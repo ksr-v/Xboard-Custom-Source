@@ -24,7 +24,16 @@ class XboardInstall extends Command
      *
      * @var string
      */
-    protected $signature = 'xboard:install';
+    protected $signature = 'xboard:install
+        {--database= : Database driver: sqlite, mysql, or postgresql}
+        {--db-host= : Database host}
+        {--db-port= : Database port}
+        {--db-name= : Database name}
+        {--db-user= : Database username}
+        {--db-password= : Database password}
+        {--redis-host= : Redis host}
+        {--redis-port= : Redis port}
+        {--redis-password= : Redis password}';
 
     /**
      * The console command description.
@@ -55,6 +64,7 @@ class XboardInstall extends Command
             $enableSqlite = getenv('ENABLE_SQLITE', false);
             $enableRedis = getenv('ENABLE_REDIS', false);
             $adminAccount = getenv('ADMIN_ACCOUNT', false);
+            $databaseOption = $this->option('database') ?: getenv('DB_TYPE');
             $this->info("__    __ ____                      _  ");
             $this->info("\ \  / /| __ )  ___   __ _ _ __ __| | ");
             $this->info(" \ \/ / | __ \ / _ \ / _` | '__/ _` | ");
@@ -69,14 +79,14 @@ class XboardInstall extends Command
                 $this->warn("如需重新安装请清空目录下 .env 文件的内容（Docker安装方式不可以删除此文件）");
                 $this->warn("快捷清空.env命令：");
                 note('rm .env && touch .env');
-                return;
+                return self::SUCCESS;
             }
             if (is_dir(base_path() . '/.env')) {
                 $this->error('😔：安装失败，Docker环境下安装请保留空的 .env 文件');
-                return;
+                return self::FAILURE;
             }
             // 选择数据库类型
-            $dbType = $enableSqlite ? 'sqlite' : select(
+            $dbType = $databaseOption ?: ($enableSqlite ? 'sqlite' : select(
                 label: '请选择数据库类型',
                 options: [
                     'sqlite' => 'SQLite (无需额外安装)',
@@ -84,21 +94,52 @@ class XboardInstall extends Command
                     'postgresql' => 'PostgreSQL'
                 ],
                 default: 'sqlite'
-            );
+            ));
 
             // 使用 match 表达式配置数据库
             $envConfig = match ($dbType) {
                 'sqlite' => $this->configureSqlite(),
-                'mysql' => $this->configureMysql(),
+                'mysql' => $this->configureMysql($this->nonInteractiveMysqlConfig()),
                 'postgresql' => $this->configurePostgresql(),
                 default => throw new \InvalidArgumentException("不支持的数据库类型: {$dbType}")
             };
 
             if (is_null($envConfig)) {
-                return; // 用户选择退出安装
+                return self::FAILURE; // 用户选择退出安装或非交互安全检查失败
             }
             $envConfig['APP_KEY'] = 'base64:' . base64_encode(Encrypter::generateKey('AES-256-CBC'));
             $isReidsValid = false;
+            $redisHostOption = $this->option('redis-host') ?: getenv('REDIS_HOST');
+            $redisPortOption = $this->option('redis-port') ?: getenv('REDIS_PORT');
+            $redisPasswordOption = $this->option('redis-password');
+            if ($redisPasswordOption === null || $redisPasswordOption === false) {
+                $redisPasswordOption = getenv('REDIS_PASSWORD');
+            }
+            if ($redisPasswordOption === '' || $redisPasswordOption === 'null') {
+                $redisPasswordOption = null;
+            }
+            if ($redisHostOption !== false && $redisHostOption !== null && $redisHostOption !== '') {
+                $envConfig['REDIS_HOST'] = $redisHostOption;
+                $envConfig['REDIS_PORT'] = $redisPortOption ?: '6379';
+                $envConfig['REDIS_PASSWORD'] = $redisPasswordOption;
+                $redisConfig = [
+                    'client' => 'phpredis',
+                    'default' => [
+                        'host' => $envConfig['REDIS_HOST'],
+                        'password' => $envConfig['REDIS_PASSWORD'],
+                        'port' => $envConfig['REDIS_PORT'],
+                        'database' => 0,
+                    ],
+                ];
+                try {
+                    $redis = new \Illuminate\Redis\RedisManager(app(), 'phpredis', $redisConfig);
+                    $redis->ping();
+                    $isReidsValid = true;
+                } catch (\Exception $e) {
+                    $this->error("redis连接失败：" . $e->getMessage());
+                    return self::FAILURE;
+                }
+            }
             while (!$isReidsValid) {
                 // 判断是否为Docker环境
                 $useBuiltinRedis = $isDocker && ($enableRedis || confirm(label: '是否启用Docker内置的Redis', default: true, yes: '启用', no: '不启用'));
@@ -191,8 +232,10 @@ class XboardInstall extends Command
                 unset($_ENV[$key], $_SERVER[$key]);
             }
             Artisan::call('config:clear');
+            return self::SUCCESS;
         } catch (\Exception $e) {
             $this->error($e);
+            return self::FAILURE;
         }
     }
 
@@ -292,10 +335,28 @@ class XboardInstall extends Command
     /**
      * 配置 MySQL 数据库
      *
-     * @return array
+     * @return array|null
      */
-    private function configureMysql(): array
+    private function configureMysql(?array $nonInteractiveConfig = null): ?array
     {
+        if ($nonInteractiveConfig !== null) {
+            Config::set("database.default", 'mysql');
+            Config::set("database.connections.mysql.host", $nonInteractiveConfig['DB_HOST']);
+            Config::set("database.connections.mysql.port", $nonInteractiveConfig['DB_PORT']);
+            Config::set("database.connections.mysql.database", $nonInteractiveConfig['DB_DATABASE']);
+            Config::set("database.connections.mysql.username", $nonInteractiveConfig['DB_USERNAME']);
+            Config::set("database.connections.mysql.password", $nonInteractiveConfig['DB_PASSWORD']);
+            DB::purge('mysql');
+            DB::connection('mysql')->getPdo();
+
+            if (!blank(DB::connection('mysql')->select('SHOW TABLES'))) {
+                $this->error('检测到数据库中已经存在数据，非交互安装已安全退出。请使用空数据库，或改用交互安装确认清空操作。');
+                return null;
+            }
+
+            return $nonInteractiveConfig;
+        }
+
         while (true) {
             $envConfig = [
                 'DB_CONNECTION' => 'mysql',
@@ -333,6 +394,31 @@ class XboardInstall extends Command
                 $this->info("请重新输入MySQL数据库配置");
             }
         }
+    }
+
+    private function nonInteractiveMysqlConfig(): ?array
+    {
+        $databaseOption = $this->option('database') ?: getenv('DB_TYPE');
+        if ($databaseOption !== 'mysql') {
+            return null;
+        }
+
+        $password = $this->option('db-password');
+        if ($password === null) {
+            $password = getenv('DB_PASSWORD');
+        }
+        if ($password === false) {
+            $password = '';
+        }
+
+        return [
+            'DB_CONNECTION' => 'mysql',
+            'DB_HOST' => $this->option('db-host') ?: getenv('DB_HOST') ?: '127.0.0.1',
+            'DB_PORT' => $this->option('db-port') ?: getenv('DB_PORT') ?: '3306',
+            'DB_DATABASE' => $this->option('db-name') ?: getenv('DB_DATABASE') ?: 'xboard',
+            'DB_USERNAME' => $this->option('db-user') ?: getenv('DB_USERNAME') ?: 'root',
+            'DB_PASSWORD' => $password,
+        ];
     }
 
     /**
