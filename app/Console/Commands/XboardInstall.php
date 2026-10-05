@@ -350,8 +350,18 @@ class XboardInstall extends Command
             DB::connection('mysql')->getPdo();
 
             if (!blank(DB::connection('mysql')->select('SHOW TABLES'))) {
-                $this->error('检测到数据库中已经存在数据，非交互安装已安全退出。请使用空数据库，或改用交互安装确认清空操作。');
-                return null;
+                if (!$this->input->isInteractive()) {
+                    $this->error('检测到数据库中已经存在数据，非交互安装已安全退出。请使用空数据库，或改用交互安装确认清空操作。');
+                    return null;
+                }
+
+                if (!confirm(label: '检测到数据库中已经存在数据，是否要清空数据库以便安装新的数据？', default: false, yes: '清空', no: '不清空')) {
+                    return null;
+                }
+
+                $this->info('正在清空数据库请稍等');
+                $this->call('db:wipe', ['--force' => true]);
+                $this->info('数据库清空完成');
             }
 
             return $nonInteractiveConfig;

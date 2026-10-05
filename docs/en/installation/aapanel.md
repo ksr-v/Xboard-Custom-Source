@@ -77,7 +77,7 @@ rm -rf .htaccess 404.html 502.html index.html .user.ini
 git clone https://github.com/ksr-v/Xboard-Custom-Source.git ./
 
 # Install dependencies
-sh init.sh
+bash init.sh
 ```
 
 #### 3.3 Configure Site
