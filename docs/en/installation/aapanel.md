@@ -36,8 +36,8 @@ bash install_6.0_en.sh aapanel
 #### 2.1 Install LNMP Environment
 In the aaPanel dashboard, install:
 - Nginx (any version)
-- MySQL 5.7
-- PHP 8.2
+- MySQL MariaDB 10.11.10
+- PHP 8.3
 
 #### 2.2 Install PHP Extensions
 Required PHP extensions:
