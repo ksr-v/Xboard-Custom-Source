@@ -9,4 +9,5 @@ return [
     'xboard_update_token' => env('XBOARD_UPDATE_TOKEN', ''),
     'xboard_build_commit' => env('XBOARD_BUILD_COMMIT', ''),
     'node_installer_dir' => env('XBOARD_NODE_INSTALLER_DIR', storage_path('app/private/node-installer')),
+    'node_installer_url' => env('XBOARD_NODE_INSTALLER_URL', 'https://raw.githubusercontent.com/ksr-v/Xboard-Independent/main/node-installer/install.sh'),
 ];
