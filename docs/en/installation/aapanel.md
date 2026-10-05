@@ -17,8 +17,8 @@
 ### Software Requirements
 - Operating System: Ubuntu 20.04+ / Debian 10+ (⚠️ CentOS 7 is not recommended)
 - Latest version of aaPanel
-- PHP 8.2
-- MySQL 5.7+
+- PHP 8.3
+- MySQL MariaDB 10.11.10
 - Redis
 - Nginx (any version)
 
