@@ -2,6 +2,8 @@
 
 use App\Services\ThemeService;
 use App\Services\UpdateService;
+use App\Http\Controllers\PrivateUpdateReleaseController;
+use App\Http\Controllers\NodeInstallerAssetController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
@@ -18,6 +20,16 @@ use Illuminate\Support\Facades\File;
 |
 */
 
+Route::get('/node-installer/{asset}', [NodeInstallerAssetController::class, 'download'])
+    ->where('asset', '[A-Za-z0-9._-]+')
+    ->middleware('signed')
+    ->name('node-installer.asset');
+
+Route::get('/private-xboard-updates/latest.json', [PrivateUpdateReleaseController::class, 'manifest'])
+    ->name('private-xboard-updates.manifest');
+Route::get('/private-xboard-updates/releases/{version}/xboard.tar.gz', [PrivateUpdateReleaseController::class, 'archive'])
+    ->where('version', '[0-9]{8}-[a-fA-F0-9]{7,40}')
+    ->name('private-xboard-updates.archive');
 
 Route::get('/', function (Request $request) {
     if (admin_setting('app_url') && admin_setting('safe_mode_enable', 0)) {

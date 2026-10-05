@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\File;
 class UpdateService
 {
     const UPDATE_CHECK_INTERVAL = 86400; // 24 hours
-    const GITHUB_API_URL = 'https://api.github.com/repos/cedar2025/xboard/commits';
     const CACHE_UPDATE_INFO = 'UPDATE_INFO';
     const CACHE_LAST_CHECK = 'LAST_UPDATE_CHECK';
     const CACHE_UPDATE_LOCK = 'UPDATE_LOCK';
@@ -58,6 +57,11 @@ class UpdateService
 
     public function checkForUpdates(): array
     {
+        if (config('orphan.xboard_update_mode') === 'archive') {
+            return app(PrivateArchiveUpdateService::class)->checkForUpdates();
+        }
+
+        $currentCommit = 'unknown';
         try {
             // Get current version commit
             $currentCommit = $this->getCurrentCommit();
@@ -69,21 +73,34 @@ class UpdateService
             $localLogs = $this->getLocalGitLogs();
             if (empty($localLogs)) {
                 Log::error('Failed to get local git logs');
-                return $this->getCachedUpdateInfo();
+                return $this->getUnavailableUpdateInfo($currentCommit);
             }
 
-            // Get remote latest commits
-            $response = Http::withHeaders([
+            $repository = trim((string) config('orphan.xboard_repository', ''));
+            $ref = trim((string) config('orphan.xboard_ref', 'master'));
+            if ($repository === '' || $currentCommit === 'unknown') {
+                return $this->getUnavailableUpdateInfo($currentCommit);
+            }
+
+            $request = Http::withHeaders([
                 'Accept' => 'application/vnd.github.v3+json',
-                'User-Agent' => 'XBoard-Update-Checker'
-            ])->get(self::GITHUB_API_URL . '?per_page=50');
+                'User-Agent' => 'Xboard-Private-Update-Checker'
+            ]);
+            $token = (string) config('orphan.xboard_update_token', '');
+            if ($token !== '') {
+                $request = $request->withToken($token);
+            }
+            $response = $request->get(
+                'https://api.github.com/repos/' . $repository . '/commits',
+                ['sha' => $ref, 'per_page' => 50]
+            );
 
             if ($response->successful()) {
                 $commits = $response->json();
                 
                 if (empty($commits) || !is_array($commits)) {
                     Log::error('Invalid GitHub response format');
-                    return $this->getCachedUpdateInfo();
+                    return $this->getUnavailableUpdateInfo($currentCommit);
                 }
                 
                 $latestCommit = $this->formatCommitHash($commits[0]['sha']);
@@ -158,10 +175,10 @@ class UpdateService
                 return $updateInfo;
             }
             
-            return $this->getCachedUpdateInfo();
+            return $this->getUnavailableUpdateInfo($currentCommit);
         } catch (\Exception $e) {
             Log::error('Update check failed: ' . $e->getMessage());
-            return $this->getCachedUpdateInfo();
+            return $this->getUnavailableUpdateInfo($currentCommit);
         }
     }
 
@@ -169,13 +186,13 @@ class UpdateService
     {
         // Check for new version first
         $updateInfo = $this->checkForUpdates();
-        if ($updateInfo['is_local_newer']) {
+        if (($updateInfo['is_local_newer'] ?? false)) {
             return [
                 'success' => false,
                 'message' => __('update.local_newer')
             ];
         }
-        if (!$updateInfo['has_update']) {
+        if (!($updateInfo['has_update'] ?? false)) {
             return [
                 'success' => false,
                 'message' => __('update.already_latest')
@@ -198,7 +215,7 @@ class UpdateService
             $this->backupDatabase();
 
             // 2. Pull latest code
-            $result = $this->pullLatestCode();
+            $result = $this->pullLatestCode($updateInfo);
             if (!$result['success']) {
                 throw new \Exception($result['message']);
             }
@@ -256,16 +273,28 @@ class UpdateService
 
     protected function getCurrentCommit(): string
     {
+        $buildMarker = storage_path('app/private/xboard-build.json');
+        if (config('orphan.xboard_update_mode') === 'archive' && File::exists($buildMarker)) {
+            $marker = json_decode(File::get($buildMarker), true);
+            if (is_array($marker) && !empty($marker['commit'])) {
+                return $this->formatCommitHash((string) $marker['commit']);
+            }
+        }
+
         try {
             // Ensure git configuration is correct
             Process::run(sprintf('git config --global --add safe.directory %s', base_path()));
             $result = Process::run('git rev-parse HEAD');
             $fullHash = trim($result->output());
-            return $fullHash ? $this->formatCommitHash($fullHash) : 'unknown';
+            if ($fullHash !== '') {
+                return $this->formatCommitHash($fullHash);
+            }
         } catch (\Exception $e) {
             Log::error('Failed to get current commit: ' . $e->getMessage());
-            return 'unknown';
         }
+
+        $buildCommit = trim((string) config('orphan.xboard_build_commit', ''));
+        return $buildCommit !== '' ? $this->formatCommitHash($buildCommit) : 'unknown';
     }
 
     protected function getFirstCommit(): string
@@ -302,8 +331,21 @@ class UpdateService
         }
     }
 
-    protected function pullLatestCode(): array
+    protected function pullLatestCode(array $updateInfo = []): array
     {
+        if (config('orphan.xboard_update_mode') === 'archive') {
+            try {
+                app(PrivateArchiveUpdateService::class)->applyUpdate($updateInfo);
+                $this->updateVersionCache();
+                return ['success' => true];
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'message' => __('update.code_update_failed', ['error' => $e->getMessage()])
+                ];
+            }
+        }
+
         try {
             // Get current project root directory
             $basePath = base_path();
@@ -311,12 +353,24 @@ class UpdateService
             // Ensure git configuration is correct
             Process::run(sprintf('git config --global --add safe.directory %s', $basePath));
             
-            // Pull latest code
-            Process::run('git fetch origin master');
-            Process::run('git reset --hard origin/master');
+            $ref = trim((string) config('orphan.xboard_ref', 'master'));
+            $fetch = Process::path($basePath)->run(['git', 'fetch', 'private', $ref]);
+            if (!$fetch->successful()) {
+                throw new \RuntimeException('Failed to fetch the configured private source.');
+            }
+
+            $merge = Process::path($basePath)->run(['git', 'merge', '--ff-only', 'FETCH_HEAD']);
+            if (!$merge->successful()) {
+                throw new \RuntimeException('Private source update is not a fast-forward; local changes were preserved.');
+            }
 
             // Update dependencies
-            Process::run('composer install --no-dev --optimize-autoloader');
+            $dependencies = Process::path($basePath)->run([
+                'composer', 'install', '--no-dev', '--no-interaction', '--optimize-autoloader'
+            ]);
+            if (!$dependencies->successful()) {
+                throw new \RuntimeException('Composer dependency installation failed.');
+            }
 
             // Update version cache after pulling new code
             $this->updateVersionCache();
@@ -422,6 +476,20 @@ class UpdateService
             'published_at' => '',
             'author' => '',
         ]);
+    }
+
+    protected function getUnavailableUpdateInfo(string $currentCommit): array
+    {
+        return [
+            'has_update' => false,
+            'is_local_newer' => false,
+            'latest_version' => $currentCommit,
+            'current_version' => $currentCommit,
+            'update_logs' => [],
+            'download_url' => '',
+            'published_at' => '',
+            'author' => '',
+        ];
     }
 
     protected function getLocalGitLogs(int $limit = 50): array

@@ -65,8 +65,8 @@ cd /www/wwwroot/your-domain
 chattr -i .user.ini
 rm -rf .htaccess 404.html 502.html index.html .user.ini
 
-# Clone the compose branch
-git clone -b compose --depth 1 https://github.com/cedar2025/Xboard.git ./
+# Clone the privately maintained source repository
+git clone https://github.com/ksr-v/Xboard-Custom-Source.git ./
 
 # Prepare configuration file
 cp compose.host.sample.yaml compose.yaml

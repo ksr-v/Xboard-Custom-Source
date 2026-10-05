@@ -59,11 +59,8 @@ apt update && apt install -y git
 ## CentOS/RHEL
 yum update && yum install -y git
 
-# Clone repository
-git clone -b compose --depth 1 https://github.com/cedar2025/Xboard ./
-# (Optional shortcut: skip the clone and just fetch the sample file with
-#  curl -fsSL https://raw.githubusercontent.com/cedar2025/Xboard/master/compose.sample.yaml -o compose.yaml
-#  — the running PHP code is in the Docker image, not in the clone.)
+# Clone the privately maintained source repository
+git clone https://github.com/ksr-v/Xboard-Custom-Source.git ./
 
 # Configure Docker Compose
 ```

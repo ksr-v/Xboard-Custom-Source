@@ -73,8 +73,8 @@ cd /www/wwwroot/your-domain
 chattr -i .user.ini
 rm -rf .htaccess 404.html 502.html index.html .user.ini
 
-# Clone repository
-git clone https://github.com/cedar2025/Xboard.git ./
+# Clone the privately maintained source repository
+git clone https://github.com/ksr-v/Xboard-Custom-Source.git ./
 
 # Install dependencies
 sh init.sh

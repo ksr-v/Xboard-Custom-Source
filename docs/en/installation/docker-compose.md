@@ -15,10 +15,10 @@ systemctl start docker
 
 ### 2. Deployment Steps
 
-1. Clone the `compose` branch (it ships `compose.sample.yaml` and the other `compose.*.sample.yaml` variants):
+1. Clone the privately maintained source repository (it contains the Compose samples):
    ```bash
-   git clone -b compose --depth 1 https://github.com/cedar2025/Xboard
-   cd Xboard
+    git clone https://github.com/ksr-v/Xboard-Custom-Source.git
+    cd Xboard-Custom-Source
    cp compose.sample.yaml compose.yaml
    ```
 

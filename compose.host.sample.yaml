@@ -1,6 +1,7 @@
 services:
   xboard:
-    image: ghcr.io/cedar2025/xboard:latest
+    image: xboard:local
+    build: .
     restart: unless-stopped
     network_mode: host
     volumes:

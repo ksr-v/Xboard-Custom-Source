@@ -9,6 +9,7 @@ use App\Models\ServerMachine;
 use App\Models\ServerMachineLoadHistory;
 use App\Services\NodeSyncService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 
 class MachineController extends Controller
 {
@@ -202,11 +203,26 @@ class MachineController extends Controller
     private function buildInstallCommand(Request $request, ServerMachine $machine): string
     {
         $panelUrl = rtrim((string) (admin_setting('app_url') ?: $request->getSchemeAndHttpHost()), '/');
-        $installerUrl = 'https://raw.githubusercontent.com/cedar2025/xboard-node/dev/install.sh';
+        $assetUrl = static fn(string $asset): string => URL::temporarySignedRoute(
+            'node-installer.asset',
+            now()->addMinutes(15),
+            ['asset' => $asset]
+        );
+        $urls = [
+            'install' => escapeshellarg($assetUrl('install.sh')),
+            'node_amd64' => escapeshellarg($assetUrl('xboard-node-linux-amd64')),
+            'xbctl_amd64' => escapeshellarg($assetUrl('xbctl-linux-amd64')),
+            'node_arm64' => escapeshellarg($assetUrl('xboard-node-linux-arm64')),
+            'xbctl_arm64' => escapeshellarg($assetUrl('xbctl-linux-arm64')),
+        ];
 
         return sprintf(
-            'curl -fsSL %s | sudo bash -s -- --mode machine --panel %s --token %s --machine-id %d',
-            $installerUrl,
+            'set -eu; tmp_dir="$(mktemp -d)"; trap \'rm -rf "$tmp_dir"\' EXIT; arch="$(uname -m)"; case "$arch" in x86_64|amd64) node_url=%s; xbctl_url=%s ;; aarch64|arm64) node_url=%s; xbctl_url=%s ;; *) echo "Unsupported architecture: $arch" >&2; exit 1 ;; esac; curl -fsSL %s -o "$tmp_dir/install.sh"; curl -fsSL "$node_url" -o "$tmp_dir/xboard-node"; curl -fsSL "$xbctl_url" -o "$tmp_dir/xbctl"; chmod 755 "$tmp_dir/install.sh" "$tmp_dir/xboard-node" "$tmp_dir/xbctl"; sudo bash "$tmp_dir/install.sh" --mode machine --panel %s --token %s --machine-id %d --version v1.13-orphan.1 --binary "$tmp_dir/xboard-node" --xbctl-binary "$tmp_dir/xbctl"',
+            $urls['node_amd64'],
+            $urls['xbctl_amd64'],
+            $urls['node_arm64'],
+            $urls['xbctl_arm64'],
+            $urls['install'],
             escapeshellarg($panelUrl),
             escapeshellarg($machine->token),
             $machine->id

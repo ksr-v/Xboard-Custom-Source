@@ -2,7 +2,6 @@
 
 <div align="center">
 
-[![Telegram](https://img.shields.io/badge/Telegram-Channel-blue)](https://t.me/XboardOfficial)
 ![PHP](https://img.shields.io/badge/PHP-8.2+-green.svg)
 ![MySQL](https://img.shields.io/badge/MySQL-5.7+-blue.svg)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -24,8 +23,9 @@ Xboard is a modern panel system built on Laravel 11, focusing on providing a cle
 ## 🚀 Quick Start
 
 ```bash
-git clone -b compose --depth 1 https://github.com/cedar2025/Xboard && \
-cd Xboard && \
+git clone https://github.com/ksr-v/Xboard-Custom-Source.git && \
+cd Xboard-Custom-Source && \
+cp compose.sample.yaml compose.yaml && \
 docker compose run -it --rm \
     -e ENABLE_SQLITE=true \
     -e ENABLE_REDIS=true \
