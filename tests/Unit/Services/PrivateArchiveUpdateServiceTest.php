@@ -57,6 +57,7 @@ class PrivateArchiveUpdateServiceTest extends TestCase
     public function test_archive_mode_allows_loopback_http_for_a_same_host_release_endpoint(): void
     {
         config()->set('orphan.xboard_update_base_url', 'http://127.0.0.1/private-xboard-updates');
+        config()->set('app.url', 'http://panel.example.test');
         Http::fake([
             '127.0.0.1/private-xboard-updates/latest.json' => Http::response([
                 'version' => '20261005-2222222',
@@ -73,7 +74,8 @@ class PrivateArchiveUpdateServiceTest extends TestCase
 
         $this->assertTrue($result['has_update']);
         Http::assertSent(fn(Request $request) => $request->url() === 'http://127.0.0.1/private-xboard-updates/latest.json'
-            && $request->hasHeader('Authorization', 'Bearer test-token'));
+            && $request->hasHeader('Authorization', 'Bearer test-token')
+            && $request->hasHeader('Host', 'panel.example.test'));
     }
 
     public function test_archive_manifest_rejects_invalid_release_names_and_hashes(): void

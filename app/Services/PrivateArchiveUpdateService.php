@@ -264,6 +264,20 @@ class PrivateArchiveUpdateService
     private function request(): \Illuminate\Http\Client\PendingRequest
     {
         $request = Http::acceptJson()->timeout(30)->withOptions(['allow_redirects' => false]);
+        $baseUrl = $this->baseUrl();
+        $parts = parse_url($baseUrl);
+        $host = is_array($parts) ? trim((string) ($parts['host'] ?? ''), '[]') : '';
+        if (($parts['scheme'] ?? '') === 'http' && in_array($host, ['127.0.0.1', '::1'], true)) {
+            $appUrl = (string) config('app.url', '');
+            $appHost = parse_url($appUrl, PHP_URL_HOST);
+            if (is_string($appHost) && $appHost !== '') {
+                $appPort = parse_url($appUrl, PHP_URL_PORT);
+                $request = $request->withHeaders([
+                    'Host' => $appHost . ($appPort ? ':' . $appPort : ''),
+                ]);
+            }
+        }
+
         $token = trim((string) config('orphan.xboard_update_token', ''));
         return $token === '' ? $request : $request->withToken($token);
     }
