@@ -713,11 +713,7 @@ class PluginManager
         $pluginManager = app(self::class);
         $coreDir = base_path('plugins-core');
 
-        if (!File::isDirectory($coreDir)) {
-            return;
-        }
-
-        foreach (File::directories($coreDir) as $directory) {
+        foreach (File::isDirectory($coreDir) ? File::directories($coreDir) : [] as $directory) {
             $configFile = $directory . '/config.json';
             if (!File::exists($configFile)) {
                 continue;
@@ -732,6 +728,9 @@ class PluginManager
                 $pluginManager->enable($code);
                 Log::info("Installed and enabled core plugin: {$code}");
             }
+        }
+        if (File::isFile(base_path('bundled-plugins/manifest.json'))) {
+            app(BundledPluginInstaller::class)->synchronize();
         }
     }
 

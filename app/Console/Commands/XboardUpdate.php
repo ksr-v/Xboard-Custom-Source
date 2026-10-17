@@ -41,8 +41,12 @@ class XboardUpdate extends Command
      */
     public function handle()
     {
+        \App\Services\Plugin\BundledPluginInstaller::assertApplicationUser();
+        app(\App\Services\Plugin\BundledPluginInstaller::class)->stage();
         $this->info('正在导入数据库请稍等...');
-        Artisan::call("migrate", ['--force' => true]);
+        if (Artisan::call("migrate", ['--force' => true]) !== 0) {
+            throw new \RuntimeException('Database migration failed; update was not completed.');
+        }
         $this->info(Artisan::output());
         $this->info('正在检查并安装默认插件...');
         PluginManager::installDefaultPlugins();
@@ -61,5 +65,6 @@ class XboardUpdate extends Command
             }
         }
         $this->info('更新完毕，队列服务已重启，你无需进行任何操作。');
+        return self::SUCCESS;
     }
 }

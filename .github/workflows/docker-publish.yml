@@ -1,8 +1,8 @@
 name: Docker Build and Publish
 
 on:
-  push:
-    branches: ["master", "new-dev"]
+  # Native FPM is the validated route for the bundled release. Keep Docker
+  # publication explicit until container installation/volumes are validated.
   workflow_dispatch:
 
 env:

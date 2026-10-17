@@ -62,7 +62,7 @@ class PrivateArchiveUpdateService
         }
     }
 
-    public function applyUpdate(array $updateInfo): void
+    public function applyUpdate(array $updateInfo, bool $writeBuildMarker = true): void
     {
         $baseUrl = $this->baseUrl();
         $version = (string) ($updateInfo['archive_version'] ?? '');
@@ -136,12 +136,9 @@ class PrivateArchiveUpdateService
                 chmod($destination, (fileperms($source) & 0111) !== 0 ? 0755 : 0644);
             }
 
-            File::ensureDirectoryExists(dirname($markerPath), 0700);
-            File::put($markerPath, json_encode([
-                'commit' => strtolower($commit),
-                'version' => $version,
-                'updated_at' => now()->toIso8601String(),
-            ], JSON_THROW_ON_ERROR));
+            // Web updates commit their version only after the fresh application
+            // process has completed migrations and bundled-plugin activation.
+            if ($writeBuildMarker) { $this->completeUpdate($updateInfo); }
         } catch (\Throwable $exception) {
             foreach ($newFiles as $relativePath) {
                 File::delete($basePath . '/' . $relativePath);
@@ -161,6 +158,33 @@ class PrivateArchiveUpdateService
             throw $exception;
         } finally {
             File::deleteDirectory($workDir);
+        }
+    }
+
+    public function completeUpdate(array $updateInfo): void
+    {
+        $commit = $updateInfo['archive_commit'] ?? '';
+        $version = $updateInfo['archive_version'] ?? '';
+        if (!is_string($commit) || !preg_match('/^[a-f0-9]{40}$/iD', $commit)
+            || !is_string($version) || !preg_match('/^[A-Za-z0-9._-]{1,120}$/D', $version)) {
+            throw new RuntimeException('Private release build metadata is invalid.');
+        }
+        $path = storage_path('app/private/xboard-build.json');
+        if (is_link($path) || is_link(dirname($path))) {
+            throw new RuntimeException('Private release build metadata may not use symbolic links.');
+        }
+        File::ensureDirectoryExists(dirname($path), 0700);
+        $temporary = tempnam(dirname($path), '.build-');
+        if (!$temporary) { throw new RuntimeException('Could not stage private release build metadata.'); }
+        try {
+            if (!chmod($temporary, 0600)
+                || File::put($temporary, json_encode(['commit' => strtolower($commit), 'version' => $version,
+                    'updated_at' => now()->toIso8601String()], JSON_THROW_ON_ERROR)) === false
+                || !rename($temporary, $path)) {
+                throw new RuntimeException('Could not commit private release build metadata.');
+            }
+        } finally {
+            if (is_file($temporary)) { unlink($temporary); }
         }
     }
 
@@ -236,11 +260,14 @@ class PrivateArchiveUpdateService
     private function isProtectedPath(string $path): bool
     {
         $path = trim($path, '/');
-        return in_array($path, ['.env', '.git', 'storage', 'vendor', 'public/storage', 'bootstrap/cache'], true)
+        return in_array($path, ['.env', '.git', 'storage', 'vendor', 'plugins', 'public/storage', 'bootstrap/cache', '.docker/.data'], true)
+            || (str_starts_with($path, '.env') && $path !== '.env.example')
             || str_starts_with($path, '.env/')
             || str_starts_with($path, '.git/')
             || str_starts_with($path, 'storage/')
             || str_starts_with($path, 'vendor/')
+            || str_starts_with($path, 'plugins/')
+            || str_starts_with($path, '.docker/.data/')
             || str_starts_with($path, 'public/storage/')
             || str_starts_with($path, 'bootstrap/cache/');
     }

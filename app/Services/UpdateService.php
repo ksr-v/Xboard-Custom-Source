@@ -35,6 +35,16 @@ class UpdateService
      */
     public function updateVersionCache(): void
     {
+        $markerPath = storage_path('app/private/xboard-build.json');
+        if (config('orphan.xboard_update_mode') === 'archive' && File::isFile($markerPath)) {
+            $marker = json_decode(File::get($markerPath), true);
+            if (is_array($marker) && preg_match('/^[a-f0-9]{40}$/iD', $marker['commit'] ?? '')) {
+                preg_match('/^(\d{8})[-_]/', (string) ($marker['version'] ?? ''), $date);
+                Cache::forever(self::CACHE_VERSION_DATE, $date[1] ?? date('Ymd'));
+                Cache::forever(self::CACHE_VERSION, substr(strtolower($marker['commit']), 0, 7));
+                return;
+            }
+        }
         try {
             $result = Process::run('git log -1 --format=%cd:%H --date=format:%Y%m%d');
             if ($result->successful()) {
@@ -207,9 +217,13 @@ class UpdateService
             ];
         }
 
+        $versionState = null;
         try {
             // Set update lock
             Cache::put(self::CACHE_UPDATE_LOCK, true, now()->addMinutes(30));
+            if (config('orphan.xboard_update_mode') === 'archive') {
+                $versionState = $this->captureVersionState();
+            }
 
             // 1. Backup database
             $this->backupDatabase();
@@ -228,6 +242,11 @@ class UpdateService
 
             // 5. Create update flag
             $this->createUpdateFlag();
+
+            if ($versionState !== null) {
+                app(PrivateArchiveUpdateService::class)->completeUpdate($updateInfo);
+                $this->updateVersionCache();
+            }
 
             // 6. Restart Octane if running
             $this->restartOctane();
@@ -260,7 +279,16 @@ class UpdateService
                 ]
             ];
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            if ($versionState !== null) {
+                try {
+                    // The child may have written a candidate build marker before
+                    // a later application step failed. Keep this release retryable.
+                    $this->restoreVersionState($versionState);
+                } catch (\Throwable $restoreError) {
+                    Log::error('Could not restore the pre-update version state; review protected release metadata before retrying.');
+                }
+            }
             Log::error('Update execution failed: ' . $e->getMessage());
             Cache::forget(self::CACHE_UPDATE_LOCK);
             
@@ -268,6 +296,48 @@ class UpdateService
                 'success' => false,
                 'message' => __('update.failed', ['error' => $e->getMessage()])
             ];
+        }
+    }
+
+    private function captureVersionState(): array
+    {
+        $path = storage_path('app/private/xboard-build.json');
+        if (is_link($path) || is_link(dirname($path))
+            || (File::exists($path) && (!File::isFile($path) || File::size($path) > 16384))) {
+            throw new \RuntimeException('Invalid private release build metadata path.');
+        }
+        $cache = [];
+        foreach ([self::CACHE_VERSION, self::CACHE_VERSION_DATE, self::CACHE_UPDATE_INFO, self::CACHE_LAST_CHECK] as $key) {
+            $cache[$key] = ['exists' => Cache::has($key), 'value' => Cache::get($key)];
+        }
+        return ['exists' => File::exists($path), 'contents' => File::exists($path) ? File::get($path) : null,
+            'mode' => File::exists($path) ? fileperms($path) & 0777 : 0600, 'cache' => $cache];
+    }
+
+    private function restoreVersionState(array $state): void
+    {
+        $path = storage_path('app/private/xboard-build.json');
+        if (is_link($path) || is_link(dirname($path))) {
+            throw new \RuntimeException('Refusing a symbolic link while restoring release metadata.');
+        }
+        if ($state['exists']) {
+            File::ensureDirectoryExists(dirname($path), 0700);
+            $temporary = tempnam(dirname($path), '.restore-build-');
+            if (!$temporary) { throw new \RuntimeException('Could not stage release metadata recovery.'); }
+            try {
+                if (!chmod($temporary, $state['mode']) || File::put($temporary, $state['contents']) === false
+                    || !rename($temporary, $path)) {
+                    throw new \RuntimeException('Could not restore release metadata.');
+                }
+            } finally { if (is_file($temporary)) { unlink($temporary); } }
+        } elseif (File::exists($path) && !File::delete($path)) {
+            throw new \RuntimeException('Could not remove an uncommitted release marker.');
+        }
+        foreach ($state['cache'] as $key => $value) {
+            if ($value['exists'] && in_array($key, [self::CACHE_UPDATE_INFO, self::CACHE_LAST_CHECK], true)) {
+                Cache::put($key, $value['value'], now()->addHours(24));
+            } elseif ($value['exists']) { Cache::forever($key, $value['value']); }
+            else { Cache::forget($key); }
         }
     }
 
@@ -320,10 +390,10 @@ class UpdateService
     {
         try {
             // Use existing backup command
-            Process::run('php artisan backup:database');
+            $result = Process::run('php artisan backup:database');
             
-            if (!Process::result()->successful()) {
-                throw new \Exception(__('update.backup_failed', ['error' => Process::result()->errorOutput()]));
+            if (!$result->successful()) {
+                throw new \Exception(__('update.backup_failed', ['error' => $result->errorOutput()]));
             }
         } catch (\Exception $e) {
             Log::error('Database backup failed: ' . $e->getMessage());
@@ -335,8 +405,7 @@ class UpdateService
     {
         if (config('orphan.xboard_update_mode') === 'archive') {
             try {
-                app(PrivateArchiveUpdateService::class)->applyUpdate($updateInfo);
-                $this->updateVersionCache();
+                app(PrivateArchiveUpdateService::class)->applyUpdate($updateInfo, false);
                 return ['success' => true];
             } catch (\Exception $e) {
                 return [
@@ -387,7 +456,13 @@ class UpdateService
     protected function runMigrations(): void
     {
         try {
-            Process::run('php artisan migrate --force');
+            $binary = PHP_SAPI === 'cli' ? PHP_BINARY : dirname(PHP_BINARY, 2) . '/bin/php';
+            if (!is_executable($binary)) { $binary = 'php'; }
+            $result = Process::path(base_path())->timeout(600)
+                ->run([$binary, 'artisan', 'xboard:update', '--no-interaction']);
+            if (!$result->successful()) {
+                throw new \RuntimeException('Application migration or bundled-plugin synchronization failed. Inspect the protected application logs.');
+            }
         } catch (\Exception $e) {
             Log::error('Migration failed: ' . $e->getMessage());
             throw new \Exception(__('update.migration_failed', ['error' => $e->getMessage()]));
@@ -523,4 +598,4 @@ class UpdateService
             return [];
         }
     }
-} 
+}

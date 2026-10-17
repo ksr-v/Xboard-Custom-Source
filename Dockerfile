@@ -16,27 +16,18 @@ WORKDIR /www
 
 COPY .docker /
 
-# Add build arguments
-ARG CACHEBUST=1
-ARG REPO_URL=https://github.com/cedar2025/Xboard
-ARG BRANCH_NAME=master
-
-RUN echo "Attempting to clone branch: ${BRANCH_NAME} from ${REPO_URL} with CACHEBUST: ${CACHEBUST}" && \
-    rm -rf ./* && \
-    rm -rf .git && \
-    git config --global --add safe.directory /www && \
-    git clone --depth 1 --branch ${BRANCH_NAME} ${REPO_URL} . && \
-    git submodule update --init --recursive --force
+# Build only the already verified independent source context, including plugins.
+COPY --chown=www:www . /www
 
 COPY .docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY .docker/caddy/Caddyfile /etc/caddy/Caddyfile
 COPY .docker/php/zz-xboard.ini /usr/local/etc/php/conf.d/zz-xboard.ini
 
-RUN composer install --no-cache --no-dev --no-security-blocking \
-    && php artisan storage:link \
-    && chown -R www:www /www \
-    && chmod -R 775 /www \
-    && mkdir -p /data \
+USER www
+RUN composer install --no-cache --no-dev --no-interaction \
+    && php artisan storage:link
+USER root
+RUN mkdir -p /data \
     && chown redis:redis /data
     
 ENV ENABLE_WEB=true \

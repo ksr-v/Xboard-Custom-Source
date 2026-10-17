@@ -60,6 +60,7 @@ class XboardInstall extends Command
     public function handle()
     {
         try {
+            \App\Services\Plugin\BundledPluginInstaller::assertApplicationUser();
             $isDocker = file_exists('/.dockerenv');
             $enableSqlite = getenv('ENABLE_SQLITE', false);
             $enableRedis = getenv('ENABLE_REDIS', false);
@@ -208,7 +209,9 @@ class XboardInstall extends Command
             $this->call('config:cache');
             Artisan::call('cache:clear');
             $this->info('正在导入数据库请稍等...');
-            Artisan::call("migrate", ['--force' => true]);
+            if (Artisan::call("migrate", ['--force' => true]) !== 0) {
+                throw new \RuntimeException('Database migration failed; installation was not completed.');
+            }
             $this->info(Artisan::output());
             $this->info('数据库导入完成');
             $this->info('开始注册管理员账号');
@@ -293,12 +296,16 @@ class XboardInstall extends Command
      */
     private function configureSqlite(): ?array
     {
-        $sqliteFile = '.docker/.data/database.sqlite';
+        // New native installations use prepared, private application storage.
+        // Keep an existing legacy database visible to the confirmation below.
+        $sqliteFile = file_exists('/.dockerenv') || file_exists(base_path('.docker/.data/database.sqlite'))
+            ? '.docker/.data/database.sqlite' : 'storage/app/private/database.sqlite';
         if (!file_exists(base_path($sqliteFile))) {
-            // 创建空文件
-            if (!touch(base_path($sqliteFile))) {
-                $this->info("sqlite创建成功: $sqliteFile");
+            if (!is_dir(dirname(base_path($sqliteFile))) || !touch(base_path($sqliteFile))) {
+                $this->error('SQLite 数据目录不可写，请先运行 Root 权限准备。');
+                return null;
             }
+            chmod(base_path($sqliteFile), 0600);
         }
 
         $envConfig = [

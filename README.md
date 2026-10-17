@@ -1,5 +1,13 @@
 # Xboard
 
+当前独立候选版：**2026.10.18.1**。默认内置 NodeEndpoint **1.0.3**、SmartExpiry **1.2.0**、QRCode Extend **1.2.0（审计副本）** 和 FlowScope **2.4.0**；全新安装时自动安装并启用。已有面板升级保留各插件配置、公共 CA 和管理员已有的禁用选择，可显式选择全部启用。
+
+宝塔 / aaPanel 原生安装优先使用 [新版安装和升级说明](docs/installation/bundled-native.zh-CN.md)。以 Root 运行 `bash init.sh --app-user www --php /实际PHP路径 --composer /实际Composer路径 --host 通讯IP`，安装器先准备文件权限，再降权执行 Composer、数据库迁移和插件生命周期，最后处理独立 HTTPS 入口、本机防火墙及公共 CA 导入。Root 工具和私钥位于应用目录之外。
+
+已有面板不要执行全新安装或生成 APP_KEY；使用已校验发行包的 Root 升级工具。四插件无需逐个上传。FlowScope 采集器仍在对应节点机器部署，云安全组需另行放行。Docker / Octane 的完整安装与 Root 集成不属于本轮已验证的原生 FPM 路线。
+
+验证依据见 [本版测试记录](docs/installation/bundled-validation.zh-CN.md)，包含隔离虚拟机从零安装、重复升级和完整归档升级。
+
 <div align="center">
 
 ![PHP](https://img.shields.io/badge/PHP-8.2+-green.svg)
@@ -20,22 +28,9 @@ Xboard is a modern panel system built on Laravel 11, focusing on providing a cle
 - 🐳 Ready-to-use Docker deployment solution
 - 🎯 Optimized system architecture for better maintainability
 
-## 🚀 Quick Start
+## 🚀 Installation
 
-```bash
-git clone https://github.com/ksr-v/Xboard-Custom-Source.git && \
-cd Xboard-Custom-Source && \
-cp compose.sample.yaml compose.yaml && \
-docker compose run -it --rm \
-    -e ENABLE_SQLITE=true \
-    -e ENABLE_REDIS=true \
-    -e ADMIN_ACCOUNT=admin@demo.com \
-    xboard php artisan xboard:install && \
-docker compose up -d
-```
-
-> After installation, visit: http://SERVER_IP:7001  
-> ⚠️ Make sure to save the admin credentials shown during installation
+Use the [native PHP-FPM installation and upgrade guide](docs/installation/bundled-native.zh-CN.md) for this bundled release. The Docker definitions now consume the independent build context and pinned dependency lock; their complete installation, volume permissions and Root integration have not been validated in this release. Historical Docker instructions below require separate validation before use.
 
 ## 📖 Documentation
 

@@ -61,9 +61,14 @@ class Kernel extends ConsoleKernel
     {
         $this->load(__DIR__ . '/Commands');
 
-        try {
-            app(PluginManager::class)->initializeEnabledPlugins();
-        } catch (\Exception $e) {
+        // Maintenance must stage verified files before any old plugin classes
+        // are loaded into this process. Ordinary commands keep native behavior.
+        $maintenance = ['xboard:install', 'xboard:update', 'xboard:bundled-plugins', 'xboard:configure-endpoint'];
+        if (!array_intersect($maintenance, $_SERVER['argv'] ?? [])) {
+            try {
+                app(PluginManager::class)->initializeEnabledPlugins();
+            } catch (\Exception $e) {
+            }
         }
         require base_path('routes/console.php');
     }

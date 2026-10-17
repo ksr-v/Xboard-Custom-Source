@@ -1,0 +1,24 @@
+<?php
+
+namespace Plugin\Qrcodeextend\Commands;
+
+use Illuminate\Console\Command;
+use Plugin\Qrcodeextend\Services\AdminBundlePatcher;
+use Throwable;
+
+class PatchCommand extends Command
+{
+    protected $signature = 'qrcodeextend:patch';
+    protected $description = 'Insert or verify the owned qrcodeextend Admin bridge fragment';
+
+    public function handle(AdminBundlePatcher $patcher): int
+    {
+        try {
+            $this->info($patcher->patch());
+            return self::SUCCESS;
+        } catch (Throwable $exception) {
+            $this->error($exception->getMessage());
+            return self::FAILURE;
+        }
+    }
+}

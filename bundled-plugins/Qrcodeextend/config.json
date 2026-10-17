@@ -1,0 +1,7 @@
+{
+  "name": "QRCode Extend",
+  "code": "qrcodeextend",
+  "version": "1.2.0",
+  "description": "Add subscription QR codes through a reversible, ownership-scoped Admin bridge",
+  "author": "Local"
+}
