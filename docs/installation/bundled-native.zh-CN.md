@@ -2,6 +2,8 @@
 
 本版基于用户维护的 `ksr-v/Xboard-Custom-Source`，不拉取原版 Xboard、原版子模块或原版 Node 安装源。插件源码和公共 Root 工具资产随发行包提供；PHP 第三方依赖仍按原 `composer.lock` 安装。
 
+希望按原版宝塔教程的操作顺序部署时，请使用 [宝塔 / aaPanel 安装教程](aapanel.zh-CN.md)。
+
 | 内置功能插件 | 固定版本 | 源码位置 |
 | --- | --- | --- |
 | NodeEndpoint | 1.0.3 | `bundled-plugins/NodeEndpoint` |
@@ -28,7 +30,7 @@ cd /www/wwwroot/panel.example.com
 bash init.sh --app-user www \
   --php /www/server/php/83/bin/php \
   --composer /usr/local/bin/composer \
-  --host '你的节点通讯公网IP' --port 8443
+  --host '面板服务器公网IP' --port 8443
 ```
 
 PHP、Composer 和用户名必须替换为本机实际值；Composer 路径应指向可信 PHP 脚本 / PHAR。不要在已有业务目录执行本节命令。
