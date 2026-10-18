@@ -1,6 +1,6 @@
 # 宝塔 / aaPanel 安装教程（内置插件版）
 
-本教程沿用原版的“安装环境 → 创建网站 → 拉取源码 → 配置网站 → 执行安装 → 守护进程”流程，适用于独立 **v2026.10.18.5** 的原生 PHP-FPM 部署。
+本教程沿用原版的“安装环境 → 创建网站 → 拉取源码 → 配置网站 → 执行安装 → 守护进程”流程，适用于独立 **v2026.10.18.6** 的原生 PHP-FPM 部署。
 
 核心命令仍是 `git clone` 和 `bash init.sh`。新版需要**先配置实际运行的 Nginx / PHP-FPM 网站，再执行安装器**。安装器会统一处理权限及 NodeEndpoint 入口，无需再逐个上传插件、单独运行 Root 安装脚本或手动上传公共 CA。
 
@@ -8,7 +8,7 @@
 
 | 插件 | 版本 |
 | --- | --- |
-| NodeEndpoint | 1.0.3 |
+| NodeEndpoint | 1.0.5 |
 | SmartExpiry | 1.2.0 |
 | QRCode Extend | **1.2.0，审计副本** |
 | FlowScope | 2.4.0 |
@@ -92,7 +92,7 @@ Composer 安装时会检查完整依赖要求，缺少的扩展应先补齐。�
 ```bash
 cd /www/wwwroot/your-domain
 
-git clone --branch v2026.10.18.5 --single-branch \
+git clone --branch v2026.10.18.6 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git ./
 ```
 
@@ -100,7 +100,7 @@ git clone --branch v2026.10.18.5 --single-branch \
 
 **先完成下一节的网站配置，再运行 `init.sh`。** 源码已经包含四插件及公共 Root 工具资产，不需要另外下载插件 ZIP。
 
-也可以使用 [Release](https://github.com/ksr-v/Xboard-Custom-Source/releases/tag/v2026.10.18.5) 中的固定附件 `xboard.tar.gz`，独立核对 `SHA256SUMS` 后解压到该空目录，替代上述 Git 克隆。两种取源码方式选一种即可，随后均继续 3.3。
+也可以使用 [Release](https://github.com/ksr-v/Xboard-Custom-Source/releases/tag/v2026.10.18.6) 中的固定附件 `xboard.tar.gz`，独立核对 `SHA256SUMS` 后解压到该空目录，替代上述 Git 克隆。两种取源码方式选一种即可，随后均继续 3.3。
 
 #### 3.3 配置网站并执行安装
 
@@ -158,6 +158,8 @@ INSTALL <实际通讯地址>:<端口>
 请将数据库与原 `.env` / `APP_KEY` 一起备份，并按 NodeEndpoint 工具说明导出、验证和离线保管加密 CA。CA 私钥始终位于网站之外的 Root 私有目录或离线介质，不上传面板。旧版已签发的 CA 保持原样；未托管的旧 CA 在维护时仍需要原口令，升级不会自动改口令或更换证书。
 
 完成后按安装输出的管理地址登录，刷新插件页面检查四插件及公共 CA。无需再次下载和运行独立的 Root 安装器，也不对已安装网站重复运行 `init.sh`。
+
+日后更改通讯 IP 时，在“节点通讯设置”填写新地址并保存，在“SSH 配置入口”点击“一键复制 Root 工具命令”。以 Root 通过 SSH 登录这台面板服务器并粘贴执行，核对命令中的已保存地址、向导端口和 WS 模式，再确认修改。完成后回到插件页点击“验证入口”；只有保存网页设置还不会修改 Root 管理的监听和服务器证书。
 
 本机防火墙支持运行中的 firewalld 和 UFW；UFW 原本未启用时只保存规则，不启用整个防火墙。默认规则允许所有来源访问所选 TCP 通讯端口。服务商防火墙 / 云安全组仍需在控制台放行 **8443/TCP**；保存本机规则不等于已经验证公网可达。
 

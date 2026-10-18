@@ -1,6 +1,6 @@
 # Xboard Deployment Guide for aaPanel Environment
 
-This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.18.5** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.4, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
+This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.18.6** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.5, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
 
 ## Table of Contents
 
@@ -88,7 +88,7 @@ As Root, clone the fixed independent release into the empty site directory:
 
 ```bash
 cd /www/wwwroot/your-domain
-git clone --branch v2026.10.18.5 --single-branch \
+git clone --branch v2026.10.18.6 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git .
 ```
 
@@ -139,6 +139,8 @@ For a new CA, the plugin generates a random passphrase and saves it encrypted wi
 Back up the database together with the original `.env` / `APP_KEY`, and complete the encrypted CA export and offline verification described in the NodeEndpoint tools. Private keys stay in the external Root-only directory or offline storage. Existing CAs retain their certificates and passwords; older unmanaged CAs still require their original passphrase during maintenance.
 
 Root tools and PKI stay outside the application directory. After a successful installation, refresh the plugin page; do not download and rerun a separate Root installer or rerun `init.sh` on this installed site. Normal maintenance does not recreate the CA or certificates.
+
+For a later communication IP change, save the new address on the NodeEndpoint settings page, then click “一键复制 Root 工具命令” (Copy Root tool command) under “SSH 配置入口”. Log in to this panel server through SSH as Root and run the copied command. Check the saved address, port, and WS mode in the wizard before confirming the modification. Return to the plugin page and verify the entry afterward. Saving settings or copying a command does not execute Root operations from the web application.
 
 The local firewall step supports active firewalld and UFW. If UFW is inactive, it saves the TCP rule and reports that status without enabling UFW. The default rule permits all source addresses to reach the selected TCP port. You must separately open the port in your provider's firewall / cloud security group. A saved local rule alone does not prove external connectivity.
 

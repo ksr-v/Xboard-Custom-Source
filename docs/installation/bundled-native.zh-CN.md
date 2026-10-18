@@ -6,7 +6,7 @@
 
 | 内置功能插件 | 固定版本 | 源码位置 |
 | --- | --- | --- |
-| NodeEndpoint | 1.0.4 | `bundled-plugins/NodeEndpoint` |
+| NodeEndpoint | 1.0.5 | `bundled-plugins/NodeEndpoint` |
 | SmartExpiry | 1.2.0 | `bundled-plugins/SmartExpiry` |
 | QRCode Extend | 1.2.0，审计副本 | `bundled-plugins/Qrcodeextend` |
 | FlowScope | 2.4.0，含五个采集器安装资产 | `bundled-plugins/Flowscope` |
@@ -76,6 +76,12 @@ INSTALL <实际通讯地址>:<端口>
 
 多站点或特殊布局不能自动确认时，安装器停止并说明原因。Docker / Octane 不套用 PHP-FPM 发现逻辑。若明确只使用域名方式或自行维护独立入口，可加 `--skip-endpoint`，四插件仍安装启用，但 IP 入口不会被标记为就绪。`--prepare-only` 只准备权限，不运行 Composer / 数据库或签发证书。
 
+### 保存通讯地址后修改入口
+
+在插件“节点通讯设置”填写新 IP / 域名并保存后，在“SSH 配置入口”点击“一键复制 Root 工具命令”，以 Root 通过 SSH 登录这台面板服务器并执行。复制的固定版本入口带有已保存的 `--host`，不使用示例地址修复专用参数；核对向导中的端口和 WS 模式，再按计划确认修改。完成后回到插件页点击“验证入口”，验证通过后重新复制节点安装命令。
+
+保存设置和复制命令不会在网页执行 Root 操作。已有入口由 Root 向导按修改流程更新监听和对应服务器证书，沿用原 CA 和口令；若是未托管的旧 CA，仍需原口令。仅保存网页地址不能完成证书和入口变更。
+
 全新 SQLite 安装使用 `storage/app/private/database.sqlite`（文件 0600），已有数据库地址和 `.env` 在升级时保持原值。MySQL / PostgreSQL 的账号及库需预先创建。
 
 ### 旧版确认中止后继续
@@ -133,7 +139,7 @@ python3 -I /root/xboard-upgrade-tool/scripts/deploy-release.py \
 
 升级器校验整个归档、拒绝路径逃逸 / 链接 / 运行数据和依赖清单变更，进入维护模式并备份待替换源码。它不覆盖 `.env`、`storage/`、`vendor/`、`plugins/` 或公共存储链接。新插件来源先进入 `bundled-plugins/`，随后由应用用户校验和同步到运行目录。
 
-已装同版本的插件会按原状态保留；已装旧版仅在来源清单可验证时升级并保留配置、记录 ID、CA 和启停选择。NodeEndpoint 已发布的 1.0.0 / 1.0.1 / 1.0.2 有固定来源认领清单。未知修改、旧二维码 1.0.7 的 core overlay 或无法确认的源码需要先单独审计，不盲目覆盖；高于内置版本的用户插件不降级。
+已装同版本的插件会按原状态保留；已装旧版仅在来源清单可验证时升级并保留配置、记录 ID、CA 和启停选择。NodeEndpoint 已发布的 1.0.0 / 1.0.1 / 1.0.2 / 1.0.3 / 1.0.4 有固定来源认领清单。未知修改、旧二维码 1.0.7 的 core overlay 或无法确认的源码需要先单独审计，不盲目覆盖；高于内置版本的用户插件不降级。
 
 已有 NodeEndpoint Root 入口只校验并补防火墙 / 同步 CA，不修改地址、重签证书或更换 CA。地址、端口、应用或 PHP 用户不一致时停止。未配置过入口的已有面板可在升级时首次配置；纯域名方式可显式 `--skip-endpoint`。
 
