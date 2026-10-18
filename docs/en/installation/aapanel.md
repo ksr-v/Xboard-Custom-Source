@@ -1,6 +1,6 @@
 # Xboard Deployment Guide for aaPanel Environment
 
-This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.18.3** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.3, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
+This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.18.4** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.4, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
 
 ## Table of Contents
 
@@ -88,7 +88,7 @@ As Root, clone the fixed independent release into the empty site directory:
 
 ```bash
 cd /www/wwwroot/your-domain
-git clone --branch v2026.10.18.3 --single-branch \
+git clone --branch v2026.10.18.4 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git .
 ```
 
@@ -134,7 +134,9 @@ INSTALL 203.0.113.10:8443
 
 This is a response to the installer's prompt, not a shell command. Include the space after `INSTALL`, the actual IP, and the port; typing only `INSTALL` does not confirm the plan. The new interactive flow explains mismatched input and asks again. Enter `CANCEL`, send EOF, or press Ctrl+C to cancel; an automated confirmation must still match the complete phrase exactly.
 
-`Encrypted CA passphrase` asks for a hidden password of at least 16 characters to encrypt the CA private key; it is not the panel password. Keep it securely and complete the encrypted export / offline backup described in the NodeEndpoint tools. Do not upload a private key to the panel.
+For a new CA, the plugin generates a random passphrase and saves it encrypted with the panel's original `APP_KEY` before issuing certificates. No passphrase or repeat prompt is needed. An administrator can explicitly reveal or copy it in the certificate section of the HTTPS `/node-endpoint` page. Normal settings and node installation commands do not include it.
+
+Back up the database together with the original `.env` / `APP_KEY`, and complete the encrypted CA export and offline verification described in the NodeEndpoint tools. Private keys stay in the external Root-only directory or offline storage. Existing CAs retain their certificates and passwords; older unmanaged CAs still require their original passphrase during maintenance.
 
 Root tools and PKI stay outside the application directory. After a successful installation, refresh the plugin page; do not download and rerun a separate Root installer or rerun `init.sh` on this installed site. Normal maintenance does not recreate the CA or certificates.
 

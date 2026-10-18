@@ -16,10 +16,10 @@ import sys
 import urllib.parse
 import urllib.request
 
-BOOTSTRAP_SHA256 = '058e041eac8eacf31ff24926fd3d5154dce2045df0f7b0c3850b4e0e989caf40'
-TOOLS_SHA256 = 'ea46e0ea8fe1275204c9a7f1f3dd21157a3bdf34070917e1aad8e49cda537a93'
+BOOTSTRAP_SHA256 = 'a5284c1bb7bc2adc241d74e43516bf08f9fde336a310df1e95b22d3b1647ea2e'
+TOOLS_SHA256 = '68603a42d62a4464508a191def80072fd4114094e8420fd1c15da1afd0d420e5'
 FIREWALL_PATCH_SHA256 = 'c230d11ec268c1754b26d032108e3d2ce2372af2674c9dfad021e1e98439adcb'
-BOOTSTRAP_URL = 'https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/releases/download/root-installer-v1.0.4/quick_install.py'
+BOOTSTRAP_URL = 'https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/releases/download/root-installer-v1.0.5/quick_install.py'
 SYSTEM_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 CODE_DIRS = ('app', 'bootstrap', 'config', 'database', 'routes', 'resources', 'public', 'plugins',
              'plugins-core', 'bundled-plugins', 'root-assets', 'scripts', 'theme', 'vendor', '.git', 'storage')
@@ -292,7 +292,7 @@ def install_firewall_patch(app, tools, directory):
             handle.write(data)
             handle.flush()
             os.fsync(handle.fileno())
-    for name in ('manager', 'pki', 'nginx', 'panel_ca', 'firewall'):
+    for name in ('manager', 'pki', 'nginx', 'panel_ca', 'panel_passphrase', 'firewall'):
         existing = sys.modules.get(name)
         expected = target if name == 'firewall' else panel / (name + '.py')
         if existing is not None:
@@ -338,7 +338,7 @@ def root_tools(app):
     quick = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(quick)
     require(quick.TOOLS_SHA256 == TOOLS_SHA256, '工具包版本不一致')
-    package = plain_path(app / 'root-assets/node-endpoint-tools-1.0.3.zip')
+    package = plain_path(app / 'root-assets/node-endpoint-tools-1.0.4.zip')
     require(not package.exists() or package.stat().st_size <= 16777216, 'Root 工具包异常过大')
     data = package.read_bytes() if package.is_file() else quick.download()
     tools = quick.install_cache(quick.verified_members(data))
@@ -360,7 +360,7 @@ def endpoint_plan(args, app, quick):
         host = validate_host(args.host)[0] if args.host else plan['host']
         require(host == plan['host'] and (args.port is None or args.port == plan['port']), '现有入口地址/端口不同，请单独审计 modify；不会重签 CA')
         return plan, True
-    require(not args.non_interactive, '首次独立入口需要 SSH 交互确认和隐藏 CA 口令；可显式 --skip-endpoint 延期')
+    require(not args.non_interactive, '首次独立入口需要 SSH 交互确认；新 CA 口令自动加密托管，可显式 --skip-endpoint 延期')
     host = validate_host(args.host or input('节点通讯 IP / 域名（不含协议，建议公网 IP）：').strip())[0]
     port = args.port or 8443
     require(port not in (80, 443), '独立入口不能占用网站 80/443')

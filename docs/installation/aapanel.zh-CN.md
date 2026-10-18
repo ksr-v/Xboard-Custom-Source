@@ -1,6 +1,6 @@
 # 宝塔 / aaPanel 安装教程（内置插件版）
 
-本教程沿用原版的“安装环境 → 创建网站 → 拉取源码 → 配置网站 → 执行安装 → 守护进程”流程，适用于独立 **v2026.10.18.3** 的原生 PHP-FPM 部署。
+本教程沿用原版的“安装环境 → 创建网站 → 拉取源码 → 配置网站 → 执行安装 → 守护进程”流程，适用于独立 **v2026.10.18.4** 的原生 PHP-FPM 部署。
 
 核心命令仍是 `git clone` 和 `bash init.sh`。新版需要**先配置实际运行的 Nginx / PHP-FPM 网站，再执行安装器**。安装器会统一处理权限及 NodeEndpoint 入口，无需再逐个上传插件、单独运行 Root 安装脚本或手动上传公共 CA。
 
@@ -92,7 +92,7 @@ Composer 安装时会检查完整依赖要求，缺少的扩展应先补齐。�
 ```bash
 cd /www/wwwroot/your-domain
 
-git clone --branch v2026.10.18.3 --single-branch \
+git clone --branch v2026.10.18.4 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git ./
 ```
 
@@ -100,7 +100,7 @@ git clone --branch v2026.10.18.3 --single-branch \
 
 **先完成下一节的网站配置，再运行 `init.sh`。** 源码已经包含四插件及公共 Root 工具资产，不需要另外下载插件 ZIP。
 
-也可以使用 [Release](https://github.com/ksr-v/Xboard-Custom-Source/releases/tag/v2026.10.18.3) 中的固定附件 `xboard.tar.gz`，独立核对 `SHA256SUMS` 后解压到该空目录，替代上述 Git 克隆。两种取源码方式选一种即可，随后均继续 3.3。
+也可以使用 [Release](https://github.com/ksr-v/Xboard-Custom-Source/releases/tag/v2026.10.18.4) 中的固定附件 `xboard.tar.gz`，独立核对 `SHA256SUMS` 后解压到该空目录，替代上述 Git 克隆。两种取源码方式选一种即可，随后均继续 3.3。
 
 #### 3.3 配置网站并执行安装
 
@@ -152,7 +152,9 @@ INSTALL 203.0.113.10:8443
 
 这是对安装器提示的回答，**不是另行执行的 Shell 命令**。`INSTALL` 后有一个空格，还要带上实际 IP 和端口；只输入 `INSTALL` 不能确认该计划。新版交互输错时会说明原因并再次询问；输入 `CANCEL`、发送 EOF 或按 Ctrl+C 可取消。自动化提供的确认内容仍必须与完整短语精确一致。
 
-`Encrypted CA passphrase` 要求设置至少 16 字符的 CA 私钥加密口令，隐藏输入并需要重复确认；它不是面板登录密码。妥善保存口令，并按 NodeEndpoint 工具说明完成加密导出和离线保管，不上传私钥。
+新建 CA 的口令由新版插件自动随机生成，先使用面板原 `APP_KEY` 加密保存在独立凭据表，再签发证书；不再要求输入或重复输入 CA 口令。管理员可在 HTTPS `/node-endpoint` 页面的“证书与信任”区显式查看和复制。普通设置和节点安装命令不会携带口令。
+
+请将数据库与原 `.env` / `APP_KEY` 一起备份，并按 NodeEndpoint 工具说明导出、验证和离线保管加密 CA。CA 私钥始终位于网站之外的 Root 私有目录或离线介质，不上传面板。旧版已签发的 CA 保持原样；未托管的旧 CA 在维护时仍需要原口令，升级不会自动改口令或更换证书。
 
 完成后按安装输出的管理地址登录，刷新插件页面检查四插件及公共 CA。无需再次下载和运行独立的 Root 安装器，也不对已安装网站重复运行 `init.sh`。
 

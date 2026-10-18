@@ -27,7 +27,7 @@ class NativeConfirmationError(RuntimeError):
 def native_confirmation():
     # Exercise the immutable manager's actual guard without importing its Root
     # module or any PKI/Nginx implementation into this isolated unit fixture.
-    with zipfile.ZipFile(ROOT / 'root-assets/node-endpoint-tools-1.0.3.zip') as archive:
+    with zipfile.ZipFile(ROOT / 'root-assets/node-endpoint-tools-1.0.4.zip') as archive:
         tree = ast.parse(archive.read('tools/panel/manager.py'))
     function = next(node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == 'confirmation')
     namespace = {'SafetyError': NativeConfirmationError}
@@ -122,7 +122,8 @@ class ConfirmationTests(unittest.TestCase):
                      patch('sys.stdout', new_callable=io.StringIO):
                     self.assertEqual(install.execute_endpoint_install(manager, args), 'installed')
                 original.assert_called_once_with(phrase, None)
-                prompt.assert_called_once_with('Type exactly "' + phrase + '": ')
+                prompt.assert_called_once()
+                self.assertIn('"' + phrase + '"', prompt.call_args.args[0])
                 self.assertEqual(events, ['plan', 'transaction'])
                 self.assertIs(manager.confirmation, original)
 

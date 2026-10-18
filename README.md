@@ -1,6 +1,6 @@
 # Xboard
 
-当前独立候选版：**2026.10.18.3**。默认内置 NodeEndpoint **1.0.3**、SmartExpiry **1.2.0**、QRCode Extend **1.2.0（审计副本）** 和 FlowScope **2.4.0**；全新安装时自动安装并启用。已有面板升级保留各插件配置、公共 CA 和管理员已有的禁用选择，可显式选择全部启用。
+当前独立候选版：**2026.10.18.4**。默认内置 NodeEndpoint **1.0.4**、SmartExpiry **1.2.0**、QRCode Extend **1.2.0（审计副本）** 和 FlowScope **2.4.0**；全新安装时自动安装并启用。已有面板升级保留各插件配置、公共 CA 和管理员已有的禁用选择，可显式选择全部启用。
 
 宝塔 / aaPanel 原生安装可按 [宝塔安装教程（沿用原教程步骤）](docs/installation/aapanel.zh-CN.md) 操作；权限、归档升级和恢复边界见 [完整安装和升级说明](docs/installation/bundled-native.zh-CN.md)。按教程准备固定 Composer PHAR 并完成网站配置后，以 Root 运行 `bash init.sh --app-user www --php /实际PHP路径 --composer /opt/xboard-tools/composer-2.10.3.phar --host 面板服务器公网IP`。安装器先准备文件权限，再降权执行 Composer、数据库迁移和插件生命周期，最后处理独立 HTTPS 入口、本机防火墙及公共 CA 导入。Root 工具和私钥位于应用目录之外。
 

@@ -49,7 +49,7 @@ bash init.sh --app-user www \
 
 PHP、Composer 和用户名必须替换为本机实际值；Composer 路径应指向可信 PHP 脚本 / PHAR。不要在已有业务目录执行本节命令。
 
-PHP CLI 需要启用 `symlink`，用于创建 Laravel 的公共存储链接。v2026.10.18.3 新装流程在 Composer 和数据库初始化之前检查所选 PHP CLI 是否提供该函数；预检停止时先修正对应 CLI 的设置再重试，安装器不会自动修改 `php.ini` 或开放 `exec`。如果旧版后台已能登录，但新装脚本在 `storage:link` 报 undefined `exec`，应先修正 PHP 禁用函数，再按 [宝塔教程中的恢复步骤](aapanel.zh-CN.md#常见问题) 补齐链接和 Root 后续配置；不要重跑全新安装或清空 `.env`。
+PHP CLI 需要启用 `symlink`，用于创建 Laravel 的公共存储链接。v2026.10.18.4 新装流程在 Composer 和数据库初始化之前检查所选 PHP CLI 是否提供该函数；预检停止时先修正对应 CLI 的设置再重试，安装器不会自动修改 `php.ini` 或开放 `exec`。如果旧版后台已能登录，但新装脚本在 `storage:link` 报 undefined `exec`，应先修正 PHP 禁用函数，再按 [宝塔教程中的恢复步骤](aapanel.zh-CN.md#常见问题) 补齐链接和 Root 后续配置；不要重跑全新安装或清空 `.env`。
 
 安装顺序：
 
@@ -66,7 +66,9 @@ INSTALL 203.0.113.10:8443
 
 这是提示的回答，不是 Shell 命令。`INSTALL` 与 IP 之间有一个空格；必须包含计划中的实际 IP 和端口，不能只输入 `INSTALL`。新版交互输错会说明原因并再次询问；输入 `CANCEL`、发送 EOF 或按 Ctrl+C 会取消，自动化确认仍要求完整短语精确匹配。
 
-`Encrypted CA passphrase` 是加密 CA 私钥的口令，至少 16 字符，隐藏输入并需要妥善保存，不是面板登录密码。私钥不得上传面板；首次 CA 和服务器证书采用双十年策略，后续证书不超过 CA 到期时间。加密导出和离线保管仍需按 NodeEndpoint 工具说明完成。
+新 CA 的口令自动随机生成，先使用面板 `APP_KEY` 加密保存在独立凭据表，再签发证书；管理员可在 HTTPS `/node-endpoint` 页面的证书区显式查看或复制。请同时备份数据库和原 `.env` / `APP_KEY`。CA 私钥不进入面板数据库，仍位于网站之外的 Root 私有目录或离线介质。
+
+旧 CA 和已有节点信任保持原样，未托管的旧 CA 在维护时仍使用原口令。首次 CA 和服务器证书采用双十年策略，后续证书不超过 CA 到期时间；加密导出、验证和离线保管仍需按 NodeEndpoint 工具说明完成。
 
 本机防火墙支持运行中的 firewalld 和 UFW。未启用 UFW 时只保存规则并报告，不自动启用整个防火墙；冲突 / 未知规则需要人工处理。默认规则允许所有来源访问该 TCP 通讯端口。服务商防火墙和云安全组仍需在控制台放行。
 
