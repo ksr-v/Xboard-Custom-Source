@@ -7,7 +7,7 @@
       "directory": "NodeEndpoint",
       "version": "1.0.4",
       "source_repository": "https://github.com/ksr-v/Xboard-Independent-NodeEndpoint",
-      "source_commit": "5609438399d3e388b58310fcd2699b118428c038",
+      "source_commit": "fe425979d934e9a7ca61eb4d1ffae7f84dda6e51",
       "files": {
         "Controllers/SettingsController.php": "8a73a6d795b45ecca4085c1d305cbf5084adc04c35d6d623185994a6ef78ec2d",
         "Middleware/Enabled.php": "5a8d2c410b06fdd8e07bf959ef66a3f203cc7260f307bb5427db87bf0e7bae30",

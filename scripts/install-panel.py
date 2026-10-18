@@ -16,8 +16,8 @@ import sys
 import urllib.parse
 import urllib.request
 
-BOOTSTRAP_SHA256 = 'a5284c1bb7bc2adc241d74e43516bf08f9fde336a310df1e95b22d3b1647ea2e'
-TOOLS_SHA256 = '68603a42d62a4464508a191def80072fd4114094e8420fd1c15da1afd0d420e5'
+BOOTSTRAP_SHA256 = '384b9087c6a938f34b23a461e6388a8a1f83ebb3c042d7ae8b868ed941caf384'
+TOOLS_SHA256 = '45f82dff04ef90dbf0f67cba0bc04ed59f96307ed840742d12aa733d853dfee5'
 FIREWALL_PATCH_SHA256 = 'c230d11ec268c1754b26d032108e3d2ce2372af2674c9dfad021e1e98439adcb'
 BOOTSTRAP_URL = 'https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/releases/download/root-installer-v1.0.5/quick_install.py'
 SYSTEM_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'

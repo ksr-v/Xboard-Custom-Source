@@ -11,7 +11,7 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = (
     ('node_endpoint', 'NodeEndpoint', '1.0.4', 'ksr-v/Xboard-Independent-NodeEndpoint',
-     '5609438399d3e388b58310fcd2699b118428c038', 'plugin/NodeEndpoint/'),
+     'fe425979d934e9a7ca61eb4d1ffae7f84dda6e51', 'plugin/NodeEndpoint/'),
     ('smart_expiry', 'SmartExpiry', '1.2.0', 'ksr-v/xb-SmartExpiry',
      '6f22f456512d1a0cdcad9c46e75e06e5793e6bb6', ''),
     ('qrcodeextend', 'Qrcodeextend', '1.2.0', 'ksr-v/xb-qrcode-extend',
