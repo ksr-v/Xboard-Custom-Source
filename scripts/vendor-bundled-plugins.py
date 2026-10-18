@@ -70,7 +70,7 @@ def main():
     mapping = json.loads(args.source_map.read_text(encoding='utf-8'))
     target = ROOT / 'bundled-plugins'
     require(not target.exists() and not target.is_symlink(), 'Bundle already exists; build in a clean source checkout')
-    manifest = {'schema_version': 1, 'bundle_version': '2026.10.18.4', 'plugins': []}
+    manifest = {'schema_version': 1, 'bundle_version': '2026.10.18.5', 'plugins': []}
     with tempfile.TemporaryDirectory(prefix='.plugin-bundle-build-', dir=ROOT) as work:
         stage = Path(work) / 'bundled-plugins'
         stage.mkdir()

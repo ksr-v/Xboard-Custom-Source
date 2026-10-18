@@ -6,7 +6,7 @@
 
 | 内置功能插件 | 固定版本 | 源码位置 |
 | --- | --- | --- |
-| NodeEndpoint | 1.0.3 | `bundled-plugins/NodeEndpoint` |
+| NodeEndpoint | 1.0.4 | `bundled-plugins/NodeEndpoint` |
 | SmartExpiry | 1.2.0 | `bundled-plugins/SmartExpiry` |
 | QRCode Extend | 1.2.0，审计副本 | `bundled-plugins/Qrcodeextend` |
 | FlowScope | 2.4.0，含五个采集器安装资产 | `bundled-plugins/Flowscope` |
@@ -44,10 +44,12 @@ cd /www/wwwroot/panel.example.com
 bash init.sh --app-user www \
   --php /www/server/php/83/bin/php \
   --composer /opt/xboard-tools/composer-2.10.3.phar \
-  --host '面板服务器公网IP' --port 8443
+  --port 8443
 ```
 
 PHP、Composer 和用户名必须替换为本机实际值；Composer 路径应指向可信 PHP 脚本 / PHAR。不要在已有业务目录执行本节命令。
+
+首次配置会检测本机公网 IPv4 并显示候选，回车接受或手工输入真实通讯 IP / 域名；检测失败必须手工输入。上方命令省略 `--host`，不把示例 IP 写入面板。已有真实 Root 入口地址保留为默认值，不会因检测结果变化而自动修改。`203.0.113.10` 等文档示例地址不能用于实际安装。
 
 PHP CLI 需要启用 `symlink`，用于创建 Laravel 的公共存储链接。v2026.10.18.4 新装流程在 Composer 和数据库初始化之前检查所选 PHP CLI 是否提供该函数；预检停止时先修正对应 CLI 的设置再重试，安装器不会自动修改 `php.ini` 或开放 `exec`。如果旧版后台已能登录，但新装脚本在 `storage:link` 报 undefined `exec`，应先修正 PHP 禁用函数，再按 [宝塔教程中的恢复步骤](aapanel.zh-CN.md#常见问题) 补齐链接和 Root 后续配置；不要重跑全新安装或清空 `.env`。
 
@@ -56,15 +58,15 @@ PHP CLI 需要启用 `symlink`，用于创建 Laravel 的公共存储链接。v2
 1. Root 检查专用目录、站点用户、已有 `APP_KEY` / 安装标记和实际 FPM 站点。
 2. Root 准备应用、运行目录、Admin 原子补丁父目录及公共资源的权限；Root 工具缓存和 PKI 保持外置。
 3. 以站点用户运行 Composer、数据库安装、四插件源校验、迁移和启用。数据库 / Redis 及管理员信息使用 Xboard 原有交互；保留终端显示的管理员初始信息。
-4. 以站点用户保存 NodeEndpoint 设置，Root 创建独立 HTTPS 入口，放行本机配置 TCP 端口，降权导入公共 CA。
+4. Root 创建独立 HTTPS 入口，成功后以站点用户保存 NodeEndpoint 设置，放行本机配置 TCP 端口，降权导入公共 CA。
 
-Root 入口会展示计划并要求输入完整确认短语。核对计划后，如果其中的地址是 `203.0.113.10:8443`，就在安装器提示后填写：
+Root 入口会展示计划并要求输入完整确认短语。核对计划后，照抄本机提示要求的内容，格式如下：
 
 ```text
-INSTALL 203.0.113.10:8443
+INSTALL <实际通讯地址>:<端口>
 ```
 
-这是提示的回答，不是 Shell 命令。`INSTALL` 与 IP 之间有一个空格；必须包含计划中的实际 IP 和端口，不能只输入 `INSTALL`。新版交互输错会说明原因并再次询问；输入 `CANCEL`、发送 EOF 或按 Ctrl+C 会取消，自动化确认仍要求完整短语精确匹配。
+这是格式说明，不是 Shell 命令，不要原样输入尖括号和占位文字。`INSTALL` 与地址之间有一个空格；必须包含计划中的实际地址和端口，不能只输入 `INSTALL`。新版交互输错会说明原因并再次询问；输入 `CANCEL`、发送 EOF 或按 Ctrl+C 会取消，自动化确认仍要求完整短语精确匹配。
 
 新 CA 的口令自动随机生成，先使用面板 `APP_KEY` 加密保存在独立凭据表，再签发证书；管理员可在 HTTPS `/node-endpoint` 页面的证书区显式查看或复制。请同时备份数据库和原 `.env` / `APP_KEY`。CA 私钥不进入面板数据库，仍位于网站之外的 Root 私有目录或离线介质。
 
@@ -85,10 +87,20 @@ cd /www/wwwroot/panel.example.com &&
 bash update.sh --deployed-code --app-user www \
   --php /www/server/php/83/bin/php \
   --composer /opt/xboard-tools/composer-2.10.3.phar \
-  --host '面板服务器公网IP' --port 8443
+  --port 8443
 ```
 
-替换实际目录、PHP 路径、站点用户和面板公网 IP，并按显示的计划输入包含 IP 和端口的完整确认短语。
+先部署本版代码，替换实际目录、PHP 路径和站点用户；核对安装器显示的通讯地址，并按计划输入包含 IP 和端口的完整确认短语。
+
+### 已有入口误用了文档示例 IP
+
+若旧教程中的 `203.0.113.10` 已被写入通讯设置并创建为独立入口，在同一台独立面板服务器以 Root 执行：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.6/install.sh | bash -s -- --repair-address
+```
+
+核对检测到的公网 IPv4，回车接受或手工输入真实通讯 IP / 域名，再确认修改计划。工具沿用原 CA 和口令，重签包含新地址 SAN 的服务器证书，以站点用户保存通讯设置并同步公共 CA；不会通过重建 CA 来修复地址。该入口要求独立后端提供 `xboard:configure-endpoint`。仅在网页改 IP 不能修复服务器证书。若尚未创建 Root 入口，使用上方已有安装的继续流程。完成后刷新插件页面并重新复制节点安装命令，不重跑 `init.sh`。
 
 ### 旧版依赖阶段失败后重试
 

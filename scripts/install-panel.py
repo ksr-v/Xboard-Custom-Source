@@ -16,10 +16,10 @@ import sys
 import urllib.parse
 import urllib.request
 
-BOOTSTRAP_SHA256 = '384b9087c6a938f34b23a461e6388a8a1f83ebb3c042d7ae8b868ed941caf384'
+BOOTSTRAP_SHA256 = '2498a7393798753958c2bc04a04a1cf98078a50a01225232efd8165f3db5ecdb'
 TOOLS_SHA256 = '45f82dff04ef90dbf0f67cba0bc04ed59f96307ed840742d12aa733d853dfee5'
 FIREWALL_PATCH_SHA256 = 'c230d11ec268c1754b26d032108e3d2ce2372af2674c9dfad021e1e98439adcb'
-BOOTSTRAP_URL = 'https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/releases/download/root-installer-v1.0.5/quick_install.py'
+BOOTSTRAP_URL = 'https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/releases/download/root-installer-v1.0.6/quick_install.py'
 SYSTEM_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 CODE_DIRS = ('app', 'bootstrap', 'config', 'database', 'routes', 'resources', 'public', 'plugins',
              'plugins-core', 'bundled-plugins', 'root-assets', 'scripts', 'theme', 'vendor', '.git', 'storage')
@@ -350,18 +350,20 @@ def root_tools(app):
 
 def endpoint_plan(args, app, quick):
     import manager
-    from pki import validate_host
     if (ROOT_STATE / 'installation.json').exists():
         state = manager.safe_state(ROOT_STATE)
         manager.trusted_file(state / 'installation.json')
         installed = manager.Manager(state, None).assert_owned()
         plan = installed['plan']
         require(Path(plan['app']).resolve() == app and plan.get('https'), '现有 Root 入口属于其他面板或不是 HTTPS，拒绝覆盖')
-        host = validate_host(args.host)[0] if args.host else plan['host']
+        try:
+            host = quick.select_communication_host(current=plan['host'], explicit=args.host)
+        except ValueError as error:
+            raise ValueError(str(error) + '；现有 Root 入口需使用 --repair-address 显式修复地址，保留现有 CA；未改动配置') from error
         require(host == plan['host'] and (args.port is None or args.port == plan['port']), '现有入口地址/端口不同，请单独审计 modify；不会重签 CA')
         return plan, True
     require(not args.non_interactive, '首次独立入口需要 SSH 交互确认；新 CA 口令自动加密托管，可显式 --skip-endpoint 延期')
-    host = validate_host(args.host or input('节点通讯 IP / 域名（不含协议，建议公网 IP）：').strip())[0]
+    host = quick.select_communication_host(explicit=args.host)
     port = args.port or 8443
     require(port not in (80, 443), '独立入口不能占用网站 80/443')
     nginx = args.nginx or ('/www/server/nginx/sbin/nginx' if Path('/www/server/nginx/sbin/nginx').is_file() else None)
@@ -413,8 +415,6 @@ def complete_endpoint(app, user, php, quick, plan, existing):
     import manager
     from panel_ca import sync_panel_ca
     mode = 'rewrite' if plan.get('ws_backend') else 'rest'
-    as_user(user, app, [php, 'artisan', 'xboard:configure-endpoint', '--host=' + plan['host'],
-                       '--port=' + str(plan['port']), '--ws-mode=' + mode])
     if not existing:
         site = plan['site']
         argv = (['--nginx', plan['nginx']] if plan['nginx'] else []) + ['install', '--host', plan['host'],
@@ -424,6 +424,8 @@ def complete_endpoint(app, user, php, quick, plan, existing):
         if plan['ws_backend']:
             argv += ['--enable-ws', '--ws-backend', plan['ws_backend']]
         execute_endpoint_install(manager, manager.parser().parse_args(argv))
+    as_user(user, app, [php, 'artisan', 'xboard:configure-endpoint', '--host=' + plan['host'],
+                       '--port=' + str(plan['port']), '--ws-mode=' + mode])
     failures = []
     try:
         result = quick.configure_firewall()

@@ -1,6 +1,6 @@
 # 宝塔 / aaPanel 安装教程（内置插件版）
 
-本教程沿用原版的“安装环境 → 创建网站 → 拉取源码 → 配置网站 → 执行安装 → 守护进程”流程，适用于独立 **v2026.10.18.4** 的原生 PHP-FPM 部署。
+本教程沿用原版的“安装环境 → 创建网站 → 拉取源码 → 配置网站 → 执行安装 → 守护进程”流程，适用于独立 **v2026.10.18.5** 的原生 PHP-FPM 部署。
 
 核心命令仍是 `git clone` 和 `bash init.sh`。新版需要**先配置实际运行的 Nginx / PHP-FPM 网站，再执行安装器**。安装器会统一处理权限及 NodeEndpoint 入口，无需再逐个上传插件、单独运行 Root 安装脚本或手动上传公共 CA。
 
@@ -92,7 +92,7 @@ Composer 安装时会检查完整依赖要求，缺少的扩展应先补齐。�
 ```bash
 cd /www/wwwroot/your-domain
 
-git clone --branch v2026.10.18.4 --single-branch \
+git clone --branch v2026.10.18.5 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git ./
 ```
 
@@ -100,7 +100,7 @@ git clone --branch v2026.10.18.4 --single-branch \
 
 **先完成下一节的网站配置，再运行 `init.sh`。** 源码已经包含四插件及公共 Root 工具资产，不需要另外下载插件 ZIP。
 
-也可以使用 [Release](https://github.com/ksr-v/Xboard-Custom-Source/releases/tag/v2026.10.18.4) 中的固定附件 `xboard.tar.gz`，独立核对 `SHA256SUMS` 后解压到该空目录，替代上述 Git 克隆。两种取源码方式选一种即可，随后均继续 3.3。
+也可以使用 [Release](https://github.com/ksr-v/Xboard-Custom-Source/releases/tag/v2026.10.18.5) 中的固定附件 `xboard.tar.gz`，独立核对 `SHA256SUMS` 后解压到该空目录，替代上述 Git 克隆。两种取源码方式选一种即可，随后均继续 3.3。
 
 #### 3.3 配置网站并执行安装
 
@@ -126,14 +126,15 @@ cd /www/wwwroot/your-domain
 bash init.sh --app-user www \
   --php /www/server/php/83/bin/php \
   --composer /opt/xboard-tools/composer-2.10.3.phar \
-  --host '203.0.113.10' --port 8443
+  --port 8443
 ```
 
 执行前替换：
 
 - `your-domain`：实际面板网站目录。
-- `203.0.113.10`：**这台面板服务器的真实公网 IP**，不是节点机器 IP；这里只是文档示例地址。
 - `www` 和 PHP 路径：本机实际的网站用户和 PHP 8.3 CLI 路径，宝塔通常使用以上值。
+
+首次配置节点通讯地址时，安装器检测**这台面板服务器的公网 IPv4**并显示候选，回车接受或手工输入实际 IP / 域名；检测失败时必须手工输入。这里不传 `--host`，避免把教程示例地址写入配置。`203.0.113.10` 属于文档示例网段，不能用于实际通讯。已有真实 Root 入口保留原地址，不会被自动检测结果覆盖。
 
 保留 `--composer`，指向 2.1 节已经校验的 PHAR，避免自动选中旧版 Composer。无需改成 Root 运行应用命令，也不要给整个站点设置 777。
 
@@ -144,13 +145,13 @@ bash init.sh --app-user www \
 3. 按提示输入数据库、Redis 和管理员信息。MySQL 使用宝塔创建的空数据库及其独立账号；保存安装结束时显示的管理员初始信息。
 4. 配置 NodeEndpoint 的 IP 私有 CA HTTPS 入口、保存本机 TCP 端口规则，并自动导入公共 CA。
 
-Root 入口确认时，先核对显示的计划，再输入提示中的**完整确认内容**。例如计划的地址为 `203.0.113.10:8443`，就在安装器的输入提示后填写：
+Root 入口确认时，先核对显示的计划，再输入提示中的**完整确认内容**。确认格式如下，其中地址和端口必须使用本机计划中的实际值：
 
 ```text
-INSTALL 203.0.113.10:8443
+INSTALL <实际通讯地址>:<端口>
 ```
 
-这是对安装器提示的回答，**不是另行执行的 Shell 命令**。`INSTALL` 后有一个空格，还要带上实际 IP 和端口；只输入 `INSTALL` 不能确认该计划。新版交互输错时会说明原因并再次询问；输入 `CANCEL`、发送 EOF 或按 Ctrl+C 可取消。自动化提供的确认内容仍必须与完整短语精确一致。
+这是格式说明，**不是另行执行的 Shell 命令**，不要原样输入尖括号和占位文字。照抄本机提示要求的短语：`INSTALL` 后有一个空格，还要带上实际地址和端口；只输入 `INSTALL` 不能确认该计划。新版交互输错时会说明原因并再次询问；输入 `CANCEL`、发送 EOF 或按 Ctrl+C 可取消。自动化提供的确认内容仍必须与完整短语精确一致。
 
 新建 CA 的口令由新版插件自动随机生成，先使用面板原 `APP_KEY` 加密保存在独立凭据表，再签发证书；不再要求输入或重复输入 CA 口令。管理员可在 HTTPS `/node-endpoint` 页面的“证书与信任”区显式查看和复制。普通设置和节点安装命令不会携带口令。
 
@@ -216,7 +217,7 @@ runuser -u www -- /www/server/php/83/bin/php /www/wwwroot/your-domain/artisan sc
 
 **旧版后台可以登录，但安装停在 `Filesystem.php` / undefined `exec`：** 主程序和数据库可能已完成安装，失败的是后面的 `storage:link`。独立 IP HTTPS 入口、防火墙及公共 CA 配置排在它之后，尚不能据此认为全部安装完成。新版新装流程已将 PHP CLI 的 `symlink` 可用性检查前置到 Composer 和数据库初始化之前。
 
-在宝塔 PHP 8.3 的禁用函数中移除 `symlink`，保存后确认命令行 PHP 配置已生效；需要时重启 PHP-FPM。然后以 Root 在已安装目录执行下面的恢复步骤，替换实际目录及面板公网 IP：
+在宝塔 PHP 8.3 的禁用函数中移除 `symlink`，保存后确认命令行 PHP 配置已生效；需要时重启 PHP-FPM。然后以 Root 在已部署本版代码的安装目录执行下面的恢复步骤，替换实际目录：
 
 ```bash
 cd /www/wwwroot/your-domain &&
@@ -224,22 +225,30 @@ runuser -u www -- /www/server/php/83/bin/php artisan storage:link &&
 bash update.sh --deployed-code --app-user www \
   --php /www/server/php/83/bin/php \
   --composer /opt/xboard-tools/composer-2.10.3.phar \
-  --host '203.0.113.10' --port 8443
+  --port 8443
 ```
 
-此时使用已有安装的继续流程，不重跑全新安装，不删除 `.env`，不重建 APP_KEY。
+此时使用已有安装的继续流程；尚未创建入口时按提示核对公网 IPv4 候选，已有真实入口保留原值。不重跑全新安装，不删除 `.env`，不重建 APP_KEY。
 
-**v2026.10.18.1 / v2026.10.18.2 因只输入 `INSTALL` 而中止：** 如果主程序已经安装，保留数据库和 `.env`，在该站点目录以 Root 继续完成后续配置：
+**v2026.10.18.1 / v2026.10.18.2 因只输入 `INSTALL` 而中止：** 如果主程序已经安装，保留数据库和 `.env`，部署本版代码后，在该站点目录以 Root 继续完成后续配置：
 
 ```bash
 cd /www/wwwroot/your-domain &&
 bash update.sh --deployed-code --app-user www \
   --php /www/server/php/83/bin/php \
   --composer /opt/xboard-tools/composer-2.10.3.phar \
-  --host '203.0.113.10' --port 8443
+  --port 8443
 ```
 
-替换实际站点目录和面板公网 IP，并按 3.3 节说明填写计划中的完整确认短语。不要重跑 `init.sh`、删除 `.env` 或重建 APP_KEY；Root 确认中止不会回滚已完成的主程序安装。
+替换实际站点目录，核对安装器给出的通讯地址，并按 3.3 节说明填写计划中的完整确认短语。不要重跑 `init.sh`、删除 `.env` 或重建 APP_KEY；Root 确认中止不会回滚已完成的主程序安装。
+
+**节点通讯地址已经保存为 `203.0.113.10`：** 这是旧教程中的示例 IP，并非本机公网 IP。若独立入口也已创建，在同一台独立面板服务器以 Root 执行：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.6/install.sh | bash -s -- --repair-address
+```
+
+核对检测到的公网 IPv4，回车接受或输入真实通讯 IP / 域名，并确认修改计划。工具沿用现有 CA 和口令，为新地址重签服务器证书，以站点用户保存设置并同步公共 CA；只在插件页面改 IP 不能修复服务器证书。此命令仅适用于提供 `xboard:configure-endpoint` 的独立后端。若入口尚未创建，使用上方已有安装的继续流程并核对真实地址。完成后刷新插件页面，重新复制节点安装命令；不重装主程序或重建 CA。
 
 - **没有发现 Nginx / PHP-FPM 站点**：先核对 `/public`、PHP 8.3、实际 FPM 后端、伪静态及运行中的 Nginx，再处理失败步骤，不猜测 socket。
 - **Composer 或 PHP 报错**：核对 PHP CLI / FPM 版本和缺失扩展。提示 `composer-runtime-api ^2.2` 时是选中的 Composer 过旧，按 2.1 节准备固定 PHAR，并显式传入对应的 `--composer` 路径；不修改 `composer.lock` 或绕过平台检查。`mbstring` 重复加载警告与本次致命依赖错误不同，可另查对应 PHP 配置中重复的扩展条目。

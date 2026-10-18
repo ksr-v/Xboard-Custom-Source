@@ -1,6 +1,6 @@
 # Xboard Deployment Guide for aaPanel Environment
 
-This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.18.4** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.4, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
+This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.18.5** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.4, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
 
 ## Table of Contents
 
@@ -88,7 +88,7 @@ As Root, clone the fixed independent release into the empty site directory:
 
 ```bash
 cd /www/wwwroot/your-domain
-git clone --branch v2026.10.18.4 --single-branch \
+git clone --branch v2026.10.18.5 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git .
 ```
 
@@ -112,27 +112,27 @@ In the new site's aaPanel settings:
 
 4. Save the site configuration, check the Nginx configuration, and start / reload Nginx and PHP 8.3 FPM. The application may not respond successfully until dependencies and the database are installed; the Nginx site and FPM backend must already be running.
 
-Now run the installer from the site directory as Root. Replace the directory and example IP with your actual values. aaPanel normally uses the `www` website user; verify it before running the command.
+Now run the installer from the site directory as Root. Replace the directory with your actual path. aaPanel normally uses the `www` website user; verify it before running the command.
 
 ```bash
 cd /www/wwwroot/your-domain
 bash init.sh --app-user www \
   --php /www/server/php/83/bin/php \
   --composer /opt/xboard-tools/composer-2.10.3.phar \
-  --host '203.0.113.10' --port 8443
+  --port 8443
 ```
 
-`203.0.113.10` is a documentation placeholder; replace it with the panel server's public communication IP. Keep the explicit `--composer` path to the verified PHAR prepared in section 2.1.
+For the first endpoint configuration, the installer detects this panel server's public IPv4 and displays it as a candidate. Press Enter to accept it or enter the actual communication IP / domain. If detection fails, enter the address manually. The command deliberately omits `--host`; documentation addresses such as `203.0.113.10` cannot be used for real communication. An existing real Root endpoint address remains the default and is not overwritten by detection. Keep the explicit `--composer` path to the verified PHAR prepared in section 2.1.
 
 The Root entry prepares the application and Admin patch directories, then runs Composer, Xboard installation, database migrations, and all four plugin lifecycles as `www`. Follow the database, Redis, and administrator prompts and save the displayed initial login information. You do not need to upload these plugins separately.
 
-For NodeEndpoint, the same flow configures the private IP HTTPS entry, the local TCP firewall rule, and automatic public CA import. Review the displayed plan, then type the **entire confirmation phrase** shown by the installer. For example, if the plan is for `203.0.113.10:8443`, enter:
+For NodeEndpoint, the same flow configures the private IP HTTPS entry, the local TCP firewall rule, and automatic public CA import. Review the displayed plan, then type the **entire confirmation phrase** shown by the installer. Its format is:
 
 ```text
-INSTALL 203.0.113.10:8443
+INSTALL <actual-communication-address>:<port>
 ```
 
-This is a response to the installer's prompt, not a shell command. Include the space after `INSTALL`, the actual IP, and the port; typing only `INSTALL` does not confirm the plan. The new interactive flow explains mismatched input and asks again. Enter `CANCEL`, send EOF, or press Ctrl+C to cancel; an automated confirmation must still match the complete phrase exactly.
+This shows the response format; do not enter the angle brackets or placeholder text literally. Copy the exact phrase requested by your local installer. It includes the space after `INSTALL`, the actual address, and the port; typing only `INSTALL` does not confirm the plan. The new interactive flow explains mismatched input and asks again. Enter `CANCEL`, send EOF, or press Ctrl+C to cancel; an automated confirmation must still match the complete phrase exactly.
 
 For a new CA, the plugin generates a random passphrase and saves it encrypted with the panel's original `APP_KEY` before issuing certificates. No passphrase or repeat prompt is needed. An administrator can explicitly reveal or copy it in the certificate section of the HTTPS `/node-endpoint` page. Normal settings and node installation commands do not include it.
 
@@ -195,7 +195,7 @@ Do not rerun fresh installation, regenerate APP_KEY, or uninstall plugins first.
 
 ### Common Issues
 
-**An older release's dashboard works, but installation stopped with `Filesystem.php` / undefined `exec`:** Xboard and the database may already be installed. The fresh installer runs `storage:link` before configuring the private IP entry, firewall, and public CA, so those later steps are still pending. The new fresh-install flow checks PHP CLI `symlink` availability before Composer or database initialization. To recover an older installation, enable `symlink` in PHP 8.3's disabled-function settings and ensure the CLI configuration has taken effect. Then, from the installed site directory, run the following as Root, replacing the example IP and paths:
+**An older release's dashboard works, but installation stopped with `Filesystem.php` / undefined `exec`:** Xboard and the database may already be installed. The fresh installer runs `storage:link` before configuring the private IP entry, firewall, and public CA, so those later steps are still pending. The new fresh-install flow checks PHP CLI `symlink` availability before Composer or database initialization. To recover an older installation, enable `symlink` in PHP 8.3's disabled-function settings and ensure the CLI configuration has taken effect. Deploy this release's code, then run the following as Root from the installed site directory, replacing the paths:
 
 ```bash
 cd /www/wwwroot/your-domain &&
@@ -203,22 +203,30 @@ runuser -u www -- /www/server/php/83/bin/php artisan storage:link &&
 bash update.sh --deployed-code --app-user www \
   --php /www/server/php/83/bin/php \
   --composer /opt/xboard-tools/composer-2.10.3.phar \
-  --host '203.0.113.10' --port 8443
+  --port 8443
 ```
 
-This resumes the installed application and Root setup without rerunning fresh installation or changing APP_KEY. Do not remove `.env` or rerun `init.sh` to recover an installed site.
+This resumes the installed application and Root setup. If no endpoint exists, review the detected public IPv4 candidate; an existing real endpoint retains its address. Do not remove `.env`, change APP_KEY, or rerun `init.sh` to recover an installed site.
 
-**v2026.10.18.1 / v2026.10.18.2 stopped after an incomplete `INSTALL` confirmation:** If the application is already installed, keep its database and `.env`. Resume the pending Root setup from that site directory with:
+**v2026.10.18.1 / v2026.10.18.2 stopped after an incomplete `INSTALL` confirmation:** If the application is already installed, keep its database and `.env`. Deploy this release's code, then resume the pending Root setup from that site directory with:
 
 ```bash
 cd /www/wwwroot/your-domain &&
 bash update.sh --deployed-code --app-user www \
   --php /www/server/php/83/bin/php \
   --composer /opt/xboard-tools/composer-2.10.3.phar \
-  --host '203.0.113.10' --port 8443
+  --port 8443
 ```
 
-Use the actual site path and public IP. At the confirmation prompt, enter the full phrase for the displayed plan as explained in section 3.3. Do not rerun `init.sh`, delete `.env`, or regenerate APP_KEY. An aborted Root confirmation does not roll back application installation.
+Use the actual site path and review the communication address offered by the installer. At the confirmation prompt, enter the full phrase for the displayed plan as explained in section 3.3. Do not rerun `init.sh`, delete `.env`, or regenerate APP_KEY. An aborted Root confirmation does not roll back application installation.
+
+**The saved communication address is `203.0.113.10`:** This was an old documentation example, not the panel server's public IP. If its Root endpoint was already created, run this on the same independent Xboard panel server as Root:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.6/install.sh | bash -s -- --repair-address
+```
+
+Review the detected public IPv4, press Enter to accept it or enter the actual communication IP / domain, then confirm the modification plan. The tool keeps the existing CA and passphrase, issues a server certificate for the new address, saves settings as the application user, and synchronizes the public CA. Changing the plugin page alone does not repair the server certificate. This command requires the independent backend's `xboard:configure-endpoint` command. If no Root endpoint exists yet, use the installed-site continuation above and check the real address. Refresh the plugin page and copy fresh node installation commands afterward; do not reinstall Xboard or recreate its CA.
 
 1. **Empty Admin Dashboard:** Check browser errors, the deployed release's local Admin assets, and the application / Nginx logs. Restore verified assets from the independent release if needed; do not fetch original-author submodules.
 2. **Root installer cannot discover the site:** Confirm `/public`, the actual PHP 8.3 FPM backend, Laravel rewrite rules, and running Nginx / FPM services before rerunning the failed step. Resolve ambiguous or multiple-site discovery explicitly; do not guess a socket.
