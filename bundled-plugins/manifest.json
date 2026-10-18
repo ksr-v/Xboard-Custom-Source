@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "bundle_version": "2026.10.18.2",
+  "bundle_version": "2026.10.18.3",
   "plugins": [
     {
       "code": "node_endpoint",

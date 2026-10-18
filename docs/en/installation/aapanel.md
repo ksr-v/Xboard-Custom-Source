@@ -1,6 +1,6 @@
 # Xboard Deployment Guide for aaPanel Environment
 
-This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.18.2** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.3, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
+This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.18.3** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.3, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
 
 ## Table of Contents
 
@@ -71,6 +71,8 @@ Use the same PHP 8.3 installation for CLI and FPM. Composer checks the complete 
 
 Check PHP 8.3's disabled-function settings in aaPanel. Application installation and workers need functions such as `putenv`, `proc_open`, `pcntl_alarm`, `pcntl_signal`, and **`symlink`**. Laravel uses `symlink` for the public storage link; enabling `exec` is not required for that step when `symlink` is available. Apply changes to the relevant CLI configuration and restart PHP-FPM when required. Do not give the website user sudo access.
 
+Before running Composer or initializing the database, the new fresh-install flow checks that the selected PHP CLI provides `symlink`. If this check stops installation, correct the relevant PHP CLI settings and retry; the installer does not edit `php.ini` or enable `exec` for you.
+
 ### 3. Site Configuration
 
 #### 3.1 Create Website
@@ -86,7 +88,7 @@ As Root, clone the fixed independent release into the empty site directory:
 
 ```bash
 cd /www/wwwroot/your-domain
-git clone --branch v2026.10.18.2 --single-branch \
+git clone --branch v2026.10.18.3 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git .
 ```
 
@@ -124,7 +126,15 @@ bash init.sh --app-user www \
 
 The Root entry prepares the application and Admin patch directories, then runs Composer, Xboard installation, database migrations, and all four plugin lifecycles as `www`. Follow the database, Redis, and administrator prompts and save the displayed initial login information. You do not need to upload these plugins separately.
 
-For NodeEndpoint, the same flow configures the private IP HTTPS entry, the local TCP firewall rule, and automatic public CA import. Confirm the displayed plan by typing the exact `INSTALL IP:8443` phrase. `Encrypted CA passphrase` asks for a hidden password of at least 16 characters to encrypt the CA private key; it is not the panel password. Keep it securely and complete the encrypted export / offline backup described in the NodeEndpoint tools. Do not upload a private key to the panel.
+For NodeEndpoint, the same flow configures the private IP HTTPS entry, the local TCP firewall rule, and automatic public CA import. Review the displayed plan, then type the **entire confirmation phrase** shown by the installer. For example, if the plan is for `203.0.113.10:8443`, enter:
+
+```text
+INSTALL 203.0.113.10:8443
+```
+
+This is a response to the installer's prompt, not a shell command. Include the space after `INSTALL`, the actual IP, and the port; typing only `INSTALL` does not confirm the plan. The new interactive flow explains mismatched input and asks again. Enter `CANCEL`, send EOF, or press Ctrl+C to cancel; an automated confirmation must still match the complete phrase exactly.
+
+`Encrypted CA passphrase` asks for a hidden password of at least 16 characters to encrypt the CA private key; it is not the panel password. Keep it securely and complete the encrypted export / offline backup described in the NodeEndpoint tools. Do not upload a private key to the panel.
 
 Root tools and PKI stay outside the application directory. After a successful installation, refresh the plugin page; do not download and rerun a separate Root installer or rerun `init.sh` on this installed site. Normal maintenance does not recreate the CA or certificates.
 
@@ -183,7 +193,7 @@ Do not rerun fresh installation, regenerate APP_KEY, or uninstall plugins first.
 
 ### Common Issues
 
-**The dashboard works, but installation stopped with `Filesystem.php` / undefined `exec`:** Xboard and the database may already be installed. The fresh installer runs `storage:link` before configuring the private IP entry, firewall, and public CA, so those later steps are still pending. In PHP 8.3's disabled-function settings, enable `symlink` and ensure the CLI configuration has taken effect. Then, from the installed site directory, run the following as Root, replacing the example IP and paths:
+**An older release's dashboard works, but installation stopped with `Filesystem.php` / undefined `exec`:** Xboard and the database may already be installed. The fresh installer runs `storage:link` before configuring the private IP entry, firewall, and public CA, so those later steps are still pending. The new fresh-install flow checks PHP CLI `symlink` availability before Composer or database initialization. To recover an older installation, enable `symlink` in PHP 8.3's disabled-function settings and ensure the CLI configuration has taken effect. Then, from the installed site directory, run the following as Root, replacing the example IP and paths:
 
 ```bash
 cd /www/wwwroot/your-domain &&
@@ -195,6 +205,18 @@ bash update.sh --deployed-code --app-user www \
 ```
 
 This resumes the installed application and Root setup without rerunning fresh installation or changing APP_KEY. Do not remove `.env` or rerun `init.sh` to recover an installed site.
+
+**v2026.10.18.1 / v2026.10.18.2 stopped after an incomplete `INSTALL` confirmation:** If the application is already installed, keep its database and `.env`. Resume the pending Root setup from that site directory with:
+
+```bash
+cd /www/wwwroot/your-domain &&
+bash update.sh --deployed-code --app-user www \
+  --php /www/server/php/83/bin/php \
+  --composer /opt/xboard-tools/composer-2.10.3.phar \
+  --host '203.0.113.10' --port 8443
+```
+
+Use the actual site path and public IP. At the confirmation prompt, enter the full phrase for the displayed plan as explained in section 3.3. Do not rerun `init.sh`, delete `.env`, or regenerate APP_KEY. An aborted Root confirmation does not roll back application installation.
 
 1. **Empty Admin Dashboard:** Check browser errors, the deployed release's local Admin assets, and the application / Nginx logs. Restore verified assets from the independent release if needed; do not fetch original-author submodules.
 2. **Root installer cannot discover the site:** Confirm `/public`, the actual PHP 8.3 FPM backend, Laravel rewrite rules, and running Nginx / FPM services before rerunning the failed step. Resolve ambiguous or multiple-site discovery explicitly; do not guess a socket.

@@ -49,7 +49,7 @@ bash init.sh --app-user www \
 
 PHP、Composer 和用户名必须替换为本机实际值；Composer 路径应指向可信 PHP 脚本 / PHAR。不要在已有业务目录执行本节命令。
 
-PHP CLI 需要启用 `symlink`，用于创建 Laravel 的公共存储链接。如果后台已能登录，但新装脚本在 `storage:link` 报 undefined `exec`，应先修正 PHP 禁用函数，再按 [宝塔教程中的恢复步骤](aapanel.zh-CN.md#常见问题) 补齐链接和 Root 后续配置；不要重跑全新安装或清空 `.env`。
+PHP CLI 需要启用 `symlink`，用于创建 Laravel 的公共存储链接。v2026.10.18.3 新装流程在 Composer 和数据库初始化之前检查所选 PHP CLI 是否提供该函数；预检停止时先修正对应 CLI 的设置再重试，安装器不会自动修改 `php.ini` 或开放 `exec`。如果旧版后台已能登录，但新装脚本在 `storage:link` 报 undefined `exec`，应先修正 PHP 禁用函数，再按 [宝塔教程中的恢复步骤](aapanel.zh-CN.md#常见问题) 补齐链接和 Root 后续配置；不要重跑全新安装或清空 `.env`。
 
 安装顺序：
 
@@ -58,13 +58,35 @@ PHP CLI 需要启用 `symlink`，用于创建 Laravel 的公共存储链接。�
 3. 以站点用户运行 Composer、数据库安装、四插件源校验、迁移和启用。数据库 / Redis 及管理员信息使用 Xboard 原有交互；保留终端显示的管理员初始信息。
 4. 以站点用户保存 NodeEndpoint 设置，Root 创建独立 HTTPS 入口，放行本机配置 TCP 端口，降权导入公共 CA。
 
-Root 入口会展示计划并要求输入 `INSTALL IP:8443`。`Encrypted CA passphrase` 是加密 CA 私钥的口令，至少 16 字符，隐藏输入并需要妥善保存，不是面板登录密码。私钥不得上传面板；首次 CA 和服务器证书采用双十年策略，后续证书不超过 CA 到期时间。加密导出和离线保管仍需按 NodeEndpoint 工具说明完成。
+Root 入口会展示计划并要求输入完整确认短语。核对计划后，如果其中的地址是 `203.0.113.10:8443`，就在安装器提示后填写：
+
+```text
+INSTALL 203.0.113.10:8443
+```
+
+这是提示的回答，不是 Shell 命令。`INSTALL` 与 IP 之间有一个空格；必须包含计划中的实际 IP 和端口，不能只输入 `INSTALL`。新版交互输错会说明原因并再次询问；输入 `CANCEL`、发送 EOF 或按 Ctrl+C 会取消，自动化确认仍要求完整短语精确匹配。
+
+`Encrypted CA passphrase` 是加密 CA 私钥的口令，至少 16 字符，隐藏输入并需要妥善保存，不是面板登录密码。私钥不得上传面板；首次 CA 和服务器证书采用双十年策略，后续证书不超过 CA 到期时间。加密导出和离线保管仍需按 NodeEndpoint 工具说明完成。
 
 本机防火墙支持运行中的 firewalld 和 UFW。未启用 UFW 时只保存规则并报告，不自动启用整个防火墙；冲突 / 未知规则需要人工处理。默认规则允许所有来源访问该 TCP 通讯端口。服务商防火墙和云安全组仍需在控制台放行。
 
 多站点或特殊布局不能自动确认时，安装器停止并说明原因。Docker / Octane 不套用 PHP-FPM 发现逻辑。若明确只使用域名方式或自行维护独立入口，可加 `--skip-endpoint`，四插件仍安装启用，但 IP 入口不会被标记为就绪。`--prepare-only` 只准备权限，不运行 Composer / 数据库或签发证书。
 
 全新 SQLite 安装使用 `storage/app/private/database.sqlite`（文件 0600），已有数据库地址和 `.env` 在升级时保持原值。MySQL / PostgreSQL 的账号及库需预先创建。
+
+### 旧版确认中止后继续
+
+v2026.10.18.1 / v2026.10.18.2 若因只输入 `INSTALL` 而中止，且主程序已经安装，不要重跑 `init.sh`、删除 `.env` 或重建 APP_KEY。Root 确认中止不会回滚应用安装。在原站点目录以 Root 继续：
+
+```bash
+cd /www/wwwroot/panel.example.com &&
+bash update.sh --deployed-code --app-user www \
+  --php /www/server/php/83/bin/php \
+  --composer /opt/xboard-tools/composer-2.10.3.phar \
+  --host '面板服务器公网IP' --port 8443
+```
+
+替换实际目录、PHP 路径、站点用户和面板公网 IP，并按显示的计划输入包含 IP 和端口的完整确认短语。
 
 ### 旧版依赖阶段失败后重试
 

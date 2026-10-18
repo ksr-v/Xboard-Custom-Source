@@ -147,7 +147,9 @@ class InstallerGuards(unittest.TestCase):
              patch.object(install, 'executable', return_value='/usr/bin/php'), \
              patch.object(install, 'root_path', side_effect=Path), \
              patch.object(install, 'prepare_permissions', return_value='/fixture/cache'), \
-             patch.object(install, 'as_user', side_effect=['', 'Composer version 2.0.13 2021-04-27 13:11:08']) as run:
+             patch.object(install, 'as_user', side_effect=[
+                 'XBOARD_PHP_PREFLIGHT={"version_id":80300,"symlink":true,"ini":"/fixture/php.ini"}\n',
+                 'Composer version 2.0.13 2021-04-27 13:11:08']) as run:
             with self.assertRaisesRegex(RuntimeError, r'Composer 2\.0\.13.*2\.2'):
                 install.main()
         self.assertEqual(run.call_count, 2)

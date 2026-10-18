@@ -1,6 +1,6 @@
 # 宝塔 / aaPanel 安装教程（内置插件版）
 
-本教程沿用原版的“安装环境 → 创建网站 → 拉取源码 → 配置网站 → 执行安装 → 守护进程”流程，适用于独立 **v2026.10.18.2** 的原生 PHP-FPM 部署。
+本教程沿用原版的“安装环境 → 创建网站 → 拉取源码 → 配置网站 → 执行安装 → 守护进程”流程，适用于独立 **v2026.10.18.3** 的原生 PHP-FPM 部署。
 
 核心命令仍是 `git clone` 和 `bash init.sh`。新版需要**先配置实际运行的 Nginx / PHP-FPM 网站，再执行安装器**。安装器会统一处理权限及 NodeEndpoint 入口，无需再逐个上传插件、单独运行 Root 安装脚本或手动上传公共 CA。
 
@@ -70,6 +70,8 @@ Composer 安装时会检查完整依赖要求，缺少的扩展应先补齐。�
 
 在 PHP 8.3 设置中确认 `putenv`、`proc_open`、`pcntl_alarm`、`pcntl_signal` 和 **`symlink`** 等安装及队列需要的函数可用；相应扩展也须启用。Laravel 创建公共存储链接需要 `symlink`，这个函数可用时，该步骤不需要开放 `exec`。修改后按需要重启 PHP-FPM，并确认命令行 PHP 使用正确配置。
 
+新版新装流程会在 Composer 和数据库初始化之前，检查所选 PHP CLI 是否提供 `symlink`。若预检停止，先修正对应 PHP CLI 的设置再重试；安装器不会自动修改 `php.ini` 或开放 `exec`。
+
 ### 3. 网站配置
 
 #### 3.1 创建网站
@@ -90,7 +92,7 @@ Composer 安装时会检查完整依赖要求，缺少的扩展应先补齐。�
 ```bash
 cd /www/wwwroot/your-domain
 
-git clone --branch v2026.10.18.2 --single-branch \
+git clone --branch v2026.10.18.3 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git ./
 ```
 
@@ -98,7 +100,7 @@ git clone --branch v2026.10.18.2 --single-branch \
 
 **先完成下一节的网站配置，再运行 `init.sh`。** 源码已经包含四插件及公共 Root 工具资产，不需要另外下载插件 ZIP。
 
-也可以使用 [Release](https://github.com/ksr-v/Xboard-Custom-Source/releases/tag/v2026.10.18.2) 中的固定附件 `xboard.tar.gz`，独立核对 `SHA256SUMS` 后解压到该空目录，替代上述 Git 克隆。两种取源码方式选一种即可，随后均继续 3.3。
+也可以使用 [Release](https://github.com/ksr-v/Xboard-Custom-Source/releases/tag/v2026.10.18.3) 中的固定附件 `xboard.tar.gz`，独立核对 `SHA256SUMS` 后解压到该空目录，替代上述 Git 克隆。两种取源码方式选一种即可，随后均继续 3.3。
 
 #### 3.3 配置网站并执行安装
 
@@ -142,7 +144,15 @@ bash init.sh --app-user www \
 3. 按提示输入数据库、Redis 和管理员信息。MySQL 使用宝塔创建的空数据库及其独立账号；保存安装结束时显示的管理员初始信息。
 4. 配置 NodeEndpoint 的 IP 私有 CA HTTPS 入口、保存本机 TCP 端口规则，并自动导入公共 CA。
 
-Root 入口确认时，按实际计划输入完整的 `INSTALL 你的公网IP:8443`。`Encrypted CA passphrase` 要求设置至少 16 字符的 CA 私钥加密口令，隐藏输入并需要重复确认；它不是面板登录密码。妥善保存口令，并按 NodeEndpoint 工具说明完成加密导出和离线保管，不上传私钥。
+Root 入口确认时，先核对显示的计划，再输入提示中的**完整确认内容**。例如计划的地址为 `203.0.113.10:8443`，就在安装器的输入提示后填写：
+
+```text
+INSTALL 203.0.113.10:8443
+```
+
+这是对安装器提示的回答，**不是另行执行的 Shell 命令**。`INSTALL` 后有一个空格，还要带上实际 IP 和端口；只输入 `INSTALL` 不能确认该计划。新版交互输错时会说明原因并再次询问；输入 `CANCEL`、发送 EOF 或按 Ctrl+C 可取消。自动化提供的确认内容仍必须与完整短语精确一致。
+
+`Encrypted CA passphrase` 要求设置至少 16 字符的 CA 私钥加密口令，隐藏输入并需要重复确认；它不是面板登录密码。妥善保存口令，并按 NodeEndpoint 工具说明完成加密导出和离线保管，不上传私钥。
 
 完成后按安装输出的管理地址登录，刷新插件页面检查四插件及公共 CA。无需再次下载和运行独立的 Root 安装器，也不对已安装网站重复运行 `init.sh`。
 
@@ -202,7 +212,7 @@ runuser -u www -- /www/server/php/83/bin/php /www/wwwroot/your-domain/artisan sc
 
 ## 常见问题
 
-**后台可以登录，但安装停在 `Filesystem.php` / undefined `exec`：** 主程序和数据库可能已完成安装，失败的是后面的 `storage:link`。独立 IP HTTPS 入口、防火墙及公共 CA 配置排在它之后，尚不能据此认为全部安装完成。
+**旧版后台可以登录，但安装停在 `Filesystem.php` / undefined `exec`：** 主程序和数据库可能已完成安装，失败的是后面的 `storage:link`。独立 IP HTTPS 入口、防火墙及公共 CA 配置排在它之后，尚不能据此认为全部安装完成。新版新装流程已将 PHP CLI 的 `symlink` 可用性检查前置到 Composer 和数据库初始化之前。
 
 在宝塔 PHP 8.3 的禁用函数中移除 `symlink`，保存后确认命令行 PHP 配置已生效；需要时重启 PHP-FPM。然后以 Root 在已安装目录执行下面的恢复步骤，替换实际目录及面板公网 IP：
 
@@ -216,6 +226,18 @@ bash update.sh --deployed-code --app-user www \
 ```
 
 此时使用已有安装的继续流程，不重跑全新安装，不删除 `.env`，不重建 APP_KEY。
+
+**v2026.10.18.1 / v2026.10.18.2 因只输入 `INSTALL` 而中止：** 如果主程序已经安装，保留数据库和 `.env`，在该站点目录以 Root 继续完成后续配置：
+
+```bash
+cd /www/wwwroot/your-domain &&
+bash update.sh --deployed-code --app-user www \
+  --php /www/server/php/83/bin/php \
+  --composer /opt/xboard-tools/composer-2.10.3.phar \
+  --host '203.0.113.10' --port 8443
+```
+
+替换实际站点目录和面板公网 IP，并按 3.3 节说明填写计划中的完整确认短语。不要重跑 `init.sh`、删除 `.env` 或重建 APP_KEY；Root 确认中止不会回滚已完成的主程序安装。
 
 - **没有发现 Nginx / PHP-FPM 站点**：先核对 `/public`、PHP 8.3、实际 FPM 后端、伪静态及运行中的 Nginx，再处理失败步骤，不猜测 socket。
 - **Composer 或 PHP 报错**：核对 PHP CLI / FPM 版本和缺失扩展。提示 `composer-runtime-api ^2.2` 时是选中的 Composer 过旧，按 2.1 节准备固定 PHAR，并显式传入对应的 `--composer` 路径；不修改 `composer.lock` 或绕过平台检查。`mbstring` 重复加载警告与本次致命依赖错误不同，可另查对应 PHP 配置中重复的扩展条目。

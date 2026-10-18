@@ -147,6 +147,23 @@ def check_composer(user, app, php, composer, cache):
     print('Composer ' + '.'.join(match.groups()) + ' 版本检查通过；应用安装以网站用户执行。')
 
 
+def check_php(user, app, php, storage_link=False):
+    probe = ('echo "\\nXBOARD_PHP_PREFLIGHT=" . json_encode(['
+             '"version_id" => PHP_VERSION_ID, "symlink" => function_exists("symlink"), '
+             '"ini" => php_ini_loaded_file() ?: "(none)"]) . "\\n";')
+    output = as_user(user, app, [php, '-r', probe], capture=True)
+    match = re.search(r'(?m)^XBOARD_PHP_PREFLIGHT=(.+)$', output)
+    require(match, '无法读取 PHP CLI 环境检查结果；请核对 --php 指定的程序和配置')
+    result = json.loads(match.group(1))
+    require(isinstance(result, dict) and isinstance(result.get('version_id'), int)
+            and result['version_id'] >= 80200, 'PHP CLI 需要 8.2 或更新版本')
+    if storage_link:
+        require(result.get('symlink') is True,
+                'PHP CLI 的 symlink 函数不可用，已在 Composer / 数据库安装前停止。'
+                '请在宝塔对应 PHP 版本的禁用函数中移除 symlink，确认 CLI 配置生效后重试；'
+                '此步骤无需开放 exec。当前 PHP：' + php + '；php.ini：' + str(result.get('ini')))
+
+
 def permission_paths(app):
     device = app.stat().st_dev
     result = [app]
@@ -357,6 +374,41 @@ def endpoint_plan(args, app, quick):
             'ws_backend': site['ws_backend']}, False
 
 
+def execute_endpoint_install(manager, args):
+    """Improve only this install prompt; retain the manager's exact-value guard.
+
+    The manager prints its final reviewable plan before calling confirmation.
+    Wrong interactive input can be corrected before any PKI/Nginx transaction.
+    Explicit noninteractive values retain the original strict failure behavior.
+    """
+    original = manager.confirmation
+    install_phrase = 'INSTALL ' + args.host + ':' + str(args.port)
+
+    def confirm(expected, provided=None):
+        if expected != install_phrase or provided is not None:
+            return original(expected, provided)
+        print('请核对上方安装计划。以下是确认内容，请在提示处完整输入；输入 CANCEL 取消。')
+        print(expected)
+        while True:
+            try:
+                answer = input('请完整输入 "' + expected + '"：').strip()
+            except (EOFError, KeyboardInterrupt) as error:
+                raise RuntimeError('已取消入口安装确认；未进入证书签发或 Nginx 配置事务。'
+                                   '已安装的面板请用 update.sh --deployed-code 继续。') from error
+            if answer.upper() == 'CANCEL':
+                raise RuntimeError('已取消入口安装确认；未进入证书签发或 Nginx 配置事务。'
+                                   '已安装的面板请用 update.sh --deployed-code 继续。')
+            if answer == expected:
+                return original(expected, answer)
+            print('输入不匹配，尚未确认。需要完整输入（包含地址和端口）：' + expected)
+
+    manager.confirmation = confirm
+    try:
+        return manager.execute(args)
+    finally:
+        manager.confirmation = original
+
+
 def complete_endpoint(app, user, php, quick, plan, existing):
     import manager
     from panel_ca import sync_panel_ca
@@ -371,7 +423,7 @@ def complete_endpoint(app, user, php, quick, plan, existing):
             '--php', php, '--deployment', 'fpm', '--backend', site['backend']]
         if plan['ws_backend']:
             argv += ['--enable-ws', '--ws-backend', plan['ws_backend']]
-        manager.execute(manager.parser().parse_args(argv))
+        execute_endpoint_install(manager, manager.parser().parse_args(argv))
     failures = []
     try:
         result = quick.configure_firewall()
@@ -423,7 +475,7 @@ def main():
     if existing:
         require(plan.get('app_user') == user.pw_name and Path(plan.get('php', '')).resolve() == Path(php),
                 '现有 Root 入口的应用用户 / PHP 与本次不同，请先单独审计；未改动配置')
-    as_user(user, app, [php, '-r', 'exit(PHP_VERSION_ID >= 80200 ? 0 : 1);'], capture=True)
+    check_php(user, app, php, storage_link=args.action == 'install' and not args.prepare_only)
     cache = prepare_permissions(app, user)
     if args.prepare_only:
         print('Root 权限准备完成；未安装应用、修改数据库或创建独立入口。')
