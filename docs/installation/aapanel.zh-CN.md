@@ -68,7 +68,7 @@ Composer 安装时会检查完整依赖要求，缺少的扩展应先补齐。�
 
 #### 2.3 检查 PHP 禁用函数
 
-在 PHP 8.3 设置中确认 `putenv`、`proc_open`、`pcntl_alarm`、`pcntl_signal` 等安装及队列需要的函数可用；相应扩展也须启用。修改后按需要重启 PHP-FPM，并确认命令行 PHP 使用正确配置。
+在 PHP 8.3 设置中确认 `putenv`、`proc_open`、`pcntl_alarm`、`pcntl_signal` 和 **`symlink`** 等安装及队列需要的函数可用；相应扩展也须启用。Laravel 创建公共存储链接需要 `symlink`，这个函数可用时，该步骤不需要开放 `exec`。修改后按需要重启 PHP-FPM，并确认命令行 PHP 使用正确配置。
 
 ### 3. 网站配置
 
@@ -201,6 +201,21 @@ runuser -u www -- /www/server/php/83/bin/php /www/wwwroot/your-domain/artisan sc
 查看应用、Nginx、PHP-FPM 和 Supervisor 日志；定期备份数据库、`.env` / APP_KEY、插件配置和 Root 入口状态，并验证恢复途径。CA 私钥的加密备份离线保存。
 
 ## 常见问题
+
+**后台可以登录，但安装停在 `Filesystem.php` / undefined `exec`：** 主程序和数据库可能已完成安装，失败的是后面的 `storage:link`。独立 IP HTTPS 入口、防火墙及公共 CA 配置排在它之后，尚不能据此认为全部安装完成。
+
+在宝塔 PHP 8.3 的禁用函数中移除 `symlink`，保存后确认命令行 PHP 配置已生效；需要时重启 PHP-FPM。然后以 Root 在已安装目录执行下面的恢复步骤，替换实际目录及面板公网 IP：
+
+```bash
+cd /www/wwwroot/your-domain &&
+runuser -u www -- /www/server/php/83/bin/php artisan storage:link &&
+bash update.sh --deployed-code --app-user www \
+  --php /www/server/php/83/bin/php \
+  --composer /opt/xboard-tools/composer-2.10.3.phar \
+  --host '203.0.113.10' --port 8443
+```
+
+此时使用已有安装的继续流程，不重跑全新安装，不删除 `.env`，不重建 APP_KEY。
 
 - **没有发现 Nginx / PHP-FPM 站点**：先核对 `/public`、PHP 8.3、实际 FPM 后端、伪静态及运行中的 Nginx，再处理失败步骤，不猜测 socket。
 - **Composer 或 PHP 报错**：核对 PHP CLI / FPM 版本和缺失扩展。提示 `composer-runtime-api ^2.2` 时是选中的 Composer 过旧，按 2.1 节准备固定 PHAR，并显式传入对应的 `--composer` 路径；不修改 `composer.lock` 或绕过平台检查。`mbstring` 重复加载警告与本次致命依赖错误不同，可另查对应 PHP 配置中重复的扩展条目。

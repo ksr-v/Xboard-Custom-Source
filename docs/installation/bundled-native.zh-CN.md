@@ -49,6 +49,8 @@ bash init.sh --app-user www \
 
 PHP、Composer 和用户名必须替换为本机实际值；Composer 路径应指向可信 PHP 脚本 / PHAR。不要在已有业务目录执行本节命令。
 
+PHP CLI 需要启用 `symlink`，用于创建 Laravel 的公共存储链接。如果后台已能登录，但新装脚本在 `storage:link` 报 undefined `exec`，应先修正 PHP 禁用函数，再按 [宝塔教程中的恢复步骤](aapanel.zh-CN.md#常见问题) 补齐链接和 Root 后续配置；不要重跑全新安装或清空 `.env`。
+
 安装顺序：
 
 1. Root 检查专用目录、站点用户、已有 `APP_KEY` / 安装标记和实际 FPM 站点。

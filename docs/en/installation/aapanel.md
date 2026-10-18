@@ -69,7 +69,7 @@ Use the same PHP 8.3 installation for CLI and FPM. Composer checks the complete 
 
 #### 2.3 Enable Required PHP Functions
 
-Check PHP 8.3's disabled-function settings in aaPanel. Application installation and workers need functions such as `putenv`, `proc_open`, `pcntl_alarm`, and `pcntl_signal`. Apply changes to the relevant CLI configuration and restart PHP-FPM when required. Do not give the website user sudo access.
+Check PHP 8.3's disabled-function settings in aaPanel. Application installation and workers need functions such as `putenv`, `proc_open`, `pcntl_alarm`, `pcntl_signal`, and **`symlink`**. Laravel uses `symlink` for the public storage link; enabling `exec` is not required for that step when `symlink` is available. Apply changes to the relevant CLI configuration and restart PHP-FPM when required. Do not give the website user sudo access.
 
 ### 3. Site Configuration
 
@@ -182,6 +182,19 @@ Do not rerun fresh installation, regenerate APP_KEY, or uninstall plugins first.
 ## Troubleshooting
 
 ### Common Issues
+
+**The dashboard works, but installation stopped with `Filesystem.php` / undefined `exec`:** Xboard and the database may already be installed. The fresh installer runs `storage:link` before configuring the private IP entry, firewall, and public CA, so those later steps are still pending. In PHP 8.3's disabled-function settings, enable `symlink` and ensure the CLI configuration has taken effect. Then, from the installed site directory, run the following as Root, replacing the example IP and paths:
+
+```bash
+cd /www/wwwroot/your-domain &&
+runuser -u www -- /www/server/php/83/bin/php artisan storage:link &&
+bash update.sh --deployed-code --app-user www \
+  --php /www/server/php/83/bin/php \
+  --composer /opt/xboard-tools/composer-2.10.3.phar \
+  --host '203.0.113.10' --port 8443
+```
+
+This resumes the installed application and Root setup without rerunning fresh installation or changing APP_KEY. Do not remove `.env` or rerun `init.sh` to recover an installed site.
 
 1. **Empty Admin Dashboard:** Check browser errors, the deployed release's local Admin assets, and the application / Nginx logs. Restore verified assets from the independent release if needed; do not fetch original-author submodules.
 2. **Root installer cannot discover the site:** Confirm `/public`, the actual PHP 8.3 FPM backend, Laravel rewrite rules, and running Nginx / FPM services before rerunning the failed step. Resolve ambiguous or multiple-site discovery explicitly; do not guess a socket.
