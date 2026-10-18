@@ -1,6 +1,6 @@
 # Xboard Deployment Guide for aaPanel Environment
 
-This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.18.1** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.3, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
+This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.18.2** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.3, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
 
 ## Table of Contents
 
@@ -25,7 +25,7 @@ This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026
 - Nginx / OpenResty and PHP **8.3**, using PHP-FPM for the website
 - A running Redis service and a prepared MySQL / MariaDB database and account, or another database supported by Xboard
 - Python **3.10+**, Git, OpenSSL, `ss`, and `runuser`
-- A trusted **Composer 2** PHP script / PHAR, installed before starting this guide
+- A trusted **Composer 2.2 or newer (2.x)** PHP script / PHAR; this guide pins **2.10.3**
 - The PHP extensions required by the pinned `composer.lock`, enabled for both PHP 8.3 CLI and FPM
 
 The installer does not install aaPanel, upgrade system software or Composer, or create database accounts. The complete installation was validated on an isolated PHP-FPM / SQLite test site; complete MySQL / PostgreSQL installation and Docker / Octane installation are outside this release's validated scope. See the [validation record](../../installation/bundled-validation.zh-CN.md).
@@ -47,7 +47,19 @@ In the aaPanel dashboard, install and start:
 - Redis
 - MySQL / MariaDB if using a MySQL database
 
-Confirm that `python3 --version` is 3.10 or newer. Install trusted Composer 2 in a standard system path such as `/usr/local/bin/composer`, and check that `command -v composer` finds it. For a custom PHP script / PHAR path, add `--composer /actual/path/to/composer` to the installer command below. The installer runs Composer and application commands as the website user, not as Root. Do not run `composer install` separately as Root.
+Confirm that `python3 --version` is 3.10 or newer. The locked dependencies require Composer's runtime API `^2.2`; Composer 2.0 / 2.1 are too old. To avoid selecting an older aaPanel or system Composer, prepare the fixed **Composer 2.10.3** PHAR as Root using the [official Composer download](https://getcomposer.org/download/):
+
+```bash
+install -d -o root -g root -m 755 /opt/xboard-tools
+curl -fsSL --proto '=https' --tlsv1.2 \
+  https://getcomposer.org/download/2.10.3/composer.phar \
+  -o /opt/xboard-tools/composer-2.10.3.phar
+printf '%s\n' '7a2d379d5b8ffdaa028580ef26494c36d2feef4b178d3dd1473a4dbc5e17c8d6  /opt/xboard-tools/composer-2.10.3.phar' | sha256sum -c -
+chown root:root /opt/xboard-tools/composer-2.10.3.phar
+chmod 0644 /opt/xboard-tools/composer-2.10.3.phar
+```
+
+Proceed only if the SHA-256 check reports `OK`. This downloads a fixed PHAR without executing a remote installer or replacing the system Composer. The commands below explicitly select this file. The installer runs Composer and application commands as the website user. Do not run `composer install` separately as Root, run `composer update`, or bypass checks with `--ignore-platform-reqs`.
 
 #### 2.2 Install PHP Extensions
 
@@ -74,7 +86,7 @@ As Root, clone the fixed independent release into the empty site directory:
 
 ```bash
 cd /www/wwwroot/your-domain
-git clone --branch v2026.10.18.1 --single-branch \
+git clone --branch v2026.10.18.2 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git .
 ```
 
@@ -104,10 +116,11 @@ Now run the installer from the site directory as Root. Replace the directory and
 cd /www/wwwroot/your-domain
 bash init.sh --app-user www \
   --php /www/server/php/83/bin/php \
+  --composer /opt/xboard-tools/composer-2.10.3.phar \
   --host '203.0.113.10' --port 8443
 ```
 
-`203.0.113.10` is a documentation placeholder; replace it with the panel server's public communication IP. If Composer is outside a standard system path, append `--composer /actual/path/to/composer`.
+`203.0.113.10` is a documentation placeholder; replace it with the panel server's public communication IP. Keep the explicit `--composer` path to the verified PHAR prepared in section 2.1.
 
 The Root entry prepares the application and Admin patch directories, then runs Composer, Xboard installation, database migrations, and all four plugin lifecycles as `www`. Follow the database, Redis, and administrator prompts and save the displayed initial login information. You do not need to upload these plugins separately.
 
@@ -172,10 +185,18 @@ Do not rerun fresh installation, regenerate APP_KEY, or uninstall plugins first.
 
 1. **Empty Admin Dashboard:** Check browser errors, the deployed release's local Admin assets, and the application / Nginx logs. Restore verified assets from the independent release if needed; do not fetch original-author submodules.
 2. **Root installer cannot discover the site:** Confirm `/public`, the actual PHP 8.3 FPM backend, Laravel rewrite rules, and running Nginx / FPM services before rerunning the failed step. Resolve ambiguous or multiple-site discovery explicitly; do not guess a socket.
-3. **PHP or Composer failure:** Check that both CLI and FPM use PHP 8.3, all pinned dependency requirements are available, and Composer is a trusted PHP script / PHAR accessible to the website user.
+3. **PHP or Composer failure:** Check that both CLI and FPM use PHP 8.3 and the required extensions are available. An error about `composer-runtime-api ^2.2` means the selected Composer is too old; prepare the pinned PHAR in section 2.1 and pass its explicit `--composer` path. Do not change `composer.lock` or bypass platform requirements. A duplicate `mbstring` warning is separate from this fatal dependency error; check duplicate extension entries in the appropriate PHP configuration.
 4. **Database or Redis connection failure:** Check service status, credentials, database existence, and permissions. Do not delete `.env` to retry an installed panel.
 5. **IP endpoint timeout:** Check the actual listener, local firewall status, and provider / cloud firewall. Keep certificate validation enabled; a connection timeout is not solved by disabling TLS verification.
 6. **Only the firewall or CA step failed:** Read the reported state and use the documented targeted recovery for that step. Do not reinstall the panel or regenerate its CA. Keep partial-install evidence for diagnosis.
+
+If **v2026.10.18.1** stopped during Composer dependency installation, before application initialization / APP_KEY creation, its cache warning can be repaired as Root with:
+
+```bash
+install -d -o root -g root -m 755 /var/cache/xboard-composer
+```
+
+Then rerun that original `init.sh` command with the verified `--composer /opt/xboard-tools/composer-2.10.3.phar` argument. Version v2026.10.18.2 handles the cache-parent permissions itself. Keep `.env`; do not delete it to force a retry. If application initialization has already begun or the panel is installed, preserve its state and diagnose the failed stage before proceeding.
 
 ## Enable WebSocket Real-time Sync (Optional)
 

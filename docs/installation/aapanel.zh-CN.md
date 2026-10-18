@@ -1,6 +1,6 @@
 # 宝塔 / aaPanel 安装教程（内置插件版）
 
-本教程沿用原版的“安装环境 → 创建网站 → 拉取源码 → 配置网站 → 执行安装 → 守护进程”流程，适用于独立 **v2026.10.18.1** 的原生 PHP-FPM 部署。
+本教程沿用原版的“安装环境 → 创建网站 → 拉取源码 → 配置网站 → 执行安装 → 守护进程”流程，适用于独立 **v2026.10.18.2** 的原生 PHP-FPM 部署。
 
 核心命令仍是 `git clone` 和 `bash init.sh`。新版需要**先配置实际运行的 Nginx / PHP-FPM 网站，再执行安装器**。安装器会统一处理权限及 NodeEndpoint 入口，无需再逐个上传插件、单独运行 Root 安装脚本或手动上传公共 CA。
 
@@ -24,7 +24,7 @@
 - Linux 和宝塔 / aaPanel，能够以 Root 登录 SSH。
 - Nginx / OpenResty、PHP **8.3**，网站使用 PHP-FPM。
 - Redis；使用 MySQL 时，预先准备 MySQL / MariaDB 的空数据库和独立账号。
-- Python **3.10+**、可信 Composer **2**、Git、OpenSSL、`ss`、`runuser`。
+- Python **3.10+**、可信 Composer **2.2 及以上的 2.x 版本**、Git、OpenSSL、`ss`、`runuser`；本教程固定使用 Composer **2.10.3**。
 
 安装器不代装宝塔、升级系统或 Composer，也不自动创建数据库账号。PHP CLI 和网站 FPM 应使用同一版本。
 
@@ -44,10 +44,21 @@
 
 ```bash
 python3 --version
-command -v composer
 ```
 
-Python 必须为 3.10 或更新版本。Composer 2 需要预先安装在可信系统路径，例如 `/usr/local/bin/composer`；自定义路径可在安装命令后补 `--composer /实际的Composer路径`，路径应指向 PHP 脚本或 PHAR。安装器会以网站用户运行 Composer，不需要另外以 Root 执行 `composer install`。
+Python 必须为 3.10 或更新版本。锁定依赖要求 `composer-runtime-api ^2.2`，Composer 2.0 / 2.1 不满足要求。为避免误用宝塔或系统中的旧 Composer，以 Root 下载[Composer 官网](https://getcomposer.org/download/)的固定 **2.10.3** PHAR 并校验：
+
+```bash
+install -d -o root -g root -m 755 /opt/xboard-tools
+curl -fsSL --proto '=https' --tlsv1.2 \
+  https://getcomposer.org/download/2.10.3/composer.phar \
+  -o /opt/xboard-tools/composer-2.10.3.phar
+printf '%s\n' '7a2d379d5b8ffdaa028580ef26494c36d2feef4b178d3dd1473a4dbc5e17c8d6  /opt/xboard-tools/composer-2.10.3.phar' | sha256sum -c -
+chown root:root /opt/xboard-tools/composer-2.10.3.phar
+chmod 0644 /opt/xboard-tools/composer-2.10.3.phar
+```
+
+必须看到摘要校验 `OK` 才继续。以上操作只下载固定 PHAR，不执行远程安装脚本，不替换系统 Composer。下文通过 `--composer` 显式指定它。安装器会以网站用户运行 Composer，不需要另以 Root 执行 `composer install`；也不要执行 `composer update` 或添加 `--ignore-platform-reqs` 绕过要求。
 
 #### 2.2 安装 PHP 扩展
 
@@ -79,7 +90,7 @@ Composer 安装时会检查完整依赖要求，缺少的扩展应先补齐。�
 ```bash
 cd /www/wwwroot/your-domain
 
-git clone --branch v2026.10.18.1 --single-branch \
+git clone --branch v2026.10.18.2 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git ./
 ```
 
@@ -87,7 +98,7 @@ git clone --branch v2026.10.18.1 --single-branch \
 
 **先完成下一节的网站配置，再运行 `init.sh`。** 源码已经包含四插件及公共 Root 工具资产，不需要另外下载插件 ZIP。
 
-也可以使用 [Release](https://github.com/ksr-v/Xboard-Custom-Source/releases/tag/v2026.10.18.1) 中的固定附件 `xboard.tar.gz`，独立核对 `SHA256SUMS` 后解压到该空目录，替代上述 Git 克隆。两种取源码方式选一种即可，随后均继续 3.3。
+也可以使用 [Release](https://github.com/ksr-v/Xboard-Custom-Source/releases/tag/v2026.10.18.2) 中的固定附件 `xboard.tar.gz`，独立核对 `SHA256SUMS` 后解压到该空目录，替代上述 Git 克隆。两种取源码方式选一种即可，随后均继续 3.3。
 
 #### 3.3 配置网站并执行安装
 
@@ -112,6 +123,7 @@ cd /www/wwwroot/your-domain
 
 bash init.sh --app-user www \
   --php /www/server/php/83/bin/php \
+  --composer /opt/xboard-tools/composer-2.10.3.phar \
   --host '203.0.113.10' --port 8443
 ```
 
@@ -121,7 +133,7 @@ bash init.sh --app-user www \
 - `203.0.113.10`：**这台面板服务器的真实公网 IP**，不是节点机器 IP；这里只是文档示例地址。
 - `www` 和 PHP 路径：本机实际的网站用户和 PHP 8.3 CLI 路径，宝塔通常使用以上值。
 
-Composer 不在标准系统路径时，在同一命令末尾补 `--composer /实际的Composer路径`。无需改成 Root 运行应用命令，也不要给整个站点设置 777。
+保留 `--composer`，指向 2.1 节已经校验的 PHAR，避免自动选中旧版 Composer。无需改成 Root 运行应用命令，也不要给整个站点设置 777。
 
 安装过程会依次完成：
 
@@ -191,11 +203,19 @@ runuser -u www -- /www/server/php/83/bin/php /www/wwwroot/your-domain/artisan sc
 ## 常见问题
 
 - **没有发现 Nginx / PHP-FPM 站点**：先核对 `/public`、PHP 8.3、实际 FPM 后端、伪静态及运行中的 Nginx，再处理失败步骤，不猜测 socket。
-- **Composer 或 PHP 报错**：核对 Composer 2 的实际路径、PHP CLI / FPM 版本和缺失扩展。
+- **Composer 或 PHP 报错**：核对 PHP CLI / FPM 版本和缺失扩展。提示 `composer-runtime-api ^2.2` 时是选中的 Composer 过旧，按 2.1 节准备固定 PHAR，并显式传入对应的 `--composer` 路径；不修改 `composer.lock` 或绕过平台检查。`mbstring` 重复加载警告与本次致命依赖错误不同，可另查对应 PHP 配置中重复的扩展条目。
 - **数据库连接失败**：核对服务、空数据库和独立账号；不要删除已安装面板的 `.env` 重试。
 - **IP 入口超时**：核对监听端口、本机防火墙及云安全组，不能通过关闭证书校验解决 TCP 超时。
 - **只剩防火墙或 CA 后续步骤失败**：保留安装输出，使用对应步骤的定向恢复；不要重装面板、清空配置或重建 CA。
 - **后台空白**：检查浏览器错误、本站 Admin 资源及应用日志，必要时从已验证的独立发行包恢复，不拉取原作者子模块。
+
+如果 **v2026.10.18.1** 只在 Composer 安装依赖阶段失败，尚未初始化应用 / 生成 APP_KEY，旧版的缓存目录权限告警可先以 Root 修复：
+
+```bash
+install -d -o root -g root -m 755 /var/cache/xboard-composer
+```
+
+然后重跑原 `init.sh` 安装命令，并加入已经校验的 `--composer /opt/xboard-tools/composer-2.10.3.phar` 参数。v2026.10.18.2 会自行处理缓存父目录权限。**保留 `.env`，不要通过删除它强行重试。** 若已经开始应用初始化或面板已安装，先保留状态并确认失败阶段，再决定后续操作。
 
 ## WebSocket 实时同步（可选）
 

@@ -93,6 +93,114 @@ class InstallerGuards(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, '未完成'):
                 install.as_user(user, self.app, ['/usr/bin/php', 'artisan', 'xboard:update'])
 
+    def composer_fixture(self, output):
+        """Run a real version-output process, replacing only the runuser launcher."""
+        fixture = self.app / 'composer-version-fixture.py'
+        fixture.write_text('import sys\nassert sys.argv[1:] == ["--no-ansi", "--version"]\nprint(' + repr(output) + ')\n', encoding='utf-8')
+        user = SimpleNamespace(pw_name='fixture-site-user', pw_dir=str(self.app))
+        real_run = subprocess.run
+
+        def launch(argv, **kwargs):
+            self.assertEqual(argv[:4], ['/fixture/runuser', '-u', user.pw_name, '--'])
+            self.assertEqual(kwargs['env']['COMPOSER_CACHE_DIR'], str(self.app / 'cache'))
+            self.assertEqual(kwargs['env']['COMPOSER_HOME'], str(self.app / 'cache') + '/home')
+            return real_run(argv[4:], **kwargs)
+
+        with patch.object(install, 'executable', return_value='/fixture/runuser'), \
+             patch.object(install.subprocess, 'run', side_effect=launch), \
+             patch('sys.stdout', new_callable=io.StringIO):
+            install.check_composer(user, self.app, sys.executable, str(fixture), str(self.app / 'cache'))
+
+    def test_old_composer_version_is_rejected_with_the_explicit_phar_recovery(self):
+        for version in ('1.10.27', '2.0.13', '2.1.14'):
+            with self.subTest(version=version):
+                with self.assertRaisesRegex(RuntimeError, 'Composer ' + version + r'.*2\.2.*--composer .*composer\.phar'):
+                    self.composer_fixture('Composer version ' + version + ' 2021-04-27 13:11:08')
+
+    def test_composer_22_and_newer_are_accepted_from_real_version_processes(self):
+        for output in ('Composer version 2.2.0 2021-12-22 11:02:10',
+                       'Composer version 2.2.25 2024-12-11 11:25:54',
+                       'Composer version 2.8.12 2025-09-19 13:41:59',
+                       'Composer 2.10.1 2026-01-01 00:00:00'):
+            with self.subTest(output=output):
+                self.composer_fixture(output)
+
+    def test_unrecognized_composer_version_is_refused(self):
+        with self.assertRaisesRegex(RuntimeError, '无法识别 Composer 版本.*--composer'):
+            self.composer_fixture('Composer unknown')
+
+    def test_composer_preflight_failure_explains_site_user_path_and_permission_checks(self):
+        with patch.object(install, 'as_user', side_effect=RuntimeError('synthetic inaccessible PHAR')):
+            with self.assertRaisesRegex(RuntimeError, '网站用户.*读取权限.*--composer'):
+                install.check_composer(SimpleNamespace(), self.app, '/usr/bin/php', '/trusted/composer.phar', '/cache')
+
+    def test_old_composer_stops_main_before_dependency_install_or_artisan(self):
+        composer = self.app / 'composer.phar'
+        composer.write_text('version fixture')
+        argv = ['install-panel.py', 'install', '--skip-endpoint', '--composer', str(composer)]
+        with patch.object(install.sys, 'argv', argv), \
+             patch.object(install.sys, 'platform', 'linux'), \
+             patch.object(install.os, 'geteuid', return_value=0, create=True), \
+             patch.object(install.os, 'umask'), \
+             patch.object(install, 'application', return_value=self.app), \
+             patch.object(install, 'site_user', return_value=SimpleNamespace()), \
+             patch.object(install, 'executable', return_value='/usr/bin/php'), \
+             patch.object(install, 'root_path', side_effect=Path), \
+             patch.object(install, 'prepare_permissions', return_value='/fixture/cache'), \
+             patch.object(install, 'as_user', side_effect=['', 'Composer version 2.0.13 2021-04-27 13:11:08']) as run:
+            with self.assertRaisesRegex(RuntimeError, r'Composer 2\.0\.13.*2\.2'):
+                install.main()
+        self.assertEqual(run.call_count, 2)
+        commands = [call.args[2] for call in run.call_args_list]
+        self.assertEqual(commands[-1][-2:], ['--no-ansi', '--version'])
+        self.assertFalse(any('install' in command or 'artisan' in command for command in commands))
+
+    @unittest.skipUnless(sys.platform == 'linux' and os.geteuid() == 0, 'Requires Linux Root and a real site-user boundary')
+    def test_root_umask_cache_parent_is_traversable_and_uid_cache_remains_private(self):
+        import pwd
+        if not install.shutil.which('runuser'):
+            self.skipTest('runuser is required for the real UID probe')
+        try:
+            user = pwd.getpwnam('nobody')
+        except KeyError:
+            self.skipTest('The nobody fixture account is unavailable')
+        self.assertNotEqual(user.pw_uid, 0)
+        self.assertNotEqual(user.pw_gid, 0)
+        Path(self.temp.name).chmod(0o755)
+        (self.app / '.env.example').write_text('APP_KEY=\n')
+        parent = Path(self.temp.name) / 'composer-cache'
+        original_root_path = install.root_path
+
+        def fixture_cache(path):
+            return parent if str(path) == '/var/cache/xboard-composer' else original_root_path(path)
+
+        probe = ('import os, pathlib, sys; cache = pathlib.Path(sys.argv[1]); '
+                 '(cache / "probe").write_text("site-user-write"); '
+                 'assert not os.access(cache.parent / "other-uid" / "secret", os.R_OK); '
+                 'print(os.geteuid())')
+        for repair_existing_parent in (False, True):
+            with self.subTest(repair_existing_parent=repair_existing_parent):
+                if repair_existing_parent:
+                    parent.chmod(0o700)  # Reproduce a cache left by the old installer.
+                previous_mask = os.umask(0o077)
+                try:
+                    with patch.object(install, 'root_path', side_effect=fixture_cache), \
+                         patch('sys.stdout', new_callable=io.StringIO):
+                        cache = Path(install.prepare_permissions(self.app, user))
+                finally:
+                    os.umask(previous_mask)
+                self.assertEqual(parent.stat().st_uid, 0)
+                self.assertEqual(parent.stat().st_mode & 0o777, 0o755)
+                self.assertEqual(cache.stat().st_uid, user.pw_uid)
+                self.assertEqual(cache.stat().st_mode & 0o777, 0o700)
+                other = parent / 'other-uid'
+                other.mkdir(mode=0o700, exist_ok=True)
+                other.chmod(0o700)
+                (other / 'secret').write_text('synthetic-private-cache')
+                result = install.as_user(user, self.app, [sys.executable, '-c', probe, cache], capture=True)
+                self.assertEqual(result.strip(), str(user.pw_uid))
+                self.assertEqual((cache / 'probe').read_text(), 'site-user-write')
+
     def test_runtime_directory_parents_are_prepared_before_private_children(self):
         # Source archives omit empty runtime directories. Root's restrictive
         # umask must not leave an intermediate directory owned by Root.

@@ -133,6 +133,20 @@ def as_user(user, app, argv, extra=None, capture=False):
     return result.stdout.decode('utf-8', errors='replace') if capture else None
 
 
+def check_composer(user, app, php, composer, cache):
+    hint = '请预先准备可信的新 Composer PHAR，并加 --composer /绝对路径/composer.phar；不会自动升级系统 Composer 或修改锁文件。'
+    try:
+        output = as_user(user, app, [php, composer, '--no-ansi', '--version'],
+                         {'COMPOSER_CACHE_DIR': cache, 'COMPOSER_HOME': cache + '/home'}, capture=True)
+    except RuntimeError as error:
+        raise RuntimeError('无法以网站用户检查 Composer 版本，请核对 PHP / PHAR 路径及读取权限。' + hint) from error
+    match = re.search(r'(?m)^Composer(?: version)?\s+(\d+)\.(\d+)\.(\d+)(?=[\s+-]|$)', output)
+    require(match, '无法识别 Composer 版本，需要 Composer >= 2.2。' + hint)
+    version = tuple(map(int, match.groups()))
+    require(version >= (2, 2, 0), '当前 Composer ' + '.'.join(match.groups()) + ' 过旧，需要 Composer >= 2.2。' + hint)
+    print('Composer ' + '.'.join(match.groups()) + ' 版本检查通过；应用安装以网站用户执行。')
+
+
 def permission_paths(app):
     device = app.stat().st_dev
     result = [app]
@@ -196,6 +210,9 @@ def prepare_permissions(app, user):
         path.chmod(0o700 if name in ('storage/app/private', 'storage/app/node_endpoint') else 0o755)
     parent = root_path('/var/cache/xboard-composer')
     parent.mkdir(mode=0o755, parents=True, exist_ok=True)
+    # main() uses umask 077. Explicitly allow site users to traverse the
+    # Root-owned parent; each UID's actual cache remains private below it.
+    parent.chmod(0o755)
     cache = parent / str(user.pw_uid)
     require(not cache.is_symlink() and (not cache.exists() or cache.stat().st_uid in (0, user.pw_uid)), 'Composer 缓存归属异常')
     cache.mkdir(mode=0o700, exist_ok=True)
@@ -398,7 +415,7 @@ def main():
     composer = args.composer or shutil.which('composer', path=SYSTEM_PATH)
     if not composer and (app / 'composer.phar').is_file():
         composer = str(app / 'composer.phar')
-    require(args.prepare_only or (composer and Path(composer).is_file()), '请预先安装可信 Composer 2，并用 --composer 指定路径；不在线自更新 Composer')
+    require(args.prepare_only or (composer and Path(composer).is_file()), '请预先安装可信 Composer >= 2.2，并用 --composer 指定路径；不在线自更新 Composer')
     if composer and not str(composer).startswith(str(app) + '/'):
         root_path(composer)
     quick = None if args.skip_endpoint or args.prepare_only else root_tools(app)
@@ -411,6 +428,7 @@ def main():
     if args.prepare_only:
         print('Root 权限准备完成；未安装应用、修改数据库或创建独立入口。')
         return
+    check_composer(user, app, php, composer, cache)
     as_user(user, app, [php, composer, 'install', '--no-dev', '--prefer-dist', '--optimize-autoloader', '--no-interaction'],
             {'COMPOSER_CACHE_DIR': cache, 'COMPOSER_HOME': cache + '/home'})
     as_user(user, app, [php, 'artisan', 'xboard:bundled-plugins', '--stage-only'])

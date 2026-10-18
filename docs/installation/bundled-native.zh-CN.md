@@ -15,7 +15,21 @@
 
 ## 从零安装：宝塔 / aaPanel 原生 PHP-FPM
 
-先准备 Linux、Python 3.10+、PHP 8.2+、可信 Composer 2、Nginx/OpenResty、数据库、Redis、OpenSSL、`ss` 和 `runuser`。按锁定依赖启用所需 PHP 扩展，CLI 与 FPM 版本应一致。安装器不升级系统或 Composer，不创建数据库账号，也不代装宝塔。
+先准备 Linux、Python 3.10+、PHP 8.3、可信 Composer 2.2 及以上的 2.x 版本、Nginx/OpenResty、数据库、Redis、OpenSSL、`ss` 和 `runuser`。按锁定依赖启用所需 PHP 扩展，CLI 与 FPM 版本应一致。安装器不升级系统或 Composer，不创建数据库账号，也不代装宝塔。
+
+锁定依赖要求 `composer-runtime-api ^2.2`，不能使用 Composer 2.0 / 2.1。推荐以 Root 准备[Composer 官网](https://getcomposer.org/download/)的固定 **2.10.3** PHAR：
+
+```bash
+install -d -o root -g root -m 755 /opt/xboard-tools
+curl -fsSL --proto '=https' --tlsv1.2 \
+  https://getcomposer.org/download/2.10.3/composer.phar \
+  -o /opt/xboard-tools/composer-2.10.3.phar
+printf '%s\n' '7a2d379d5b8ffdaa028580ef26494c36d2feef4b178d3dd1473a4dbc5e17c8d6  /opt/xboard-tools/composer-2.10.3.phar' | sha256sum -c -
+chown root:root /opt/xboard-tools/composer-2.10.3.phar
+chmod 0644 /opt/xboard-tools/composer-2.10.3.phar
+```
+
+摘要校验必须显示 `OK` 才继续。下文显式指定此 PHAR，避免选中系统旧版。这里不执行远程安装脚本，也不替换系统 Composer；不要用 `composer update` 或 `--ignore-platform-reqs` 绕过依赖要求。
 
 在宝塔创建专用空网站目录和数据库，网站运行目录设为 `public/`，配置 PHP-FPM / Laravel `try_files` 并启动网站。安装独立入口时需要从当前真实 Nginx 配置发现该站点和后端；不要先猜测 socket 或覆盖原有网站配置。
 
@@ -29,7 +43,7 @@ cd /www/wwwroot/panel.example.com
 
 bash init.sh --app-user www \
   --php /www/server/php/83/bin/php \
-  --composer /usr/local/bin/composer \
+  --composer /opt/xboard-tools/composer-2.10.3.phar \
   --host '面板服务器公网IP' --port 8443
 ```
 
@@ -50,6 +64,16 @@ Root 入口会展示计划并要求输入 `INSTALL IP:8443`。`Encrypted CA pass
 
 全新 SQLite 安装使用 `storage/app/private/database.sqlite`（文件 0600），已有数据库地址和 `.env` 在升级时保持原值。MySQL / PostgreSQL 的账号及库需预先创建。
 
+### 旧版依赖阶段失败后重试
+
+若 **v2026.10.18.1** 只在 Composer 安装依赖阶段失败，尚未初始化应用 / 生成 APP_KEY，先按上文准备固定 Composer PHAR。旧版同时出现缓存目录权限告警时，以 Root 执行：
+
+```bash
+install -d -o root -g root -m 755 /var/cache/xboard-composer
+```
+
+再重跑原 `init.sh` 命令，显式传入 `--composer /opt/xboard-tools/composer-2.10.3.phar`。v2026.10.18.2 会自行准备缓存父目录权限。`mbstring` 重复加载警告不是 `composer-runtime-api` 依赖错误的原因，可另查 PHP 配置中的重复扩展项。保留 `.env`；若已经开始应用初始化或面板已安装，不通过删除 `.env` 强行重跑新装。
+
 ## 已有面板升级
 
 先备份数据库、原 `.env` / APP_KEY、源码、插件目录与设置、Admin 资源、NodeEndpoint 公共 CA 和 Root 状态，确认具备恢复途径。不要卸载插件、清空数据库、删除 `.env`，也不要重新运行全新安装。
@@ -63,7 +87,7 @@ tar -xzf /root/xboard.tar.gz -C /root/xboard-upgrade-tool
 python3 -I /root/xboard-upgrade-tool/scripts/deploy-release.py \
   --archive /root/xboard.tar.gz --sha256 '已独立核对的64位SHA256' \
   --app /www/wwwroot/panel.example.com --app-user www \
-  --php /www/server/php/83/bin/php --composer /usr/local/bin/composer \
+  --php /www/server/php/83/bin/php --composer /opt/xboard-tools/composer-2.10.3.phar \
   --database-backup /root/已完成的数据库备份.sql
 ```
 
@@ -79,7 +103,7 @@ python3 -I /root/xboard-upgrade-tool/scripts/deploy-release.py \
 
 ```bash
 bash update.sh --deployed-code --app-user www \
-  --php /www/server/php/83/bin/php --composer /usr/local/bin/composer
+  --php /www/server/php/83/bin/php --composer /opt/xboard-tools/composer-2.10.3.phar
 ```
 
 `update.sh` 不自动 fetch / merge / reset，也不追踪浮动分支。需要明确重新启用所有四插件时加 `--enable-all`；普通同步保留管理员禁用选择。不得把此命令当成数据库回滚工具。
