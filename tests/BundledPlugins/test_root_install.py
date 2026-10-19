@@ -247,7 +247,7 @@ class InstallerGuards(unittest.TestCase):
     def test_root_tool_asset_bytes_match_pins_without_importing_app_code(self):
         import hashlib
         self.assertEqual(hashlib.sha256((ROOT / 'root-assets/quick_install.py').read_bytes()).hexdigest(), install.BOOTSTRAP_SHA256)
-        self.assertEqual(hashlib.sha256((ROOT / 'root-assets/node-endpoint-tools-1.0.4.zip').read_bytes()).hexdigest(), install.TOOLS_SHA256)
+        self.assertEqual(hashlib.sha256((ROOT / 'root-assets/node-endpoint-tools-1.0.5.zip').read_bytes()).hexdigest(), install.TOOLS_SHA256)
 
 
 class ReleaseGuards(unittest.TestCase):

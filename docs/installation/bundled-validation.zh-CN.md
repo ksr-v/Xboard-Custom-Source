@@ -1,8 +1,8 @@
 # 内置插件候选版验证记录
 
-日期：2026-10-19。功能包版本：2026.10.19.1；实际源码发行版本使用 `日期-commit前7位`，见发行附件的 `latest.json` 和包内 `build.json`。
+日期：2026-10-19。功能包版本：2026.10.19.2；实际源码发行版本使用 `日期-commit前7位`，见发行附件的 `latest.json` 和包内 `build.json`。
 
-## 已通过的验证
+## 历史版本已通过的验证
 
 | 范围 | 结果 |
 | --- | --- |
@@ -82,6 +82,24 @@ Root 一键入口为 `root-installer-v1.0.6`，继续固定已发布的 tools 1.
 已完成本地检查：Root Windows Python 142 项全部通过，其中公网地址选择 20 项、地址修复 16 项；后端 Python 共 58 项，Windows 54 项通过、4 项 Linux 专属检查跳过。Root `install.sh` 通过 Bash 语法检查。候选网络使用模拟响应，新增选择检查覆盖默认自动、手工不探测、无效菜单输入重试及自动失败回退。
 
 授权虚拟机 Linux 真实 PTY 的 7 个交互场景通过，覆盖手工模式不探测、取消不探测、无效菜单输入后重试、已有地址 / 显式地址跳过，以及真实检测服务失败后手工继续。测试前后 Root 状态、隔离数据库与 `.env` 摘要保持，临时目录已清理。本次固定 HTTPS 服务的实际请求未得到有效 IPv4，因此不声称真实自动检测成功；有效候选的自动接受和覆盖由模拟检查证明。上版实际换证和插件复制验证记录仍见前文，本版未重签 CA，也不声称已验证生产公网地址或连通性。
+
+## 2026.10.19.2 私有入口 IPv4 路由修复
+
+DISCOVERED：独立 Node 的出口 IPv4 上报使用精确 `POST /api/v2/flowscope/node-address`，旧 Root Nginx 白名单缺少该路径。机器状态可正常上报，但 IPv4 请求得到 404。Node 的 404 负缓存为 10 分钟，IP.SB 探测失败后 5 分钟再试；不需要重装、改 Token 或强制重启。
+
+本版内置 NodeEndpoint 1.0.6、root-installer-v1.0.8 / tools 1.0.5，其他三个插件版本及固定来源文件保持：SmartExpiry 1.2.0、二维码审计副本 1.2.0、FlowScope 2.4.0。插件命令复制按钮固定新版 Root 入口。已有入口需要显式执行 `--refresh-entry`，从安装记录读取参数并审阅确认；仅升级源码或插件不代表 Nginx 规则已刷新。支持原生 HTTPS FPM / Octane，Docker 不在自动刷新范围；保留 CA、服务器证书、托管口令、Token 和数据库，不写插件设置或防火墙。
+
+VERIFIED：独立插件的 PHP / Laravel / SQLite 原生组件 36 项、Root 命令生成与鉴权 9 项通过。Headless Chrome 的 Root 命令复制 9 项及 CA 口令 UI 7 项通过，使用真实页面及剪贴板、隔离 HTTPS API mock；没有连接生产面板。
+
+VERIFIED：Root Windows Python 154 项通过，包含精确 POST 路径、可选路由审计和专用刷新检查。后端 Python 共 58 项，Windows 54 项通过、4 项 Linux 专属检查跳过。原生插件 ZIP 为 104 个成员，6 项真实原生上传检查通过。
+
+VERIFIED：后端 bundle 从本地 Git 锁定 NodeEndpoint 1.0.6，来源 commit 为 `455278bb384d9839a63a202d6cb12508a842492c`，25 个插件文件；历史认领清单新增已发布 1.0.5。其他三插件来源元数据与合计 51 个文件逐字节保持。重新锁定后 Windows 真实 Composer / Laravel / SQLite 的 13 项插件集成、5 项归档更新回归通过，包含历史 1.0.0 升至 1.0.6 的启用和禁用两种选择、配置、身份和公共 CA 保留。五份安装 / README / 验证文档中 34 个 Bash 代码块通过语法检查。
+
+VERIFIED：授权 VM129 使用隔离 Nginx / PHP-FPM / SQLite / 私有 CA，旧 tools 1.0.4 入口对 IPv4 上报返回 404；刷新为 tools 1.0.5 后相同 Node 兼容 JSON 返回 200，IPv4 写入 SQLite，原网站管理员地址 API 返回 `source=node`、`stale=false`。错误机器 Token 返回 401、GET 返回 405、禁用 FlowScope 返回 404；`collect`、`machine-addresses`、`dashboard`、`machines`、`status`、`installer` 等其他 FlowScope 路径仍为 404。
+
+VERIFIED：最终固定包完整离线 bootstrap CLI 刷新通过，重复刷新返回 `changed:false`。测试前后 CA PEM、加密 CA 私钥、服务器证书和私钥、托管凭据 ID 与密文、Root 凭据映射、`.env` / APP_KEY、插件通讯设置及面板公共信任保持。只清理归属确认的测试入口，恢复数据库和信任备份，防火墙保持，隔离 Nginx / FPM 已停止，Root 状态与诊断留在私有归档。
+
+以上真实入口联测使用合成的 Node 兼容 JSON 验证鉴权、持久化和管理员显示，未运行 Go IPv4 reporter、未访问公网检测服务，也未操作生产面板。它不代替真实节点公网出口探测或客户端代理流量验证。
 
 ## 验证边界
 

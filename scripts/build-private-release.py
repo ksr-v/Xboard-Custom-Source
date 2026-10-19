@@ -78,7 +78,7 @@ def main():
             if node.targets[0].id.endswith('_SHA256'):
                 constants[node.targets[0].id] = ast.literal_eval(node.value)
     for name, key in [('quick_install.py', 'BOOTSTRAP_SHA256'),
-                      ('node-endpoint-tools-1.0.4.zip', 'TOOLS_SHA256'),
+                      ('node-endpoint-tools-1.0.5.zip', 'TOOLS_SHA256'),
                       ('firewall.py', 'FIREWALL_PATCH_SHA256')]:
         require(hashlib.sha256(files['root-assets/' + name][0]).hexdigest() == constants[key],
                 'Root asset differs from its executable pin: ' + name)

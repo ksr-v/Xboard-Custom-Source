@@ -16,10 +16,10 @@ import sys
 import urllib.parse
 import urllib.request
 
-BOOTSTRAP_SHA256 = 'eaa303e1422f3be260a129b5a2e93c00535bd313140b9450d56073e213c397fb'
-TOOLS_SHA256 = '45f82dff04ef90dbf0f67cba0bc04ed59f96307ed840742d12aa733d853dfee5'
+BOOTSTRAP_SHA256 = '91c31ce373e0c98fe2695afb670835d7d0339feaa52d397a24ca3a781a6e82c0'
+TOOLS_SHA256 = '7bb619440db545b6785e41d92707aa687ad43cb9529d4f8981f86dc4e1d3eb2f'
 FIREWALL_PATCH_SHA256 = 'c230d11ec268c1754b26d032108e3d2ce2372af2674c9dfad021e1e98439adcb'
-BOOTSTRAP_URL = 'https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/releases/download/root-installer-v1.0.7/quick_install.py'
+BOOTSTRAP_URL = 'https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/releases/download/root-installer-v1.0.8/quick_install.py'
 SYSTEM_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 CODE_DIRS = ('app', 'bootstrap', 'config', 'database', 'routes', 'resources', 'public', 'plugins',
              'plugins-core', 'bundled-plugins', 'root-assets', 'scripts', 'theme', 'vendor', '.git', 'storage')
@@ -338,7 +338,7 @@ def root_tools(app):
     quick = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(quick)
     require(quick.TOOLS_SHA256 == TOOLS_SHA256, '工具包版本不一致')
-    package = plain_path(app / 'root-assets/node-endpoint-tools-1.0.4.zip')
+    package = plain_path(app / 'root-assets/node-endpoint-tools-1.0.5.zip')
     require(not package.exists() or package.stat().st_size <= 16777216, 'Root 工具包异常过大')
     data = package.read_bytes() if package.is_file() else quick.download()
     tools = quick.install_cache(quick.verified_members(data))

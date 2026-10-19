@@ -6,12 +6,14 @@
 
 | 内置功能插件 | 固定版本 | 源码位置 |
 | --- | --- | --- |
-| NodeEndpoint | 1.0.5 | `bundled-plugins/NodeEndpoint` |
+| NodeEndpoint | 1.0.6 | `bundled-plugins/NodeEndpoint` |
 | SmartExpiry | 1.2.0 | `bundled-plugins/SmartExpiry` |
 | QRCode Extend | 1.2.0，审计副本 | `bundled-plugins/Qrcodeextend` |
 | FlowScope | 2.4.0，含五个采集器安装资产 | `bundled-plugins/Flowscope` |
 
 来源 commit 和每个文件摘要记录在 `bundled-plugins/manifest.json`。安装器校验后部署到正常的 `plugins/` 目录，通过原生插件生命周期执行迁移、安装和启用。后续仍可使用原生插件管理，不以 core 同名目录遮蔽用户上传版本。
+
+本版为 v2026.10.19.2，使用 root-installer-v1.0.8 / tools 1.0.5。全新 Root 入口计划包含经过审计的 FlowScope 出口 IPv4 精确 POST 上报路径，仍不开放管理接口或整个插件路径前缀。
 
 ## 从零安装：宝塔 / aaPanel 原生 PHP-FPM
 
@@ -91,6 +93,18 @@ INSTALL <实际通讯地址>:<端口>
 
 全新 SQLite 安装使用 `storage/app/private/database.sqlite`（文件 0600），已有数据库地址和 `.env` 在升级时保持原值。MySQL / PostgreSQL 的账号及库需预先创建。
 
+### 私有证书对接后 IPv4 待获取
+
+旧独立入口遗漏 `POST /api/v2/flowscope/node-address`，会出现机器认证、负载正常但服务器详情 IPv4“待获取”。单独升级面板源码或插件 ZIP 不一定改写已装 Nginx 入口；在面板服务器以 Root 执行一次：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.8/install.sh | bash -s -- --refresh-entry
+```
+
+工具从本工具管理的安装记录读取当前地址、端口、站点、PHP 和 WS 模式，核对计划并输入完整确认短语后刷新路径规则。支持原生 HTTPS FPM / Octane，Docker 不在自动刷新范围。原 CA、服务器证书、托管口令、节点 Token 和数据库保留；此操作不写插件设置或防火墙。
+
+确认 FlowScope 2.4.0 启用，节点使用独立 Node v1.13-orphan.4，并能直连 `https://api-ipv4.ip.sb/ip`。此 IPv4 来自 Node 自动报告，不要求 Python 采集器或周期流量。IP 检测成功后，旧 404 缓存最多 10 分钟，等待自动重试再刷新详情；无需重装节点、改 Token 或强制重启。只运行 `--sync-ca` 或 `--configure-firewall` 不刷新路径。改 IP 则使用普通 Root 向导，按新地址更新服务器证书。
+
 ### 旧版确认中止后继续
 
 v2026.10.18.1 / v2026.10.18.2 若因只输入 `INSTALL` 而中止，且主程序已经安装，不要重跑 `init.sh`、删除 `.env` 或重建 APP_KEY。Root 确认中止不会回滚应用安装。在原站点目录以 Root 继续：
@@ -110,7 +124,7 @@ bash update.sh --deployed-code --app-user www \
 若旧教程中的 `203.0.113.10` 已被写入通讯设置并创建为独立入口，在同一台独立面板服务器以 Root 执行：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.7/install.sh | bash -s -- --repair-address
+curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.8/install.sh | bash -s -- --repair-address
 ```
 
 先选择自动检测公网 IPv4 或手工输入真实通讯 IP / 域名。自动模式核对候选并回车接受或输入实际地址，手工模式不请求公网检测服务，再确认修改计划。工具沿用原 CA 和口令，重签包含新地址 SAN 的服务器证书，以站点用户保存通讯设置并同步公共 CA；不会通过重建 CA 来修复地址。该入口要求独立后端提供 `xboard:configure-endpoint`。仅在网页改 IP 不能修复服务器证书。若尚未创建 Root 入口，使用上方已有安装的继续流程。完成后刷新插件页面并重新复制节点安装命令，不重跑 `init.sh`。
@@ -146,9 +160,9 @@ python3 -I /root/xboard-upgrade-tool/scripts/deploy-release.py \
 
 升级器校验整个归档、拒绝路径逃逸 / 链接 / 运行数据和依赖清单变更，进入维护模式并备份待替换源码。它不覆盖 `.env`、`storage/`、`vendor/`、`plugins/` 或公共存储链接。新插件来源先进入 `bundled-plugins/`，随后由应用用户校验和同步到运行目录。
 
-已装同版本的插件会按原状态保留；已装旧版仅在来源清单可验证时升级并保留配置、记录 ID、CA 和启停选择。NodeEndpoint 已发布的 1.0.0 / 1.0.1 / 1.0.2 / 1.0.3 / 1.0.4 有固定来源认领清单。未知修改、旧二维码 1.0.7 的 core overlay 或无法确认的源码需要先单独审计，不盲目覆盖；高于内置版本的用户插件不降级。
+已装同版本的插件会按原状态保留；已装旧版仅在来源清单可验证时升级并保留配置、记录 ID、CA 和启停选择。NodeEndpoint 已发布的 1.0.0 / 1.0.1 / 1.0.2 / 1.0.3 / 1.0.4 / 1.0.5 有固定来源认领清单。未知修改、旧二维码 1.0.7 的 core overlay 或无法确认的源码需要先单独审计，不盲目覆盖；高于内置版本的用户插件不降级。
 
-已有 NodeEndpoint Root 入口只校验并补防火墙 / 同步 CA，不修改地址、重签证书或更换 CA。地址、端口、应用或 PHP 用户不一致时停止。未配置过入口的已有面板可在升级时首次配置；纯域名方式可显式 `--skip-endpoint`。
+已有 NodeEndpoint Root 入口在普通应用升级中只校验并补防火墙 / 同步 CA，不修改地址、重签证书或更换 CA。地址、端口、应用或 PHP 用户不一致时停止。旧入口遗漏 IPv4 路径时，升级后按上方 `--refresh-entry` 执行一次刷新。未配置过入口的已有面板可在升级时首次配置；纯域名方式可显式 `--skip-endpoint`。
 
 如果代码已通过其他受控流程部署，可以在网站目录运行：
 
