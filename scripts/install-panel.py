@@ -16,10 +16,10 @@ import sys
 import urllib.parse
 import urllib.request
 
-BOOTSTRAP_SHA256 = '2498a7393798753958c2bc04a04a1cf98078a50a01225232efd8165f3db5ecdb'
+BOOTSTRAP_SHA256 = 'eaa303e1422f3be260a129b5a2e93c00535bd313140b9450d56073e213c397fb'
 TOOLS_SHA256 = '45f82dff04ef90dbf0f67cba0bc04ed59f96307ed840742d12aa733d853dfee5'
 FIREWALL_PATCH_SHA256 = 'c230d11ec268c1754b26d032108e3d2ce2372af2674c9dfad021e1e98439adcb'
-BOOTSTRAP_URL = 'https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/releases/download/root-installer-v1.0.6/quick_install.py'
+BOOTSTRAP_URL = 'https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/releases/download/root-installer-v1.0.7/quick_install.py'
 SYSTEM_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 CODE_DIRS = ('app', 'bootstrap', 'config', 'database', 'routes', 'resources', 'public', 'plugins',
              'plugins-core', 'bundled-plugins', 'root-assets', 'scripts', 'theme', 'vendor', '.git', 'storage')
@@ -450,7 +450,7 @@ def main():
     parser.add_argument('--app-user')
     parser.add_argument('--php', default=os.environ.get('XBOARD_PHP_BIN'))
     parser.add_argument('--composer', default=os.environ.get('XBOARD_COMPOSER_BIN'))
-    parser.add_argument('--host')
+    parser.add_argument('--host', help='Actual bare IP or DNS host; omit for interactive IPv4 detection or manual input on first installation')
     parser.add_argument('--port', type=int)
     parser.add_argument('--nginx')
     parser.add_argument('--skip-endpoint', action='store_true')

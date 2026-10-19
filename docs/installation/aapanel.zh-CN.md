@@ -1,6 +1,6 @@
 # 宝塔 / aaPanel 安装教程（内置插件版）
 
-本教程沿用原版的“安装环境 → 创建网站 → 拉取源码 → 配置网站 → 执行安装 → 守护进程”流程，适用于独立 **v2026.10.18.6** 的原生 PHP-FPM 部署。
+本教程沿用原版的“安装环境 → 创建网站 → 拉取源码 → 配置网站 → 执行安装 → 守护进程”流程，适用于独立 **v2026.10.19.1** 的原生 PHP-FPM 部署。
 
 核心命令仍是 `git clone` 和 `bash init.sh`。新版需要**先配置实际运行的 Nginx / PHP-FPM 网站，再执行安装器**。安装器会统一处理权限及 NodeEndpoint 入口，无需再逐个上传插件、单独运行 Root 安装脚本或手动上传公共 CA。
 
@@ -92,7 +92,7 @@ Composer 安装时会检查完整依赖要求，缺少的扩展应先补齐。�
 ```bash
 cd /www/wwwroot/your-domain
 
-git clone --branch v2026.10.18.6 --single-branch \
+git clone --branch v2026.10.19.1 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git ./
 ```
 
@@ -100,7 +100,7 @@ git clone --branch v2026.10.18.6 --single-branch \
 
 **先完成下一节的网站配置，再运行 `init.sh`。** 源码已经包含四插件及公共 Root 工具资产，不需要另外下载插件 ZIP。
 
-也可以使用 [Release](https://github.com/ksr-v/Xboard-Custom-Source/releases/tag/v2026.10.18.6) 中的固定附件 `xboard.tar.gz`，独立核对 `SHA256SUMS` 后解压到该空目录，替代上述 Git 克隆。两种取源码方式选一种即可，随后均继续 3.3。
+也可以使用 [Release](https://github.com/ksr-v/Xboard-Custom-Source/releases/tag/v2026.10.19.1) 中的固定附件 `xboard.tar.gz`，独立核对 `SHA256SUMS` 后解压到该空目录，替代上述 Git 克隆。两种取源码方式选一种即可，随后均继续 3.3。
 
 #### 3.3 配置网站并执行安装
 
@@ -134,7 +134,14 @@ bash init.sh --app-user www \
 - `your-domain`：实际面板网站目录。
 - `www` 和 PHP 路径：本机实际的网站用户和 PHP 8.3 CLI 路径，宝塔通常使用以上值。
 
-首次配置节点通讯地址时，安装器检测**这台面板服务器的公网 IPv4**并显示候选，回车接受或手工输入实际 IP / 域名；检测失败时必须手工输入。这里不传 `--host`，避免把教程示例地址写入配置。`203.0.113.10` 属于文档示例网段，不能用于实际通讯。已有真实 Root 入口保留原地址，不会被自动检测结果覆盖。
+首次配置节点通讯地址时，安装器提供交互选项：
+
+```text
+1. 自动检测本机公网 IPv4（默认，回车选择）
+2. 手工输入 IP / 域名
+```
+
+选择 `1` 后检测**这台面板服务器的公网 IPv4**并显示候选，回车接受或输入其他实际 IP / 域名；检测失败必须手工输入。选择 `2` 直接输入实际地址，不请求公网检测服务。这里不传 `--host`，避免把教程示例地址写入配置。`203.0.113.10` 属于文档示例网段，不能用于实际通讯。已有真实 Root 入口或显式指定的 `--host` 跳过该菜单，地址不会被自动检测结果覆盖。
 
 保留 `--composer`，指向 2.1 节已经校验的 PHAR，避免自动选中旧版 Composer。无需改成 Root 运行应用命令，也不要给整个站点设置 777。
 
@@ -230,7 +237,7 @@ bash update.sh --deployed-code --app-user www \
   --port 8443
 ```
 
-此时使用已有安装的继续流程；尚未创建入口时按提示核对公网 IPv4 候选，已有真实入口保留原值。不重跑全新安装，不删除 `.env`，不重建 APP_KEY。
+此时使用已有安装的继续流程；尚未创建入口时选择自动检测公网 IPv4 或手工输入地址，已有真实入口保留原值。不重跑全新安装，不删除 `.env`，不重建 APP_KEY。
 
 **v2026.10.18.1 / v2026.10.18.2 因只输入 `INSTALL` 而中止：** 如果主程序已经安装，保留数据库和 `.env`，部署本版代码后，在该站点目录以 Root 继续完成后续配置：
 
@@ -247,10 +254,10 @@ bash update.sh --deployed-code --app-user www \
 **节点通讯地址已经保存为 `203.0.113.10`：** 这是旧教程中的示例 IP，并非本机公网 IP。若独立入口也已创建，在同一台独立面板服务器以 Root 执行：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.6/install.sh | bash -s -- --repair-address
+curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.7/install.sh | bash -s -- --repair-address
 ```
 
-核对检测到的公网 IPv4，回车接受或输入真实通讯 IP / 域名，并确认修改计划。工具沿用现有 CA 和口令，为新地址重签服务器证书，以站点用户保存设置并同步公共 CA；只在插件页面改 IP 不能修复服务器证书。此命令仅适用于提供 `xboard:configure-endpoint` 的独立后端。若入口尚未创建，使用上方已有安装的继续流程并核对真实地址。完成后刷新插件页面，重新复制节点安装命令；不重装主程序或重建 CA。
+先选择自动检测公网 IPv4 或手工输入地址。自动模式核对候选，回车接受或输入真实通讯 IP / 域名；手工模式不请求公网检测服务。审阅并确认修改计划后，工具沿用现有 CA 和口令，为新地址重签服务器证书，以站点用户保存设置并同步公共 CA；只在插件页面改 IP 不能修复服务器证书。此命令仅适用于提供 `xboard:configure-endpoint` 的独立后端。若入口尚未创建，使用上方已有安装的继续流程并核对真实地址。完成后刷新插件页面，重新复制节点安装命令；不重装主程序或重建 CA。
 
 - **没有发现 Nginx / PHP-FPM 站点**：先核对 `/public`、PHP 8.3、实际 FPM 后端、伪静态及运行中的 Nginx，再处理失败步骤，不猜测 socket。
 - **Composer 或 PHP 报错**：核对 PHP CLI / FPM 版本和缺失扩展。提示 `composer-runtime-api ^2.2` 时是选中的 Composer 过旧，按 2.1 节准备固定 PHAR，并显式传入对应的 `--composer` 路径；不修改 `composer.lock` 或绕过平台检查。`mbstring` 重复加载警告与本次致命依赖错误不同，可另查对应 PHP 配置中重复的扩展条目。

@@ -49,7 +49,14 @@ bash init.sh --app-user www \
 
 PHP、Composer 和用户名必须替换为本机实际值；Composer 路径应指向可信 PHP 脚本 / PHAR。不要在已有业务目录执行本节命令。
 
-首次配置会检测本机公网 IPv4 并显示候选，回车接受或手工输入真实通讯 IP / 域名；检测失败必须手工输入。上方命令省略 `--host`，不把示例 IP 写入面板。已有真实 Root 入口地址保留为默认值，不会因检测结果变化而自动修改。`203.0.113.10` 等文档示例地址不能用于实际安装。
+首次配置时选择通讯地址输入方式：
+
+```text
+1. 自动检测本机公网 IPv4（默认，回车选择）
+2. 手工输入 IP / 域名
+```
+
+自动模式显示候选，回车接受或输入其他真实通讯 IP / 域名；检测失败必须手工输入。手工模式不请求公网检测服务。上方命令省略 `--host`，不把示例 IP 写入面板；已有真实 Root 入口或显式 `--host` 跳过该菜单，保留相应地址，不会因检测结果变化而自动修改。`203.0.113.10` 等文档示例地址不能用于实际安装。
 
 PHP CLI 需要启用 `symlink`，用于创建 Laravel 的公共存储链接。v2026.10.18.4 新装流程在 Composer 和数据库初始化之前检查所选 PHP CLI 是否提供该函数；预检停止时先修正对应 CLI 的设置再重试，安装器不会自动修改 `php.ini` 或开放 `exec`。如果旧版后台已能登录，但新装脚本在 `storage:link` 报 undefined `exec`，应先修正 PHP 禁用函数，再按 [宝塔教程中的恢复步骤](aapanel.zh-CN.md#常见问题) 补齐链接和 Root 后续配置；不要重跑全新安装或清空 `.env`。
 
@@ -103,10 +110,10 @@ bash update.sh --deployed-code --app-user www \
 若旧教程中的 `203.0.113.10` 已被写入通讯设置并创建为独立入口，在同一台独立面板服务器以 Root 执行：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.6/install.sh | bash -s -- --repair-address
+curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.7/install.sh | bash -s -- --repair-address
 ```
 
-核对检测到的公网 IPv4，回车接受或手工输入真实通讯 IP / 域名，再确认修改计划。工具沿用原 CA 和口令，重签包含新地址 SAN 的服务器证书，以站点用户保存通讯设置并同步公共 CA；不会通过重建 CA 来修复地址。该入口要求独立后端提供 `xboard:configure-endpoint`。仅在网页改 IP 不能修复服务器证书。若尚未创建 Root 入口，使用上方已有安装的继续流程。完成后刷新插件页面并重新复制节点安装命令，不重跑 `init.sh`。
+先选择自动检测公网 IPv4 或手工输入真实通讯 IP / 域名。自动模式核对候选并回车接受或输入实际地址，手工模式不请求公网检测服务，再确认修改计划。工具沿用原 CA 和口令，重签包含新地址 SAN 的服务器证书，以站点用户保存通讯设置并同步公共 CA；不会通过重建 CA 来修复地址。该入口要求独立后端提供 `xboard:configure-endpoint`。仅在网页改 IP 不能修复服务器证书。若尚未创建 Root 入口，使用上方已有安装的继续流程。完成后刷新插件页面并重新复制节点安装命令，不重跑 `init.sh`。
 
 ### 旧版依赖阶段失败后重试
 

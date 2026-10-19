@@ -1,6 +1,6 @@
 # Xboard Deployment Guide for aaPanel Environment
 
-This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.18.6** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.5, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
+This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.19.1** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.5, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
 
 ## Table of Contents
 
@@ -88,7 +88,7 @@ As Root, clone the fixed independent release into the empty site directory:
 
 ```bash
 cd /www/wwwroot/your-domain
-git clone --branch v2026.10.18.6 --single-branch \
+git clone --branch v2026.10.19.1 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git .
 ```
 
@@ -122,7 +122,14 @@ bash init.sh --app-user www \
   --port 8443
 ```
 
-For the first endpoint configuration, the installer detects this panel server's public IPv4 and displays it as a candidate. Press Enter to accept it or enter the actual communication IP / domain. If detection fails, enter the address manually. The command deliberately omits `--host`; documentation addresses such as `203.0.113.10` cannot be used for real communication. An existing real Root endpoint address remains the default and is not overwritten by detection. Keep the explicit `--composer` path to the verified PHAR prepared in section 2.1.
+For the first endpoint configuration, choose how to supply the communication address:
+
+```text
+1. Automatically detect this server's public IPv4 (default; press Enter)
+2. Manually enter an IP / domain
+```
+
+Option `1` detects this panel server's public IPv4 and displays it as a candidate. Press Enter to accept it or enter another actual communication IP / domain. If detection fails, enter the address manually. Option `2` asks for the address without contacting the public-IP detection service. The command deliberately omits `--host`; documentation addresses such as `203.0.113.10` cannot be used for real communication. An existing real Root endpoint or an explicit `--host` skips this menu and is not overwritten by detection. Keep the explicit `--composer` path to the verified PHAR prepared in section 2.1.
 
 The Root entry prepares the application and Admin patch directories, then runs Composer, Xboard installation, database migrations, and all four plugin lifecycles as `www`. Follow the database, Redis, and administrator prompts and save the displayed initial login information. You do not need to upload these plugins separately.
 
@@ -208,7 +215,7 @@ bash update.sh --deployed-code --app-user www \
   --port 8443
 ```
 
-This resumes the installed application and Root setup. If no endpoint exists, review the detected public IPv4 candidate; an existing real endpoint retains its address. Do not remove `.env`, change APP_KEY, or rerun `init.sh` to recover an installed site.
+This resumes the installed application and Root setup. If no endpoint exists, choose automatic public IPv4 detection or manual address entry; an existing real endpoint retains its address. Do not remove `.env`, change APP_KEY, or rerun `init.sh` to recover an installed site.
 
 **v2026.10.18.1 / v2026.10.18.2 stopped after an incomplete `INSTALL` confirmation:** If the application is already installed, keep its database and `.env`. Deploy this release's code, then resume the pending Root setup from that site directory with:
 
@@ -225,10 +232,10 @@ Use the actual site path and review the communication address offered by the ins
 **The saved communication address is `203.0.113.10`:** This was an old documentation example, not the panel server's public IP. If its Root endpoint was already created, run this on the same independent Xboard panel server as Root:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.6/install.sh | bash -s -- --repair-address
+curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.7/install.sh | bash -s -- --repair-address
 ```
 
-Review the detected public IPv4, press Enter to accept it or enter the actual communication IP / domain, then confirm the modification plan. The tool keeps the existing CA and passphrase, issues a server certificate for the new address, saves settings as the application user, and synchronizes the public CA. Changing the plugin page alone does not repair the server certificate. This command requires the independent backend's `xboard:configure-endpoint` command. If no Root endpoint exists yet, use the installed-site continuation above and check the real address. Refresh the plugin page and copy fresh node installation commands afterward; do not reinstall Xboard or recreate its CA.
+Choose automatic public IPv4 detection or manual address entry. For automatic detection, review the candidate and press Enter to accept it or enter the actual communication IP / domain; manual entry does not contact the detection service. Review and confirm the modification plan. The tool keeps the existing CA and passphrase, issues a server certificate for the new address, saves settings as the application user, and synchronizes the public CA. Changing the plugin page alone does not repair the server certificate. This command requires the independent backend's `xboard:configure-endpoint` command. If no Root endpoint exists yet, use the installed-site continuation above and check the real address. Refresh the plugin page and copy fresh node installation commands afterward; do not reinstall Xboard or recreate its CA.
 
 1. **Empty Admin Dashboard:** Check browser errors, the deployed release's local Admin assets, and the application / Nginx logs. Restore verified assets from the independent release if needed; do not fetch original-author submodules.
 2. **Root installer cannot discover the site:** Confirm `/public`, the actual PHP 8.3 FPM backend, Laravel rewrite rules, and running Nginx / FPM services before rerunning the failed step. Resolve ambiguous or multiple-site discovery explicitly; do not guess a socket.
