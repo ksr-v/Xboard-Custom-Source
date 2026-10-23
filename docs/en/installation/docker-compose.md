@@ -1,83 +1,27 @@
-# Quick Deployment Guide with Docker Compose
+# Deploy the independent Xboard with Docker Compose
 
-This guide explains how to quickly deploy Xboard using Docker Compose. By default, it uses SQLite database, eliminating the need for a separate MySQL installation.
+For aaPanel and the private node HTTPS entry, follow the [current aaPanel + Docker guide](./aapanel-docker.md) ([Chinese](../../installation/aapanel-docker.zh-CN.md)). It provides the `docker-install.sh` fresh installer, a single reviewed confirmation, and the Root `--docker` workflow for existing standard panels.
 
-### 1. Environment Preparation
+The independent image includes NodeEndpoint 1.0.7, SmartExpiry 1.2.0, audited QRCode Extend 1.2.0 and FlowScope 2.4.0. It is built from this repository; original-maintainer images or submodules are unnecessary.
 
-Install Docker:
-```bash
-curl -sSL https://get.docker.com | bash
+## Choose the deployment path
 
-# For CentOS systems, also run:
-systemctl enable docker
-systemctl start docker
-```
+| Situation | Path |
+| --- | --- |
+| New empty aaPanel website, SQLite or a prepared MySQL database | Configure the loopback Nginx proxy, clone fixed `v2026.10.23.1`, run `bash docker-install.sh` |
+| Existing standard bridged `xboard` Compose service | Preserve data, upgrade/enable NodeEndpoint, run the host Root `--docker` command |
+| Existing original panel without fresh-installer ownership | Keep its current installation; do not run the fresh wrapper |
+| Native PHP-FPM | Use the [native guide](./aapanel.md) |
+| Host networking, split roles or remote Docker | Advanced manual deployment; excluded from automatic Root support |
 
-### 2. Deployment Steps
+The repository retains four Compose samples for advanced deployment. The fresh automatic installer instead generates its own owned `compose.node-endpoint.yaml`. Do not replace its recorded project with a sample, another Compose file or a guessed project name.
 
-1. Clone the privately maintained source repository (it contains the Compose samples):
-   ```bash
-    git clone https://github.com/ksr-v/Xboard-Custom-Source.git
-    cd Xboard-Custom-Source
-   cp compose.sample.yaml compose.yaml
-   ```
+## Data and updates
 
-2. Install database:  
+Preserve the database, original `.env` / `APP_KEY`, `storage/app`, `.docker/.data`, plugins and every runtime volume. `storage/app` includes the public CA and plugin ownership records. Do not mount an empty directory over older container-layer data: stop/retain the old container, export and verify its storage first, and only then recreate with the populated mount.
 
-- Quick installation (Recommended for beginners)
-```bash
-docker compose run -it --rm \
-    -e ENABLE_SQLITE=true \
-    -e ENABLE_REDIS=true \
-    -e ADMIN_ACCOUNT=admin@demo.com \
-    xboard php artisan xboard:install
-```
-- Custom configuration installation (Advanced users)
-```bash
-docker compose run -it --rm xboard php artisan xboard:install
-```
-> Please save the admin dashboard URL, username, and password shown after installation
-> The repository ships **four** compose templates in the `compose` branch — pick the one matching your setup, copy it to `compose.yaml`, then run the install command:
->
-> | File | Network | When to use |
-> |------|---------|-------------|
-> | `compose.sample.yaml` | bridge + ports `7001:7001` | bare docker, custom reverse proxy, aaPanel + Docker (default) |
-> | `compose.host.sample.yaml` | `network_mode: host` | aaPanel native (openresty on host) |
-> | `compose.1panel.sample.yaml` | bridge + external `1panel-network` | 1Panel users (so the container can reach 1Panel-managed MySQL/Redis) |
-> | `compose.split.sample.yaml` | multi-container (web/horizon/ws-server/redis split) | K8s migration, advanced scaling |
->
-> The local `compose.yaml` is gitignored so your edits survive `git pull` when you do clone the repo.
+Build the intended independent source and replace the service using the original Compose project/configuration and retained data. A local image is not updated by `docker compose pull` alone. The container entrypoint runs application updates as `www` and stops on failure. The fresh wrapper permits its own same-source retry; it does not replace an existing panel or upgrade arbitrary source revisions.
 
-3. Start services:
-```bash
-docker compose up -d
-```
+After a container ID changes, rerun Root `--docker` and approve the new reviewed context. Existing credentials must match the original CA key before rebinding; a new container name alone is insufficient. Rollback requires a verified matching image/source and database/configuration/runtime backup, not merely an older image tag.
 
-4. Access the site:
-- Default port: 7001
-- Website URL: http://your-server-ip:7001
-
-### 3. Version Updates
-
-```bash
-cd Xboard
-docker compose pull && docker compose up -d
-```
-
-The container always runs `php artisan xboard:update` (migrate + plugin install + version cache + theme refresh) on boot, so no extra command is required.
-
-> **Using a `compose.yaml` from before 2026-04-19?** That template did not auto-run `xboard:update` on container start, so use the following command to upgrade instead:
-> ```bash
-> docker compose pull && docker compose run -it --rm web php artisan xboard:update && docker compose up -d
-> ```
-
-### 4. Version Rollback
-
-1. Modify the version number in `docker-compose.yaml` to the version you want to roll back to
-2. Execute: `docker compose up -d`
-
-### Important Notes
-
-- If you need to use MySQL, please install it separately and redeploy
-- Code changes require service restart to take effect
-- You can configure Nginx reverse proxy to use port 80 
+Use the [complete guide](./aapanel-docker.md) for commands, reverse-proxy configuration, administrator log location, MySQL input, firewall scope, scheduling and support limits. Actual automatic-flow verification is recorded with the corresponding Release.

@@ -1,0 +1,59 @@
+{
+  "automatic_encrypted_passphrase_and_public_ca_sync": true,
+  "cid_ca_leaf_vault_app_key_settings_preserved": true,
+  "cleanup": {
+    "all_test_ports_free": true,
+    "only_owned_entry_site_container_removed": true,
+    "preexisting_nginx_files_preserved": true,
+    "private_database_pki_redis_diagnostics_retained": true,
+    "verified_cache_reusable_after_cli_maintenance": true
+  },
+  "container_uid_1000_cannot_read_root_key": true,
+  "database_driver": "mysql",
+  "default_partial_persistence": true,
+  "fresh_www_top_adopted_by_root": true,
+  "helper-concurrency": {
+    "administrator_value_won": true,
+    "concurrent_admin_update_waited_for_helper_transaction": true,
+    "database": "mysql",
+    "original_settings_restored": true,
+    "real_helper_read_write_gap_scheduled": true,
+    "result": "PASS"
+  },
+  "image_id": "sha256:f8d45147fe23db138f0922b6137d162b283f90c2129ca6775c507ba084e00d73",
+  "loopback_bridge_backend": true,
+  "mysql_password_not_logged": true,
+  "normalized_runtime_source_sha256": "2083bedaf60fc60a0cdc9a4bc8bf3ca6bad7de33bc047c5b1577f4ca5890741d",
+  "one_combined_yes": true,
+  "owned_marker_phase": "complete",
+  "ports": {
+    "backend": 7001,
+    "https": 19844,
+    "site": 18083
+  },
+  "private_tls_handshake_status": 200,
+  "quick_sha256": "b936a70bd69ffd95bf4f8e85ed5d8a4268599073ee1610543b79f84799d1bd27",
+  "result": "PASS",
+  "root_assets_and_scripts_excluded_from_image": true,
+  "runtime_source_sha256": "7a57ed996e57b8f48a5dc7df66e949cc1e1f00e693f74ba98de23b233b8b3b8f",
+  "same_source_retry_no_build_stop_update_install_or_restart": true,
+  "scope": "Fresh wrapper and same-source retry using an isolated native MariaDB 10.11 instance from aaPanel binaries. Firewall intentionally skipped; no public probe, Go reporter, proxy traffic or production access.",
+  "source_scope_sha256": "1ac122395ecfffb13fd6f2a86dfba904e4b43b2d5df87bb4243ab6f6e027f73a",
+  "synthetic_ipv4_status": 200,
+  "tools_sha256": "d1dd1258b68e34e7feca111a85c97bd0d435516093b49840633166fe066e566e",
+  "versions": {
+    "flowscope": "2.4.0",
+    "node_endpoint": "1.0.7",
+    "qrcodeextend": "1.2.0",
+    "smart_expiry": "1.2.0"
+  },
+  "wss-verification": {
+    "authenticated_wss_upgrade_status": 101,
+    "first_server_event": "auth.success",
+    "only_fixture_machine_without_nodes_used": true,
+    "private_ca_tls_verified": true,
+    "proxy_traffic": false,
+    "result": "PASS",
+    "websocket_accept_verified": true
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "admin_route_closed": 404,
+  "automatic_schema2_encrypted_vault": true,
+  "ca_leaf_ciphertext_env_settings_preserved": true,
+  "cleanup": {
+    "firewall_unchanged": true,
+    "original_nginx_configs_preserved": true,
+    "owned_entry_proxy_container_removed": true,
+    "ports_free": true,
+    "private_pki_database_volume_retained": true
+  },
+  "default_partial_mounts": true,
+  "force_recreate_old_cid_rejected": true,
+  "foreign_project_rebind_refused": true,
+  "generated_password_matches_root_ca_key": true,
+  "helper_uid_gid": 1000,
+  "host_has_no_artisan": true,
+  "no_ca_password_prompt": true,
+  "quick_sha256": "e14f85f3e5e510faa6eed991d7c759964ca9ea302420e9d64c41e3b9b53a2cd0",
+  "repeat_changed": false,
+  "result": "PASS",
+  "reviewed_new_cid_bound_with_original_ca_key_proof": true,
+  "schema_version": 1,
+  "scope": "Dedicated aaPanel VM, SQLite existing Docker panel and synthetic IPv4 API. No production, Go public IP probe, proxy traffic or new WSS test.",
+  "settings_and_public_ca_sync": true,
+  "single_yes_confirm": true,
+  "tls_ipv4_valid_post": 200,
+  "tools_sha256": "d5b907ce8622f243633e828b8f45f6a94b58e527562fb843c2cc2fb7074f30d3",
+  "wrong_method": 405,
+  "wrong_token": 401,
+  "ws_backend_detected": true
+}

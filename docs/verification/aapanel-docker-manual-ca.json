@@ -1,0 +1,68 @@
+{
+  "admin_ipv4": "8.8.4.4",
+  "admin_source": "node",
+  "admin_stale": false,
+  "automatic_ca_passphrase_vault": "UNSUPPORTED; manual fixture intentionally has no managed record",
+  "ca_leaf_environment_settings_machine_token_preserved": true,
+  "cleanup": {
+    "application_database_and_encrypted_pki_retained_privately": true,
+    "coordinated_primary_18081_rule_preserved": true,
+    "only_owned_container_and_entry_removed": true,
+    "owned_redis_volume_retained_for_diagnostics": true,
+    "preexisting_nginx_files_and_master_preserved": true,
+    "test_ports_released": true,
+    "ufw_configuration_unchanged_by_manual_case": true
+  },
+  "image_source_scope": {
+    "build_context_files": {
+      ".docker/entrypoint.sh": "8882516224964fb5c7ced932a1a699cb474d6ea74a4ffda94824b04747389c53",
+      ".dockerignore": "7cf23df611793dcd9bac9ab849453d11d2f1cb8f7763974900bc82141e5bad43",
+      "Dockerfile": "d715bfbf334fa39b354e87204d20826d458abcc2597e8adb6e14c31207eceb46"
+    },
+    "exported_initial_files": {
+      ".docker/entrypoint.sh": "8882516224964fb5c7ced932a1a699cb474d6ea74a4ffda94824b04747389c53",
+      "Dockerfile": "d715bfbf334fa39b354e87204d20826d458abcc2597e8adb6e14c31207eceb46",
+      "app/Http/Middleware/TrustProxies.php": "f259274043cc68d609bb826d5efac4c2f547c734585dbd43462635304a18f5f3",
+      "artisan": "fc281bf5d4c241469668a21094d32697c449b68c8a67a70a2e83662adaba2ad6",
+      "bundled-plugins/manifest.json": "d014889c163fbfe48971d65e947574f5c9cc529c08a0c5bcc0a928b2059de7db",
+      "composer.lock": "afc7631eb67cb2c4572bd0070a60b3bcad7d0728c7a1d83ece4b8d90df426f2b"
+    },
+    "image_id": "sha256:62c08e958063e92f90e0b72b47149618efdf2cd7c5f2944ef229782fbd2ea742",
+    "image_labels": {
+      "io.xboard.source.commit": "705e71fe46885db76e2943be876b5304f55f2616",
+      "io.xboard.test.owner": "xboard-aapanel-docker-20261023"
+    },
+    "plugin_versions": {
+      "flowscope": "2.4.0",
+      "node_endpoint": "1.0.6",
+      "qrcodeextend": "1.2.0",
+      "smart_expiry": "1.2.0"
+    },
+    "runtime_entrypoint_sha256": "8882516224964fb5c7ced932a1a699cb474d6ea74a4ffda94824b04747389c53"
+  },
+  "layout": "exported full /www exact bind, loopback published Docker, native aaPanel Nginx, manual CA",
+  "native_domain_and_private_ip_commands_ready": true,
+  "other_flowscope_paths_404": true,
+  "ports": {
+    "backend": 17003,
+    "https": 19843,
+    "site": 18082
+  },
+  "private_tls_handshake_status": 200,
+  "repeat_modify_changed": false,
+  "result": "PASS",
+  "root_key_inaccessible_to_host_and_container_uid_1000": true,
+  "scope": "Synthetic Node-compatible JSON; no Go reporter, external IP detection, WSS, proxy traffic or production access.",
+  "sqlite_durable": true,
+  "stage_summary_sha256": "c429beea7972882fa5ada4ef8ba05eef79a253df60c1943448d7b1e835b8406c",
+  "synthetic_ipv4_status": 200,
+  "tools_sha256": "7bb619440db545b6785e41d92707aa687ad43cb9529d4f8981f86dc4e1d3eb2f",
+  "versions": {
+    "flowscope": "2.4.0",
+    "node_endpoint": "1.0.6",
+    "qrcodeextend": "1.2.0",
+    "smart_expiry": "1.2.0"
+  },
+  "wrong_method_status": 405,
+  "wrong_token_status": 401
+}

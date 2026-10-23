@@ -52,14 +52,14 @@ if ($phase === 'stage-current') {
     check(count($backups) === 1 && hash_file('sha256', $backups[0]) === $state['old_plugin_sha256'], 'Actual historical plugin bytes were not backed up');
     check($installer->stage()['node_endpoint']['action'] === 'unchanged', 'Claimed source staging was not idempotent');
     $ownership = json_decode(file_get_contents($root . '/storage/app/private/plugin-bundles/ownership.json'), true);
-    check($ownership['plugins']['node_endpoint']['version'] === '1.0.6', 'Current source ownership was not recorded');
+    check($ownership['plugins']['node_endpoint']['version'] === '1.0.7', 'Current source ownership was not recorded');
 } else {
     $report = $installer->synchronize();
     check($report['node_endpoint']['lifecycle'] === ($state['enabled'] ? 'upgraded and enabled' : 'upgraded; disabled state preserved'), 'Native historical lifecycle not upgraded');
     $row = (array) DB::table('v2_plugins')->where('code', 'node_endpoint')->first();
     check($row['id'] === $state['row']['id'] && $row['installed_at'] === $state['row']['installed_at'] &&
-        $row['version'] === '1.0.6' && $row['config'] === $state['row']['config'] && (bool) $row['is_enabled'] === $state['enabled'], 'Old native identity/config/administrator choice changed');
-    check(\Plugin\NodeEndpoint\Plugin::VERSION === '1.0.6' && class_exists(\Plugin\NodeEndpoint\Services\AdminIntegration::class), 'Fresh Composer did not load current classes');
+        $row['version'] === '1.0.7' && $row['config'] === $state['row']['config'] && (bool) $row['is_enabled'] === $state['enabled'], 'Old native identity/config/administrator choice changed');
+    check(\Plugin\NodeEndpoint\Plugin::VERSION === '1.0.7' && class_exists(\Plugin\NodeEndpoint\Services\AdminIntegration::class), 'Fresh Composer did not load current classes');
     check(Schema::hasTable('node_endpoint_ca_credentials'), 'Existing native deployment did not migrate its credential vault');
     check(Plugin::count() === 5 && Plugin::whereIn('code', ['smart_expiry', 'qrcodeextend', 'flowscope'])->where('is_enabled', true)->count() === 3, 'Other bundled plugins were not installed normally');
     $installer->synchronize();

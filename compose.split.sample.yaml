@@ -29,6 +29,7 @@ services:
     volumes: &shared-volumes
       - ./.env:/www/.env
       - ./.docker/.data/:/www/.docker/.data
+      - ./storage/app:/www/storage/app
       - ./storage/logs:/www/storage/logs
       - ./storage/theme:/www/storage/theme
       - ./plugins:/www/plugins

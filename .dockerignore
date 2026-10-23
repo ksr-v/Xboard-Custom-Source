@@ -1,10 +1,26 @@
 /node_modules
 /config/v2board.php
+/config/googleCloudStorageKey.json
 /public/hot
 /public/storage
 /public/env.example.js
 /storage/*.key
+/storage/app
+/storage/logs
+/storage/qrcodeextend
+/storage/framework
+/storage/tmp
+/storage/debugbar
+/storage/backup
+/storage/views
+/storage/theme
+/bootstrap/cache
+# Installed/uploaded plugins and their published files belong to runtime
+# volumes. The verified bundled-plugins source remains in the image context.
+/plugins
+/public/plugins
 /vendor
+/auth.json
 .env
 .env.backup
 .phpunit.result.cache
@@ -17,6 +33,20 @@ yarn-error.log
 composer.phar
 yarn.lock
 docker-compose.yml
+docker-compose.yaml
+compose.yaml
+/compose.node-endpoint.yaml
+/root-assets
+/scripts
+/docs
+/tests
+/.github
+/docker-install.sh
+/init.sh
+/update.sh
+compose.host.yaml
+compose.split.yaml
+compose.1panel.yaml
 .DS_Store
 /docker
 storage/laravels.conf
@@ -24,6 +54,9 @@ storage/laravels.pid
 storage/laravels-timer-process.pid
 /frontend
 /.git
+/.runtime
+/.audit
+/.codex
 **/__pycache__
 /.docker/.data
 .env.*

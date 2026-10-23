@@ -128,18 +128,56 @@ redis_reachable() {
     esac
 }
 
-if [ ! -s /www/.env ] || ! grep -qE '^INSTALLED=(1|true)$' /www/.env || echo " $* " | grep -q ' xboard:install '; then
+# Bind mounts start with host ownership, including new storage/app volumes.
+# Prepare them before any non-root application lifecycle command can run.
+if [ -d /www/.env ]; then
+    echo "[entrypoint] ERROR: /www/.env is a directory. Create an empty .env file on the host before starting Compose." >&2
+    exit 1
+fi
+mkdir -p /www/bootstrap/cache /www/.docker/.data /www/plugins \
+    /www/storage/app/public /www/storage/app/private /www/storage/app/node_endpoint \
+    /www/storage/framework/cache/data /www/storage/framework/sessions \
+    /www/storage/framework/views /www/storage/logs/supervisor /www/storage/theme
+if [ "$(id -u)" = "0" ]; then
+    chown -R www:www /www
+    mkdir -p /data
+    chown redis:redis /data
+fi
+chmod 0700 /www/storage/app/private /www/storage/app/node_endpoint
+if [ -f /www/.env ]; then
+    chmod 0600 /www/.env
+fi
+
+run_as_app() {
+    if [ "$(id -u)" = "0" ]; then
+        su-exec www:www "$@"
+    else
+        "$@"
+    fi
+}
+
+install_command=false
+for argument in "$@"; do
+    if [ "$argument" = "xboard:install" ]; then
+        install_command=true
+    fi
+done
+if [ ! -s /www/.env ] || ! grep -qE '^INSTALLED=(1|true)$' /www/.env || [ "$install_command" = "true" ]; then
     echo "[entrypoint] Skipping xboard:update (not yet installed or running xboard:install)."
 else
     if redis_reachable; then
         echo "[entrypoint] Running xboard:update (redis reachable, real drivers)..."
-        php /www/artisan xboard:update --no-interaction || \
-            echo "[entrypoint] WARNING: xboard:update failed; continuing so supervisor can boot anyway." >&2
+        if ! run_as_app php /www/artisan xboard:update --no-interaction; then
+            echo "[entrypoint] ERROR: xboard:update failed; services were not started." >&2
+            exit 1
+        fi
     else
         echo "[entrypoint] Running xboard:update (redis not yet up, using array/sync drivers)..."
-        CACHE_DRIVER=array QUEUE_CONNECTION=sync SESSION_DRIVER=array \
-            php /www/artisan xboard:update --no-interaction || \
-            echo "[entrypoint] WARNING: xboard:update failed; continuing so supervisor can boot anyway." >&2
+        if ! run_as_app env CACHE_DRIVER=array QUEUE_CONNECTION=sync SESSION_DRIVER=array \
+                php /www/artisan xboard:update --no-interaction; then
+            echo "[entrypoint] ERROR: xboard:update failed; services were not started." >&2
+            exit 1
+        fi
     fi
 fi
 
@@ -147,6 +185,10 @@ echo "[entrypoint] Starting services (caddy=${ENABLE_CADDY} web=${ENABLE_WEB} ho
 # Drop stale Octane/WorkerMan state files so the new master does not signal
 # PIDs left over from a previous container run (causes Swoole kill EPERM).
 rm -f /www/storage/logs/octane-server-state.json /www/storage/logs/xboard-ws-server.pid 2>/dev/null || true
-chown -R www:www /www 2>/dev/null || true
-chown redis:redis /data 2>/dev/null || true
+# Default one-shot Compose commands use the same application UID as Octane.
+# Keep each argv item intact; supervisord itself still starts as Root.
+if [ "$(id -u)" = "0" ] && [ "${1##*/}" = "php" ] && \
+        { [ "${2-}" = "artisan" ] || [ "${2-}" = "/www/artisan" ]; }; then
+    exec su-exec www:www "$@"
+fi
 exec "$@"

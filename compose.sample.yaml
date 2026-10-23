@@ -1,4 +1,4 @@
-# Default deployment: bridge network with port 7001 published to the host.
+# Default deployment: bridge network with port 7001 published on host loopback.
 # Suitable for: bare docker-compose, aaPanel + Docker manager, custom reverse
 # proxies (nginx, Caddy on host, Cloudflare Tunnel, etc.) that talk to
 # 127.0.0.1:7001 on the host.
@@ -14,10 +14,11 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - "7001:7001"
+      - "127.0.0.1:7001:7001"
     volumes:
       - ./.env:/www/.env
       - ./.docker/.data/:/www/.docker/.data
+      - ./storage/app:/www/storage/app
       - ./storage/logs:/www/storage/logs
       - ./storage/theme:/www/storage/theme
       - ./plugins:/www/plugins

@@ -5,3 +5,7 @@
 CHANGELOG.md export-ignore
 bundled-plugins/** -text
 root-assets/** -text
+Dockerfile text eol=lf
+.dockerignore text eol=lf
+.docker/entrypoint.sh text eol=lf
+compose*.yaml text eol=lf

@@ -1,0 +1,196 @@
+{
+  "result": "PASS",
+  "date": "2026-10-23",
+  "source_commit": "705e71fe46885db76e2943be876b5304f55f2616",
+  "source_patch_state": "local unpublished Docker fixes",
+  "image_id": "sha256:62c08e958063e92f90e0b72b47149618efdf2cd7c5f2944ef229782fbd2ea742",
+  "runtime_profile": "minimal",
+  "compose_overrides": [
+    "isolated image/project name",
+    "loopback host port17001",
+    "aaPanel test site18081",
+    "synthetic administrator email",
+    "RESOURCE_PROFILE=minimal"
+  ],
+  "database": "new isolated SQLite",
+  "windows_external_final_http": {
+    "/": 200,
+    "/node-endpoint": 200,
+    "/api/v2/flowscope/status": 200
+  },
+  "temporary_registry_ssh_forward_closed": true,
+  "reports": {
+    "primary-api-assets-verification.json": {
+      "result": "PASS",
+      "phase": "primary_actual_http_admin_and_assets",
+      "actual_admin_login": true,
+      "protected_api_without_auth_rejected": true,
+      "node_endpoint_settings_version": "1.0.6",
+      "admin_html_node_endpoint_and_flowscope_loaders": true,
+      "served_admin_js_qr_and_smart_expiry_markers": true,
+      "served_smart_expiry_markers": [
+        "smart-expiry-create-v7",
+        "smart-expiry-edit-v7"
+      ],
+      "smart_expiry_status": "v7",
+      "resources": {
+        "/node-endpoint": {
+          "status": 200,
+          "bytes": 8707
+        },
+        "/node-endpoint/assets/app": {
+          "status": 200,
+          "bytes": 14021
+        },
+        "/node-endpoint/assets/style": {
+          "status": 200,
+          "bytes": 3176
+        },
+        "/node-endpoint/assets/native-script": {
+          "status": 200,
+          "bytes": 18224
+        },
+        "/node-endpoint/assets/native-style": {
+          "status": 200,
+          "bytes": 3960
+        },
+        "/api/v2/flowscope/assets/script": {
+          "status": 200,
+          "bytes": 48292
+        },
+        "/api/v2/flowscope/assets/style": {
+          "status": 200,
+          "bytes": 8287
+        },
+        "/plugins/qrcodeextend/qrcodeextend.js": {
+          "status": 200,
+          "bytes": 13125
+        },
+        "/plugins/qrcodeextend/qrcodeextend.css": {
+          "status": 200,
+          "bytes": 3568
+        }
+      },
+      "flowscope_empty_address_admin_api": true,
+      "all_five_supervisor_services_running": {
+        "octane_00": true,
+        "horizon_00": true,
+        "redis_00": true,
+        "ws-server_00": true,
+        "caddy_00": true
+      },
+      "internal_redis_ping": "PONG",
+      "ws_unauthenticated_upgrade_response": "HTTP/1.1 502 Bad Gateway",
+      "ws_scope": "routing smoke only; no authenticated Node session or proxy traffic"
+    },
+    "primary-ws-auth-verification.json": {
+      "result": "PASS",
+      "phase": "authenticated_websocket_route",
+      "http_upgrade_status": 101,
+      "sec_websocket_accept_verified": true,
+      "first_server_frame": "auth.success",
+      "route": "aaPanel Nginx18081 to Caddy7001 to WS8076",
+      "synthetic_machine_with_no_nodes": true,
+      "no_proxy_traffic": true,
+      "temporary_machine_removed": true,
+      "worker_registry_will_be_cleared_by_force_recreate": true
+    },
+    "primary-recreate-verification.json": {
+      "result": "PASS",
+      "phase": "primary_force_recreate_persistence",
+      "old_container_deleted": true,
+      "new_container_id": "6bb8ae29ce05888f169575787c4577bc8825a98ccefdae356bc32b4e8e5c33aa",
+      "app_key_env_users_password_hash_plugins_settings_credentials_preserved": true,
+      "storage_app_file_canary_preserved_with_www0600": true,
+      "canary_was_not_a_ca_import": true,
+      "canary_removed_after_test": true,
+      "temporary_ws_machine_absent": true,
+      "new_worker_registry_empty": true
+    },
+    "primary-context-verification.json": {
+      "result": "PASS",
+      "phase": "actual_docker_context_copy_audit",
+      "method": "FROM scratch + COPY . /context, docker create/export path inspection",
+      "actual_installed_env_sqlite_storage_app_logs_plugins_present_on_host": true,
+      "runtime_paths_absent": [
+        "context/.env",
+        "context/storage/app",
+        "context/.docker/.data",
+        "context/storage/logs",
+        "context/plugins",
+        "context/public/plugins",
+        "context/auth.json",
+        "context/.runtime"
+      ],
+      "bundled_plugin_manifest_present": true,
+      "export_member_count": 693,
+      "no_runtime_secrets_or_auth_canaries_entered_context": true
+    },
+    "primary-scheduler-verification.json": {
+      "result": "PASS",
+      "phase": "actual_schedule_run_and_automatic_observation",
+      "automatic_samples": [
+        {
+          "wall_clock": 1792724228,
+          "schedule_last_runtime": "1792724204",
+          "schedule": true,
+          "horizon": true
+        },
+        {
+          "wall_clock": 1792724282,
+          "schedule_last_runtime": "1792724264",
+          "schedule": true,
+          "horizon": true
+        },
+        {
+          "wall_clock": 1792724345,
+          "schedule_last_runtime": "1792724324",
+          "schedule": true,
+          "horizon": true
+        }
+      ],
+      "manual_compose_exec_www_schedule_run_exit": 0,
+      "redis_last_check_at_fresh": true,
+      "no_host_cron_created": true,
+      "scope": "two observation intervals plus one command; not long-term scheduling proof"
+    },
+    "primary-host-final-verification.json": {
+      "result": "PASS",
+      "temporary_proxy_dropin_removed": true,
+      "docker_restarted_without_temporary_proxy": true,
+      "primary_http_after_restart": 200,
+      "only_primary_container_retained": true,
+      "original_nginx_configs_sha256_preserved": 8,
+      "original_nginx_master_preserved": 977,
+      "original_non_nginx_service_processes_preserved": [
+        [
+          1080,
+          "redis-server"
+        ],
+        [
+          1787,
+          "mariadbd"
+        ],
+        [
+          1804,
+          "BT-Task"
+        ],
+        [
+          1839,
+          "BT-Panel"
+        ],
+        [
+          1925,
+          "webserver"
+        ]
+      ],
+      "nginx_config_test": true,
+      "primary_website": "http://192.168.128.128:18081",
+      "credential_file": "/opt/xboard-aapanel-docker-20261023/private/primary-admin-credentials.json",
+      "credential_file_uid": 0,
+      "credential_file_mode": "0o600",
+      "retained_scope": "new isolated primary container, data, vhost and narrow source-IP firewall rule; manual CA experiment already cleaned"
+    }
+  },
+  "scope": "Actual local build, install, HTTP APIs/assets, authenticated synthetic WS handshake, short scheduling observations, container recreation and build-context inspection; not complete plugin browser business tests or production traffic."
+}

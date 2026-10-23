@@ -1,132 +1,85 @@
-# Xboard Deployment Guide for aaPanel + Docker Environment
+# aaPanel + Docker: bundled Xboard and the private node entry
 
-## Table of Contents
-1. [Requirements](#requirements)
-2. [Quick Deployment](#quick-deployment)
-3. [Detailed Configuration](#detailed-configuration)
-4. [Maintenance Guide](#maintenance-guide)
-5. [Troubleshooting](#troubleshooting)
+This guide targets `v2026.10.23.1`, including NodeEndpoint 1.0.7, SmartExpiry 1.2.0, audited QRCode Extend 1.2.0 and FlowScope 2.4.0. See the [Chinese guide](../../installation/aapanel-docker.zh-CN.md). Run the commands in the **host Root SSH session**.
 
-## Requirements
+## 1. Prepare the website
 
-### Hardware Requirements
-- CPU: 1 core or above
-- Memory: 2GB or above
-- Storage: 10GB+ available space
+Prepare aaPanel Nginx, Docker Engine with the Compose plugin, Git, Python 3.10+, curl, OpenSSL, `ss` and `runuser`. Host PHP and Redis are unnecessary. The installer does not install system software. Check Docker against the [official installation instructions](https://docs.docker.com/engine/install/).
 
-### Software Requirements
-- Operating System: Ubuntu 20.04+ / CentOS 7+ / Debian 10+
-- Latest version of aaPanel
-- Docker and Docker Compose
-- Nginx (any version)
-- MySQL 5.7+
+Create a new pure-static aaPanel website and configure its ordinary domain HTTPS certificate. Before running the installer, configure its existing root location as a reverse proxy:
 
-## Quick Deployment
-
-### 1. Install aaPanel
-```bash
-curl -sSL https://www.aapanel.com/script/install_6.0_en.sh -o install_6.0_en.sh && \
-bash install_6.0_en.sh aapanel
-```
-
-### 2. Basic Environment Setup
-
-#### 2.1 Install Docker
-```bash
-# Install Docker
-curl -sSL https://get.docker.com | bash
-
-# For CentOS systems, also run:
-systemctl enable docker
-systemctl start docker
-```
-
-#### 2.2 Install Required Components
-In the aaPanel dashboard, install:
-- Nginx (any version)
-- MySQL 5.7
-- ⚠️ PHP and Redis are not required
-
-### 3. Site Configuration
-
-#### 3.1 Create Website
-1. Navigate to: aaPanel > Website > Add site
-2. Fill in the information:
-   - Domain: Enter your site domain
-   - Database: Select MySQL
-   - PHP Version: Select Pure Static
-
-#### 3.2 Deploy Xboard
-```bash
-# Enter site directory
-cd /www/wwwroot/your-domain
-
-# Clean directory
-chattr -i .user.ini
-rm -rf .htaccess 404.html 502.html index.html .user.ini
-
-# Clone the privately maintained source repository
-git clone https://github.com/ksr-v/Xboard-Custom-Source.git ./
-
-# Prepare configuration file
-cp compose.host.sample.yaml compose.yaml
-
-# Install dependencies and initialize
-docker compose run -it --rm xboard php artisan xboard:install
-```
-> ⚠️ Please save the admin dashboard URL, username, and password shown after installation
-
-#### 3.3 Start Services
-```bash
-docker compose up -d
-```
-
-#### 3.4 Configure Reverse Proxy
-Add the following content to your site configuration:
 ```nginx
-location ^~ / {
+location / {
     proxy_pass http://127.0.0.1:7001;
     proxy_http_version 1.1;
     proxy_set_header Host $http_host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection $http_connection;
+    proxy_set_header Connection "upgrade";
     proxy_read_timeout 60s;
     proxy_buffering off;
-    proxy_cache off;
 }
 ```
-> The all-in-one container's embedded Caddy fuses HTTP and the panel↔node WebSocket on port 7001. The single `Upgrade`/`Connection` pair above is enough; no separate `/ws/` location is needed. To opt out and expose Octane / `:8076` directly, set `ENABLE_CADDY=false` in `compose.yaml`.
 
-## Maintenance Guide
+Replace the existing root location; do not add a duplicate. This is a reverse proxy, not Laravel URL rewrite. Check/reload Nginx. A 502 before the container starts is temporary. The fresh installer requires exactly one site matching this backend and never edits that original site.
 
-### Version Updates
+## 2. Install into an empty directory
+
+Replace the directory below with the actual new website directory. Preserve existing sites and data.
 
 ```bash
-docker compose pull && docker compose up -d
+cd /www/wwwroot/panel.example.com
+git clone --branch v2026.10.23.1 --single-branch \
+  https://github.com/ksr-v/Xboard-Custom-Source.git .
+bash docker-install.sh
 ```
 
-The container always runs `php artisan xboard:update` (migrate + plugin install + version cache + theme refresh) on boot, so no extra command is required.
+Enter the actual node communication address and administrator email, review the combined plan, then enter `YES` once. The IPv4 suggestion can be accepted or overridden; a failed lookup requires manual input. For NAT or multiple addresses, use the address reachable by the nodes.
 
-> **Using a `compose.yaml` from before 2026-04-19?** That template did not auto-run `xboard:update` on container start, so use the following command to upgrade instead:
-> ```bash
-> docker compose pull && docker compose run -it --rm web sh update.sh && docker compose up -d
-> ```
+The default is an existing aaPanel MySQL/MariaDB database with embedded Redis. Prepare an empty database and a dedicated account in aaPanel; the installer asks for its reachable host, port, database, user and hidden password. It prepares permissions, builds the independent source, installs Xboard and four enabled plugins as container `www`, then configures host HTTPS on port 8443, encrypted storage of a random CA passphrase, public CA import and the local firewall rule. The HTTP backend binds only `127.0.0.1:7001`.
 
-### Routine Maintenance
-- Regular log checking: `docker compose logs`
-- Monitor system resource usage
-- Regular backup of database and configuration files
+The tool prints a Root-private log directory. Read its `application-install.out` locally as Root to obtain the initial administrator password and dashboard path. Preserve these securely; do not publish the logs. Log in through the website domain and verify `/node-endpoint`.
 
-## Troubleshooting
+To use SQLite instead:
 
-If you encounter any issues during installation or operation, please check:
-1. **Empty Admin Dashboard**: If the admin panel is blank, run `git submodule update --init --recursive --force` to restore the theme files.
-2. System requirements are met
-3. All required ports are available
-3. Docker services are running properly
-4. Nginx configuration is correct
-5. Check logs for detailed error messages
+```bash
+bash docker-install.sh --database sqlite
+```
 
-> The node will automatically detect WebSocket availability during handshake. No extra configuration is needed on the node side. 
+For the default MySQL mode, use a dedicated account and an address reachable from the container; container `127.0.0.1` is not the host. The tool does not install MySQL, create accounts or wipe an existing database. Existing installations keep their database.
+
+The fresh installer only accepts a new directory or its own same-source retry. It creates an owned `compose.node-endpoint.yaml`; retain its project name and configuration. **Do not use this fresh installer for an existing original Docker panel.**
+
+## 3. Add the private entry to an existing standard Docker panel
+
+Back up the database, original `.env` / `APP_KEY`, `storage/app`, `.docker/.data`, plugins and all runtime volumes. Install/upgrade and enable the current NodeEndpoint plugin first.
+
+Supported automatic layouts use a local bridged Compose `xboard` service, image application `/www`, a non-root application user and persistent `.env`, `storage/app`, `.docker/.data` and `plugins`. A full application bind is unnecessary. Publish the backend only on loopback and configure the host Nginx proxy with WebSocket headers.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.9/install.sh | bash -s -- --docker
+```
+
+Review the detected container/project and confirm. Add `--app-dir /actual/compose/project` to select among multiple projects. Without a native FPM site the ordinary Root wizard also checks standard Docker, while `--docker` selects it explicitly.
+
+The tool configures HTTPS and saves the matching panel settings through a non-root PHP pipe. Web processes receive neither Docker socket access nor sudo; the Root CA private key remains outside the container. For an address change, save the plugin settings and copy its new Root command, or pass the saved address explicitly with `--host`. Changing website settings alone does not renew the server certificate or host listener.
+
+## 4. Version updates and container replacement
+
+Retain the database, original `APP_KEY`, runtime volumes, known-good image and host Root state. Never reinstall, delete `.env` or remove data volumes during an upgrade.
+
+**Older installation without a `storage/app` mount:** stop and retain the old container, copy its `/www/storage/app/.` into a new protected host directory, verify the public CA and plugin records, and back up that directory. Only then add the populated mount and recreate. A new empty mount hides existing container-layer files. Do not remove the old container before exporting its data. This is distinct from a fresh-install recreation test.
+
+After replacing a container, rerun the `--docker` command and explicitly confirm the reviewed plan. The tool verifies the existing credential against the original CA private key before updating the pinned container ID, preserving CA trust and passphrase. If the CA key was moved offline, provide the original encrypted file using `--ca-key /root-private/ca.key.pem`; never upload it or mount it into the panel.
+
+Obtain the intended source revision and rebuild the local image using the original Compose configuration/project and existing volumes. `docker compose pull` alone does not rebuild local source. `docker-install.sh` is for fresh installation and same-source retry, not arbitrary version upgrades. Its owned file is `compose.node-endpoint.yaml`; using a directory's default project name can create a second project. Restore a matching verified image/source and database/configuration/runtime backup when rolling back; changing an image tag does not undo database migrations.
+
+## Scheduled tasks and support scope
+
+Octane provides periodic scheduling. Check that the dashboard's scheduled-task status updates automatically; do not add a duplicate cron. Only configure one external non-root `schedule:run` after diagnosing that automatic scheduling is not running.
+
+The host firewall step does not configure cloud security groups or provider firewalls. New nodes use the native machine management's IP + private certificate command and its public CA; existing business nodes require the configuration-preserving migration workflow.
+
+The automatic first version excludes host networking, split services, remote Docker, arbitrary service names and publicly exposed HTTP backends. Native installations use the [PHP-FPM guide](./aapanel.md). The [earlier Docker/manual-entry report](../../installation/aapanel-docker-validation.zh-CN.md) remains historical evidence, not proof of the new automatic flow. Consult the new Release validation record for its actual tested scope.

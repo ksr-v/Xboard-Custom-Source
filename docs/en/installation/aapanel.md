@@ -1,6 +1,6 @@
 # Xboard Deployment Guide for aaPanel Environment
 
-This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.19.2** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.6, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
+This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.23.1** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.7, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
 
 ## Table of Contents
 
@@ -28,7 +28,7 @@ This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026
 - A trusted **Composer 2.2 or newer (2.x)** PHP script / PHAR; this guide pins **2.10.3**
 - The PHP extensions required by the pinned `composer.lock`, enabled for both PHP 8.3 CLI and FPM
 
-The installer does not install aaPanel, upgrade system software or Composer, or create database accounts. The complete installation was validated on an isolated PHP-FPM / SQLite test site; complete MySQL / PostgreSQL installation and Docker / Octane installation are outside this release's validated scope. See the [validation record](../../installation/bundled-validation.zh-CN.md).
+The native installer does not install aaPanel, upgrade system software or Composer, or create database accounts. Its validation uses an isolated PHP-FPM / SQLite site; complete MySQL / PostgreSQL and standalone Octane deployments are outside that record. Docker has a separate [installation guide](aapanel-docker.md) and validation record. See the [native validation record](../../installation/bundled-validation.zh-CN.md).
 
 ## Quick Deployment
 
@@ -88,7 +88,7 @@ As Root, clone the fixed independent release into the empty site directory:
 
 ```bash
 cd /www/wwwroot/your-domain
-git clone --branch v2026.10.19.2 --single-branch \
+git clone --branch v2026.10.23.1 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git .
 ```
 
@@ -204,10 +204,10 @@ Do not rerun fresh installation, regenerate APP_KEY, or uninstall plugins first.
 
 ### Common Issues
 
-**Private-certificate nodes connect, but the server page says IPv4 is pending:** The old independent Nginx entry omitted FlowScope's exact `POST /api/v2/flowscope/node-address` route. Machine status uses a different endpoint. Fresh v2026.10.19.2 installs use root-installer-v1.0.8 / tools 1.0.5 to include the audited IPv4 route. Updating panel code or the plugin ZIP alone does not necessarily update an existing Nginx entry. Run once as Root on the panel server:
+**Private-certificate nodes connect, but the server page says IPv4 is pending:** The old independent Nginx entry omitted FlowScope's exact `POST /api/v2/flowscope/node-address` route. Machine status uses a different endpoint. Fresh v2026.10.23.1 installs use root-installer-v1.0.9 / tools 1.0.6 to include the audited IPv4 route. Updating panel code or the plugin ZIP alone does not necessarily update an existing Nginx entry. Run once as Root on the panel server:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.8/install.sh | bash -s -- --refresh-entry
+curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.9/install.sh | bash -s -- --refresh-entry
 ```
 
 The tool reads the managed entry's current address, port, site, PHP and WS mode. Review the plan and enter its full confirmation phrase. Automatic refresh supports native HTTPS FPM / Octane entries; Docker is excluded. It preserves the CA, server certificate, managed passphrase, node Token and database, without changing plugin settings or firewall rules. Ensure FlowScope 2.4.0 is enabled, the node uses independent Node v1.13-orphan.4, and it can reach `https://api-ipv4.ip.sb/ip`. Automatic IPv4 reporting requires neither the Python collector nor periodic traffic. After detection succeeds, allow up to 10 minutes for the previous 404 cache to expire, then refresh the page. Do not reinstall, change Tokens or force a Node restart. `--sync-ca` and `--configure-firewall` do not refresh routes; use the ordinary Root wizard to change an IP.
@@ -240,7 +240,7 @@ Use the actual site path and review the communication address offered by the ins
 **The saved communication address is `203.0.113.10`:** This was an old documentation example, not the panel server's public IP. If its Root endpoint was already created, run this on the same independent Xboard panel server as Root:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.8/install.sh | bash -s -- --repair-address
+curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.9/install.sh | bash -s -- --repair-address
 ```
 
 Choose automatic public IPv4 detection or manual address entry. For automatic detection, review the candidate and press Enter to accept it or enter the actual communication IP / domain; manual entry does not contact the detection service. Review and confirm the modification plan. The tool keeps the existing CA and passphrase, issues a server certificate for the new address, saves settings as the application user, and synchronizes the public CA. Changing the plugin page alone does not repair the server certificate. This command requires the independent backend's `xboard:configure-endpoint` command. If no Root endpoint exists yet, use the installed-site continuation above and check the real address. Refresh the plugin page and copy fresh node installation commands afterward; do not reinstall Xboard or recreate its CA.
