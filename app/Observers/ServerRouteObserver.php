@@ -8,6 +8,8 @@ use App\Services\NodeSyncService;
 
 class ServerRouteObserver
 {
+    public bool $afterCommit = true;
+
     public function updated(ServerRoute $route): void
     {
         $this->notifyAffectedNodes($route->id);
@@ -20,7 +22,8 @@ class ServerRouteObserver
 
     private function notifyAffectedNodes(int $routeId): void
     {
-        $servers = Server::where('show', 1)->get()->filter(
+        // Subscription visibility does not determine whether a machine runs a node.
+        $servers = Server::where('enabled', true)->get()->filter(
             fn ($s) => in_array($routeId, $s->route_ids ?? [])
         );
 

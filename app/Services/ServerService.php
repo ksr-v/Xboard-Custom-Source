@@ -114,8 +114,10 @@ class ServerService
     // 获取路由规则
     public static function getRoutes(array $routeIds)
     {
+        // Rules are first-match: SQL whereIn() does not preserve the selected priority.
+        $routeOrder = array_flip(array_values(array_unique($routeIds)));
         $routes = ServerRoute::select(['id', 'match', 'action', 'action_value'])->whereIn('id', $routeIds)->get();
-        return $routes;
+        return $routes->sortBy(fn (ServerRoute $route) => $routeOrder[$route->id])->values();
     }
 
     /**

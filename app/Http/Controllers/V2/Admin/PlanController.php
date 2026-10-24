@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\PlanSave;
 use App\Models\Order;
 use App\Models\Plan;
 use App\Models\User;
+use App\Services\NodeSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -46,12 +47,25 @@ class PlanController extends Controller
             DB::beginTransaction();
             try {
                 if ($request->input('force_update')) {
+                    // Bulk updates bypass UserObserver. Keep the previous groups so
+                    // moved users are removed there as well as added to their new group.
+                    $affectedGroupIds = User::where('plan_id', $plan->id)
+                        ->distinct()->pluck('group_id')
+                        ->push($params['group_id'])
+                        ->filter(fn ($groupId) => $groupId !== null)
+                        ->map(fn ($groupId) => (int) $groupId)
+                        ->unique()->values()->all();
                     User::where('plan_id', $plan->id)->update([
                         'group_id' => $params['group_id'],
                         'transfer_enable' => $params['transfer_enable'] * 1073741824,
                         'speed_limit' => $params['speed_limit'],
                         'device_limit' => $params['device_limit'],
                     ]);
+                    DB::afterCommit(function () use ($affectedGroupIds): void {
+                        foreach ($affectedGroupIds as $groupId) {
+                            NodeSyncService::notifyUsersUpdatedByGroup($groupId);
+                        }
+                    });
                 }
                 $plan->update($params);
                 DB::commit();

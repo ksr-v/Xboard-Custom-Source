@@ -21,6 +21,7 @@ class UserObserver
     // Use wasChanged() to detect what was actually modified.
     $syncFields = ['group_id', 'uuid', 'speed_limit', 'device_limit', 'banned', 'expired_at', 'transfer_enable', 'u', 'd', 'plan_id'];
     $needsSync = $user->wasChanged($syncFields);
+    $limitsChanged = $user->wasChanged(['speed_limit', 'device_limit']);
     $oldGroupId = $user->wasChanged('group_id') ? $user->getOriginal('group_id') : null;
 
     if ($user->wasChanged(['plan_id', 'expired_at'])) {
@@ -28,7 +29,12 @@ class UserObserver
     }
 
     if ($needsSync) {
-      NodeUserSyncJob::dispatch($user->id, 'updated', $oldGroupId);
+      // Apply interactive limit changes after commit without waiting behind notification jobs.
+      if ($limitsChanged) {
+        NodeUserSyncJob::dispatchSync($user->id, 'updated', $oldGroupId);
+      } else {
+        NodeUserSyncJob::dispatch($user->id, 'updated', $oldGroupId);
+      }
     }
   }
 
