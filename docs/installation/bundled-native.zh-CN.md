@@ -6,14 +6,14 @@
 
 | 内置功能插件 | 固定版本 | 源码位置 |
 | --- | --- | --- |
-| NodeEndpoint | 1.0.7 | `bundled-plugins/NodeEndpoint` |
+| NodeEndpoint | 1.0.8 | `bundled-plugins/NodeEndpoint` |
 | SmartExpiry | 1.2.0 | `bundled-plugins/SmartExpiry` |
 | QRCode Extend | 1.2.0，审计副本 | `bundled-plugins/Qrcodeextend` |
 | FlowScope | 2.4.0，含五个采集器安装资产 | `bundled-plugins/Flowscope` |
 
 来源 commit 和每个文件摘要记录在 `bundled-plugins/manifest.json`。安装器校验后部署到正常的 `plugins/` 目录，通过原生插件生命周期执行迁移、安装和启用。后续仍可使用原生插件管理，不以 core 同名目录遮蔽用户上传版本。
 
-本版为 v2026.10.23.1，使用 root-installer-v1.0.9 / tools 1.0.6。全新 Root 入口计划包含经过审计的 FlowScope 出口 IPv4 精确 POST 上报路径，仍不开放管理接口或整个插件路径前缀。
+本版为 v2026.10.25.1，使用 root-installer-v1.0.9 / tools 1.0.6。全新 Root 入口计划包含经过审计的 FlowScope 出口 IPv4 精确 POST 上报路径，仍不开放管理接口或整个插件路径前缀。
 
 ## 从零安装：宝塔 / aaPanel 原生 PHP-FPM
 
@@ -103,7 +103,7 @@ curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoi
 
 原生 HTTPS FPM / Octane 从安装记录读取当前地址、端口、站点、PHP 和 WS 模式，完整确认后刷新路径规则，保留原 CA、服务器证书、托管口令、节点 Token 和数据库，不写插件设置或防火墙。标准 Docker 现在有独立的宿主 Root 自动流程，容器换绑会核对原 CA，详见 [Docker 简化安装](aapanel-docker.zh-CN.md)。
 
-确认 FlowScope 2.4.0 启用，节点使用独立 Node v1.13-orphan.4，并能直连 `https://api-ipv4.ip.sb/ip`。此 IPv4 来自 Node 自动报告，不要求 Python 采集器或周期流量。IP 检测成功后，旧 404 缓存最多 10 分钟，等待自动重试再刷新详情；无需重装节点、改 Token 或强制重启。只运行 `--sync-ca` 或 `--configure-firewall` 不刷新路径。改 IP 则使用普通 Root 向导，按新地址更新服务器证书。
+确认 FlowScope 2.4.0 启用，节点使用独立 Node v1.13-orphan.5，并能直连 `https://api-ipv4.ip.sb/ip`。此 IPv4 来自 Node 自动报告，不要求 Python 采集器或周期流量。IP 检测成功后，旧 404 缓存最多 10 分钟，等待自动重试再刷新详情；无需重装节点、改 Token 或强制重启。只运行 `--sync-ca` 或 `--configure-firewall` 不刷新路径。改 IP 则使用普通 Root 向导，按新地址更新服务器证书。
 
 ### 旧版确认中止后继续
 
@@ -140,6 +140,8 @@ install -d -o root -g root -m 755 /var/cache/xboard-composer
 再重跑原 `init.sh` 命令，显式传入 `--composer /opt/xboard-tools/composer-2.10.3.phar`。v2026.10.18.2 会自行准备缓存父目录权限。`mbstring` 重复加载警告不是 `composer-runtime-api` 依赖错误的原因，可另查 PHP 配置中的重复扩展项。保留 `.env`；若已经开始应用初始化或面板已安装，不通过删除 `.env` 强行重跑新装。
 
 ## 已有面板升级
+
+本次 `v2026.10.25.1` 修复还要求独立 Node `v1.13-orphan.5`，完整顺序、两类部署和验证步骤见[本次更新教程](upgrade-2026.10.25.zh-CN.md)。只同步内置插件不足以修复旧节点内核。
 
 先备份数据库、原 `.env` / APP_KEY、源码、插件目录与设置、Admin 资源、NodeEndpoint 公共 CA 和 Root 状态，确认具备恢复途径。不要卸载插件、清空数据库、删除 `.env`，也不要重新运行全新安装。
 

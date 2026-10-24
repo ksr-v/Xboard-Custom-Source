@@ -1,6 +1,8 @@
 # aaPanel + Docker: bundled Xboard and the private node entry
 
-This guide targets `v2026.10.23.1`, including NodeEndpoint 1.0.7, SmartExpiry 1.2.0, audited QRCode Extend 1.2.0 and FlowScope 2.4.0. See the [Chinese guide](../../installation/aapanel-docker.zh-CN.md). Run the commands in the **host Root SSH session**.
+Existing panels: use the [v2026.10.25.1 update guide](../../installation/upgrade-2026.10.25.zh-CN.md) (Chinese) for preserved volumes and the matching Node upgrade. Do not rerun the fresh installer for a cross-version update.
+
+This guide targets `v2026.10.25.1`, including NodeEndpoint 1.0.8, SmartExpiry 1.2.0, audited QRCode Extend 1.2.0 and FlowScope 2.4.0. See the [Chinese guide](../../installation/aapanel-docker.zh-CN.md). Run the commands in the **host Root SSH session**.
 
 ## 1. Prepare the website
 
@@ -31,7 +33,7 @@ Replace the directory below with the actual new website directory. Preserve exis
 
 ```bash
 cd /www/wwwroot/panel.example.com
-git clone --branch v2026.10.23.1 --single-branch \
+git clone --branch v2026.10.25.1 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git .
 bash docker-install.sh
 ```

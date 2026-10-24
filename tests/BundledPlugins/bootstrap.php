@@ -12,6 +12,13 @@ if (!is_file($vendor)) { throw new RuntimeException('Set XBOARD_TEST_VENDOR to a
 /** @var Composer\Autoload\ClassLoader $loader */
 $loader = require $vendor;
 $loader->setPsr4('App\\', [$sourceRoot . '/app']);
+// A shared optimized vendor must load this checkout's application classes.
+foreach ($loader->getClassMap() as $class => $path) {
+    if (str_starts_with($class, 'App\\')) {
+        $localPath = $sourceRoot . '/app/' . str_replace('\\', '/', substr($class, 4)) . '.php';
+        if (is_file($localPath)) { $loader->addClassMap([$class => $localPath]); }
+    }
+}
 $work = getenv('XBOARD_TEST_WORK') ?: sys_get_temp_dir() . '/xboard-bundle-' . bin2hex(random_bytes(6));
 if (file_exists($work)) { throw new RuntimeException('Use a new dedicated test directory.'); }
 mkdir($work, 0700, true);

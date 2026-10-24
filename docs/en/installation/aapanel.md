@@ -1,6 +1,6 @@
 # Xboard Deployment Guide for aaPanel Environment
 
-This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.23.1** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.7, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
+This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.25.1** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.8, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.
 
 ## Table of Contents
 
@@ -88,7 +88,7 @@ As Root, clone the fixed independent release into the empty site directory:
 
 ```bash
 cd /www/wwwroot/your-domain
-git clone --branch v2026.10.23.1 --single-branch \
+git clone --branch v2026.10.25.1 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git .
 ```
 
@@ -187,6 +187,8 @@ This release's complete installation and Root endpoint integration were validate
 
 ## Maintenance Guide
 
+For the rate-limit and routing fixes in this release, follow the [v2026.10.25.1 update guide](../../installation/upgrade-2026.10.25.zh-CN.md) (Chinese). Update the backend and independent Node `v1.13-orphan.5` together; keep the existing database, `APP_KEY`, node bindings and CA trust.
+
 ### Version Updates
 
 For an existing panel, use the [Root archive upgrade procedure](../../installation/bundled-native.zh-CN.md#已有面板升级). It requires a fixed release archive, an independently checked SHA-256, and an existing protected database backup. It preserves `.env` / APP_KEY, runtime data, plugin settings, CA, and existing disabled-plugin choices. Dependency manifests must match; an original panel with different dependencies needs a separately prepared upgrade.
@@ -204,13 +206,13 @@ Do not rerun fresh installation, regenerate APP_KEY, or uninstall plugins first.
 
 ### Common Issues
 
-**Private-certificate nodes connect, but the server page says IPv4 is pending:** The old independent Nginx entry omitted FlowScope's exact `POST /api/v2/flowscope/node-address` route. Machine status uses a different endpoint. Fresh v2026.10.23.1 installs use root-installer-v1.0.9 / tools 1.0.6 to include the audited IPv4 route. Updating panel code or the plugin ZIP alone does not necessarily update an existing Nginx entry. Run once as Root on the panel server:
+**Private-certificate nodes connect, but the server page says IPv4 is pending:** The old independent Nginx entry omitted FlowScope's exact `POST /api/v2/flowscope/node-address` route. Machine status uses a different endpoint. Fresh v2026.10.25.1 installs use root-installer-v1.0.9 / tools 1.0.6 to include the audited IPv4 route. Updating panel code or the plugin ZIP alone does not necessarily update an existing Nginx entry. Run once as Root on the panel server:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.9/install.sh | bash -s -- --refresh-entry
 ```
 
-The tool reads the managed entry's current address, port, site, PHP and WS mode. Review the plan and enter its full confirmation phrase. Automatic refresh supports native HTTPS FPM / Octane entries; Docker is excluded. It preserves the CA, server certificate, managed passphrase, node Token and database, without changing plugin settings or firewall rules. Ensure FlowScope 2.4.0 is enabled, the node uses independent Node v1.13-orphan.4, and it can reach `https://api-ipv4.ip.sb/ip`. Automatic IPv4 reporting requires neither the Python collector nor periodic traffic. After detection succeeds, allow up to 10 minutes for the previous 404 cache to expire, then refresh the page. Do not reinstall, change Tokens or force a Node restart. `--sync-ca` and `--configure-firewall` do not refresh routes; use the ordinary Root wizard to change an IP.
+The tool reads the managed entry's current address, port, site, PHP and WS mode. Review the plan and enter its full confirmation phrase. Automatic refresh supports native HTTPS FPM / Octane entries; Docker is excluded. It preserves the CA, server certificate, managed passphrase, node Token and database, without changing plugin settings or firewall rules. Ensure FlowScope 2.4.0 is enabled, the node uses independent Node v1.13-orphan.5, and it can reach `https://api-ipv4.ip.sb/ip`. Automatic IPv4 reporting requires neither the Python collector nor periodic traffic. After detection succeeds, allow up to 10 minutes for the previous 404 cache to expire, then refresh the page. Do not reinstall, change Tokens or force a Node restart. `--sync-ca` and `--configure-firewall` do not refresh routes; use the ordinary Root wizard to change an IP.
 
 **An older release's dashboard works, but installation stopped with `Filesystem.php` / undefined `exec`:** Xboard and the database may already be installed. The fresh installer runs `storage:link` before configuring the private IP entry, firewall, and public CA, so those later steps are still pending. The new fresh-install flow checks PHP CLI `symlink` availability before Composer or database initialization. To recover an older installation, enable `symlink` in PHP 8.3's disabled-function settings and ensure the CLI configuration has taken effect. Deploy this release's code, then run the following as Root from the installed site directory, replacing the paths:
 

@@ -1,6 +1,6 @@
 # 宝塔 / aaPanel 安装教程（内置插件版）
 
-本教程沿用原版的“安装环境 → 创建网站 → 拉取源码 → 配置网站 → 执行安装 → 守护进程”流程，适用于独立 **v2026.10.23.1** 的原生 PHP-FPM 部署。
+本教程沿用原版的“安装环境 → 创建网站 → 拉取源码 → 配置网站 → 执行安装 → 守护进程”流程，适用于独立 **v2026.10.25.1** 的原生 PHP-FPM 部署。
 
 核心命令仍是 `git clone` 和 `bash init.sh`。新版需要**先配置实际运行的 Nginx / PHP-FPM 网站，再执行安装器**。安装器会统一处理权限及 NodeEndpoint 入口，无需再逐个上传插件、单独运行 Root 安装脚本或手动上传公共 CA。
 
@@ -8,7 +8,7 @@
 
 | 插件 | 版本 |
 | --- | --- |
-| NodeEndpoint | 1.0.7 |
+| NodeEndpoint | 1.0.8 |
 | SmartExpiry | 1.2.0 |
 | QRCode Extend | **1.2.0，审计副本** |
 | FlowScope | 2.4.0 |
@@ -92,7 +92,7 @@ Composer 安装时会检查完整依赖要求，缺少的扩展应先补齐。�
 ```bash
 cd /www/wwwroot/your-domain
 
-git clone --branch v2026.10.23.1 --single-branch \
+git clone --branch v2026.10.25.1 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git ./
 ```
 
@@ -100,7 +100,7 @@ git clone --branch v2026.10.23.1 --single-branch \
 
 **先完成下一节的网站配置，再运行 `init.sh`。** 源码已经包含四插件及公共 Root 工具资产，不需要另外下载插件 ZIP。
 
-也可以使用 [Release](https://github.com/ksr-v/Xboard-Custom-Source/releases/tag/v2026.10.23.1) 中的固定附件 `xboard.tar.gz`，独立核对 `SHA256SUMS` 后解压到该空目录，替代上述 Git 克隆。两种取源码方式选一种即可，随后均继续 3.3。
+也可以使用 [Release](https://github.com/ksr-v/Xboard-Custom-Source/releases/tag/v2026.10.25.1) 中的固定附件 `xboard.tar.gz`，独立核对 `SHA256SUMS` 后解压到该空目录，替代上述 Git 克隆。两种取源码方式选一种即可，随后均继续 3.3。
 
 #### 3.3 配置网站并执行安装
 
@@ -210,6 +210,8 @@ runuser -u www -- /www/server/php/83/bin/php /www/wwwroot/your-domain/artisan sc
 
 ## 维护指南
 
+本次限速/路由修复按 [v2026.10.25.1 更新教程](upgrade-2026.10.25.zh-CN.md)操作，同时更新后端和节点；全新安装步骤不用于已有数据库。
+
 ### 版本更新
 
 已有面板按 [Root 归档升级说明](bundled-native.zh-CN.md#已有面板升级) 操作：先备份数据库、`.env` / APP_KEY、源码、插件及 Root 状态，再核对固定发行包摘要，通过升级器部署。
@@ -224,13 +226,13 @@ runuser -u www -- /www/server/php/83/bin/php /www/wwwroot/your-domain/artisan sc
 
 ## 常见问题
 
-**私有证书对接正常，但服务器详情 IPv4 显示“待获取”：** 旧独立 Nginx 入口遗漏 FlowScope 使用的精确 `POST /api/v2/flowscope/node-address`，机器状态接口正常不能证明此上报成功。v2026.10.23.1 新装通过 root-installer-v1.0.9 / tools 1.0.6 生成包含该路径的计划。已有面板只升级代码或插件不会自动刷新原 Nginx；在面板服务器以 Root 执行一次：
+**私有证书对接正常，但服务器详情 IPv4 显示“待获取”：** 旧独立 Nginx 入口遗漏 FlowScope 使用的精确 `POST /api/v2/flowscope/node-address`，机器状态接口正常不能证明此上报成功。v2026.10.25.1 新装通过 root-installer-v1.0.9 / tools 1.0.6 生成包含该路径的计划。已有面板只升级代码或插件不会自动刷新原 Nginx；在面板服务器以 Root 执行一次：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.9/install.sh | bash -s -- --refresh-entry
 ```
 
-工具读取已有安装记录中的地址、端口、站点、PHP 和 WS 模式，核对计划后输入完整确认短语。支持原生 HTTPS FPM / Octane，Docker 不在自动刷新范围；原 CA、服务器证书、托管口令、Token 和数据库保留，不写插件设置或防火墙。确认 FlowScope 2.4.0 启用、节点使用独立 Node v1.13-orphan.4，并能访问 `https://api-ipv4.ip.sb/ip`。IPv4 自动报告不要求 Python 采集器或周期流量；检测成功后等待旧 404 最多 10 分钟负缓存自动重试，再刷新详情。无需重装节点、改 Token 或强制重启。`--sync-ca` / `--configure-firewall` 不会刷新路径；修改通讯 IP 仍使用普通 Root 向导。
+工具读取已有安装记录中的地址、端口、站点、PHP 和 WS 模式，核对计划后输入完整确认短语。支持原生 HTTPS FPM / Octane，Docker 不在自动刷新范围；原 CA、服务器证书、托管口令、Token 和数据库保留，不写插件设置或防火墙。确认 FlowScope 2.4.0 启用、节点使用独立 Node v1.13-orphan.5，并能访问 `https://api-ipv4.ip.sb/ip`。IPv4 自动报告不要求 Python 采集器或周期流量；检测成功后等待旧 404 最多 10 分钟负缓存自动重试，再刷新详情。无需重装节点、改 Token 或强制重启。`--sync-ca` / `--configure-firewall` 不会刷新路径；修改通讯 IP 仍使用普通 Root 向导。
 
 **旧版后台可以登录，但安装停在 `Filesystem.php` / undefined `exec`：** 主程序和数据库可能已完成安装，失败的是后面的 `storage:link`。独立 IP HTTPS 入口、防火墙及公共 CA 配置排在它之后，尚不能据此认为全部安装完成。新版新装流程已将 PHP CLI 的 `symlink` 可用性检查前置到 Composer 和数据库初始化之前。
 

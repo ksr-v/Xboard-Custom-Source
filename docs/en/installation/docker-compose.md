@@ -2,13 +2,13 @@
 
 For aaPanel and the private node HTTPS entry, follow the [current aaPanel + Docker guide](./aapanel-docker.md) ([Chinese](../../installation/aapanel-docker.zh-CN.md)). It provides the `docker-install.sh` fresh installer, a single reviewed confirmation, and the Root `--docker` workflow for existing standard panels.
 
-The independent image includes NodeEndpoint 1.0.7, SmartExpiry 1.2.0, audited QRCode Extend 1.2.0 and FlowScope 2.4.0. It is built from this repository; original-maintainer images or submodules are unnecessary.
+The independent image includes NodeEndpoint 1.0.8, SmartExpiry 1.2.0, audited QRCode Extend 1.2.0 and FlowScope 2.4.0. It is built from this repository; original-maintainer images or submodules are unnecessary.
 
 ## Choose the deployment path
 
 | Situation | Path |
 | --- | --- |
-| New empty aaPanel website, SQLite or a prepared MySQL database | Configure the loopback Nginx proxy, clone fixed `v2026.10.23.1`, run `bash docker-install.sh` |
+| New empty aaPanel website, SQLite or a prepared MySQL database | Configure the loopback Nginx proxy, clone fixed `v2026.10.25.1`, run `bash docker-install.sh` |
 | Existing standard bridged `xboard` Compose service | Preserve data, upgrade/enable NodeEndpoint, run the host Root `--docker` command |
 | Existing original panel without fresh-installer ownership | Keep its current installation; do not run the fresh wrapper |
 | Native PHP-FPM | Use the [native guide](./aapanel.md) |
@@ -17,6 +17,8 @@ The independent image includes NodeEndpoint 1.0.7, SmartExpiry 1.2.0, audited QR
 The repository retains four Compose samples for advanced deployment. The fresh automatic installer instead generates its own owned `compose.node-endpoint.yaml`. Do not replace its recorded project with a sample, another Compose file or a guessed project name.
 
 ## Data and updates
+
+The paired backend `v2026.10.25.1` / Node `v1.13-orphan.5` update has a [dedicated update guide](../../installation/upgrade-2026.10.25.zh-CN.md) (Chinese), including retained volumes, a fixed source build, container rebinding and rollback. Installing the plugin or refreshing the Root entry alone does not replace the backend or node binaries.
 
 Preserve the database, original `.env` / `APP_KEY`, `storage/app`, `.docker/.data`, plugins and every runtime volume. `storage/app` includes the public CA and plugin ownership records. Do not mount an empty directory over older container-layer data: stop/retain the old container, export and verify its storage first, and only then recreate with the populated mount.
 

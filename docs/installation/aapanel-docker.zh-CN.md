@@ -1,6 +1,6 @@
 # 宝塔 / aaPanel + Docker 安装（内置四插件）
 
-本教程配套独立后端 `v2026.10.23.1`，内置 NodeEndpoint 1.0.7、SmartExpiry 1.2.0、二维码审计副本 1.2.0 和 FlowScope 2.4.0。新装通过 `docker-install.sh` 合并 Xboard 安装与宿主 Root 节点入口配置；已有面板使用下方保留数据流程。
+本教程配套独立后端 `v2026.10.25.1`，内置 NodeEndpoint 1.0.8、SmartExpiry 1.2.0、二维码审计副本 1.2.0 和 FlowScope 2.4.0。新装通过 `docker-install.sh` 合并 Xboard 安装与宿主 Root 节点入口配置；已有面板使用下方保留数据流程。
 
 ## 1. 准备环境和宝塔网站
 
@@ -36,7 +36,7 @@ location / {
 
 ```bash
 cd /www/wwwroot/panel.example.com
-git clone --branch v2026.10.23.1 --single-branch \
+git clone --branch v2026.10.25.1 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git .
 bash docker-install.sh
 ```
@@ -80,6 +80,8 @@ curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoi
 修改 IP 时，在插件页面保存后复制新版 Root 命令，或在上述命令追加 `--host` 明确给出已保存的地址。现有入口沿用原 CA，地址变化时重签服务器证书；网页保存本身不改变宿主入口。
 
 ## 4. 保留旧数据、重建容器和升级
+
+本次限速/路由修复的固定版本、保留卷构建/替换命令与节点更新见 [v2026.10.25.1 更新教程](upgrade-2026.10.25.zh-CN.md)。`docker-install.sh` 仅用于新装或同源码重试，不是跨版本升级入口。
 
 所有升级前保留数据库、原 `APP_KEY`、公共 CA、运行卷、原镜像和宿主 Root 私有状态。不要运行初始化、删除 `.env` 或执行 `down -v`。
 
