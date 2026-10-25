@@ -7,6 +7,7 @@ use App\Models\ServerMachine;
 use App\Models\ServerRoute;
 use App\Models\User;
 use App\Services\Plugin\HookManager;
+use App\Support\Hysteria2PortHopping;
 use App\Utils\CacheKey;
 use App\Utils\Helper;
 use Illuminate\Support\Facades\Cache;
@@ -370,6 +371,15 @@ class ServerService
             ],
             default => [],
         };
+
+        // Old clients ignore this optional field. Never infer privileged rules from
+        // legacy malformed ranges, lists, or an invalid single listening port.
+        if ($nodeType === Server::TYPE_HYSTERIA
+            && (int) data_get($protocolSettings, 'version') === 2
+            && Hysteria2PortHopping::parsePort($serverPort) !== null
+            && ($portRange = Hysteria2PortHopping::parseRange($node->port)) !== null) {
+            $response['port_hopping'] = $portRange;
+        }
 
         if (!empty($node['route_ids'])) {
             $response['routes'] = self::getRoutes($node['route_ids']);

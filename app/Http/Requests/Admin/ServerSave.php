@@ -4,6 +4,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\Server;
+use App\Support\Hysteria2PortHopping;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ServerSave extends FormRequest
@@ -226,6 +227,22 @@ class ServerSave extends FormRequest
         return $result;
     }
 
+    protected function prepareForValidation(): void
+    {
+        // Older forms used zero for the client's default hopping interval.
+        if ($this->isHysteria2() && in_array($this->input('protocol_settings.hop_interval'), [0, '0'], true)) {
+            $settings = $this->input('protocol_settings');
+            $settings['hop_interval'] = null;
+            $this->merge(['protocol_settings' => $settings]);
+        }
+    }
+
+    private function isHysteria2(): bool
+    {
+        return $this->input('type') === Server::TYPE_HYSTERIA
+            && filter_var($this->input('protocol_settings.version'), FILTER_VALIDATE_INT) === 2;
+    }
+
     public function rules(): array
     {
         $type = $this->input('type');
@@ -234,6 +251,27 @@ class ServerSave extends FormRequest
 
         foreach ($protocolRules as $field => $rule) {
             $rules['protocol_settings.' . $field] = $rule;
+        }
+
+        if ($this->isHysteria2()) {
+            $rules['port'] = ['bail', 'required', function ($attribute, $value, $fail): void {
+                if (Hysteria2PortHopping::parsePort($value) === null
+                    && Hysteria2PortHopping::parseRange($value) === null) {
+                    $fail('Hysteria2 连接端口必须为 1–65535 的单端口或升序范围，例如 20000-21000。');
+                }
+            }];
+            $rules['server_port'] = ['bail', 'required', function ($attribute, $value, $fail): void {
+                if (Hysteria2PortHopping::parsePort($value) === null) {
+                    $fail('Hysteria2 服务监听端口必须为 1–65535 的单个整数。');
+                }
+            }];
+            $rules['protocol_settings.hop_interval'] = ['nullable', 'integer', 'min:1',
+                function ($attribute, $value, $fail): void {
+                    if (!is_int($value) && !is_string($value)) {
+                        $fail('Hysteria2 跳跃间隔必须为正整数秒数或留空。');
+                    }
+                },
+            ];
         }
 
         return $rules;

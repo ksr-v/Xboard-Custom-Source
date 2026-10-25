@@ -26,7 +26,9 @@ class ServerObserver
             'custom_outbounds',
             'custom_routes',
             'cert_config',
-        ])) {
+        ]) || ($server->type === Server::TYPE_HYSTERIA
+            && (int) data_get($server->protocol_settings, 'version') === 2
+            && $server->wasChanged('port'))) {
             NodeSyncService::notifyConfigUpdated($server->id);
         }
 
