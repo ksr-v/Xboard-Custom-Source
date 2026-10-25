@@ -106,7 +106,9 @@ def main():
         (destination / 'latest.json').write_bytes(encoded)
         (destination / 'SHA256SUMS').write_text(digest + '  xboard.tar.gz\n', encoding='utf-8')
         (destination / 'plugin-source-lock.json').write_bytes(files['bundled-plugins/manifest.json'][0])
-        report = 'docs/installation/bundled-validation.zh-CN.md'
+        report = f"docs/installation/release-{bundle['bundle_version']}-validation.zh-CN.md"
+        if report not in files:
+            report = 'docs/installation/bundled-validation.zh-CN.md'
         if report in files:
             (destination / 'VALIDATION.md').write_bytes(files[report][0])
         current = output / 'latest.json'

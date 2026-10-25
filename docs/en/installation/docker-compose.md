@@ -2,13 +2,15 @@
 
 For aaPanel and the private node HTTPS entry, follow the [current aaPanel + Docker guide](./aapanel-docker.md) ([Chinese](../../installation/aapanel-docker.zh-CN.md)). It provides the `docker-install.sh` fresh installer, a single reviewed confirmation, and the Root `--docker` workflow for existing standard panels.
 
-The independent image includes NodeEndpoint 1.0.8, SmartExpiry 1.2.0, audited QRCode Extend 1.2.0 and FlowScope 2.4.0. It is built from this repository; original-maintainer images or submodules are unnecessary.
+Pair this backend with independent Node `v1.13-orphan.6` for automatic Hysteria2 UDP range forwarding and the `node` management menu. Update the backend first, then each node with `upgrade`; keep existing identities, credentials and CA trust. Plugins do not need to be uninstalled. See the [operation notes](../../operations/node-management-hy2.zh-CN.md) and the [matching update guide](../../installation/upgrade-2026.10.25.2.zh-CN.md) (Chinese).
+
+The independent image includes NodeEndpoint 1.0.9, SmartExpiry 1.2.0, audited QRCode Extend 1.2.0 and FlowScope 2.4.0. It is built from this repository; original-maintainer images or submodules are unnecessary.
 
 ## Choose the deployment path
 
 | Situation | Path |
 | --- | --- |
-| New empty aaPanel website, SQLite or a prepared MySQL database | Configure the loopback Nginx proxy, clone fixed `v2026.10.25.1`, run `bash docker-install.sh` |
+| New empty aaPanel website, SQLite or a prepared MySQL database | Configure the loopback Nginx proxy, clone fixed `v2026.10.25.2`, run `bash docker-install.sh` |
 | Existing standard bridged `xboard` Compose service | Preserve data, upgrade/enable NodeEndpoint, run the host Root `--docker` command |
 | Existing original panel without fresh-installer ownership | Keep its current installation; do not run the fresh wrapper |
 | Native PHP-FPM | Use the [native guide](./aapanel.md) |
@@ -18,7 +20,7 @@ The repository retains four Compose samples for advanced deployment. The fresh a
 
 ## Data and updates
 
-The paired backend `v2026.10.25.1` / Node `v1.13-orphan.5` update has a [dedicated update guide](../../installation/upgrade-2026.10.25.zh-CN.md) (Chinese), including retained volumes, a fixed source build, container rebinding and rollback. Installing the plugin or refreshing the Root entry alone does not replace the backend or node binaries.
+The paired backend `v2026.10.25.2` / Node `v1.13-orphan.6` update has a [dedicated update guide](../../installation/upgrade-2026.10.25.2.zh-CN.md) (Chinese), including retained volumes, a fixed source build, container rebinding and rollback. Installing the plugin or refreshing the Root entry alone does not replace the backend or node binaries.
 
 Preserve the database, original `.env` / `APP_KEY`, `storage/app`, `.docker/.data`, plugins and every runtime volume. `storage/app` includes the public CA and plugin ownership records. Do not mount an empty directory over older container-layer data: stop/retain the old container, export and verify its storage first, and only then recreate with the populated mount.
 

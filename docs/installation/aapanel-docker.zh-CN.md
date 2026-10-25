@@ -1,6 +1,8 @@
 # 宝塔 / aaPanel + Docker 安装（内置四插件）
 
-本教程配套独立后端 `v2026.10.25.1`，内置 NodeEndpoint 1.0.8、SmartExpiry 1.2.0、二维码审计副本 1.2.0 和 FlowScope 2.4.0。新装通过 `docker-install.sh` 合并 Xboard 安装与宿主 Root 节点入口配置；已有面板使用下方保留数据流程。
+本教程配套独立后端 `v2026.10.25.2`，内置 NodeEndpoint 1.0.9、SmartExpiry 1.2.0、二维码审计副本 1.2.0 和 FlowScope 2.4.0。新装通过 `docker-install.sh` 合并 Xboard 安装与宿主 Root 节点入口配置；已有面板使用下方保留数据流程。
+
+配套 Node `v1.13-orphan.6` 支持 Hysteria2 自动 UDP 范围转发及 `node` 管理菜单；先更新后端再更新节点，保留原身份、Token 与 CA，无需卸载插件。新机器安装仍按本文流程，已有面板按[本次更新教程](upgrade-2026.10.25.2.zh-CN.md)。能力与防火墙边界见[节点操作说明](../operations/node-management-hy2.zh-CN.md)。
 
 ## 1. 准备环境和宝塔网站
 
@@ -36,7 +38,7 @@ location / {
 
 ```bash
 cd /www/wwwroot/panel.example.com
-git clone --branch v2026.10.25.1 --single-branch \
+git clone --branch v2026.10.25.2 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git .
 bash docker-install.sh
 ```
@@ -81,7 +83,7 @@ curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoi
 
 ## 4. 保留旧数据、重建容器和升级
 
-本次限速/路由修复的固定版本、保留卷构建/替换命令与节点更新见 [v2026.10.25.1 更新教程](upgrade-2026.10.25.zh-CN.md)。`docker-install.sh` 仅用于新装或同源码重试，不是跨版本升级入口。
+本次自动转发／管理菜单更新的固定版本、保留卷构建/替换命令与节点更新见 [v2026.10.25.2 更新教程](upgrade-2026.10.25.2.zh-CN.md)。`docker-install.sh` 仅用于新装或同源码重试，不是跨版本升级入口。
 
 所有升级前保留数据库、原 `APP_KEY`、公共 CA、运行卷、原镜像和宿主 Root 私有状态。不要运行初始化、删除 `.env` 或执行 `down -v`。
 

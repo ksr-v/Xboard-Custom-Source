@@ -116,22 +116,24 @@ function runFixtureProcess(array $arguments, ?array $environment = null): string
     check(proc_close($process) === 0, 'Isolated fixture failed: ' . $stdout . $stderr);
     return $stdout;
 }
-function deployHistoricalNodeEndpoint(string $root): array {
+function deployHistoricalNodeEndpoint(string $root, string $version = '1.0.0'): array {
     global $sourceRoot;
+    check(in_array($version, ['1.0.0', '1.0.8'], true), 'Unsupported historical fixture version');
+    $tag = 'v' . $version;
     $reference = getenv('NODE_ENDPOINT_REFERENCE') ?: dirname($sourceRoot, 2);
     $git = ['git', '-c', 'safe.directory=' . str_replace('\\', '/', $reference), '-C', $reference];
-    $commit = trim(runFixtureProcess([...$git, 'rev-parse', 'v1.0.0^{commit}']));
+    $commit = trim(runFixtureProcess([...$git, 'rev-parse', $tag . '^{commit}']));
     $manifest = json_decode(file_get_contents($root . '/bundled-plugins/manifest.json'), true, 64, JSON_THROW_ON_ERROR);
     $node = array_values(array_filter($manifest['plugins'], fn ($item) => $item['code'] === 'node_endpoint'))[0];
-    $previous = array_values(array_filter($node['accepted_previous'], fn ($item) => $item['version'] === '1.0.0'))[0];
+    $previous = array_values(array_filter($node['accepted_previous'], fn ($item) => $item['version'] === $version))[0];
     check($commit === $previous['source_commit'], 'Historical tag commit differs from accepted_previous');
-    $members = array_filter(explode("\n", trim(runFixtureProcess([...$git, 'ls-tree', '-r', '--name-only', 'v1.0.0', 'plugin/NodeEndpoint']))));
+    $members = array_filter(explode("\n", trim(runFixtureProcess([...$git, 'ls-tree', '-r', '--name-only', $tag, 'plugin/NodeEndpoint']))));
     $files = [];
     foreach ($members as $member) {
         check(str_starts_with($member, 'plugin/NodeEndpoint/'), 'Unexpected historical Git member');
         $relative = substr($member, strlen('plugin/NodeEndpoint/'));
         check(!str_contains($relative, '..') && !str_contains($relative, '\\'), 'Unsafe historical Git member');
-        $bytes = runFixtureProcess([...$git, 'show', 'v1.0.0:' . $member]);
+        $bytes = runFixtureProcess([...$git, 'show', $tag . ':' . $member]);
         $files[$relative] = hash('sha256', $bytes);
         check(($previous['files'][$relative] ?? null) === $files[$relative], 'Historical blob digest differs from accepted_previous');
         $target = $root . '/plugins/NodeEndpoint/' . $relative;
@@ -139,9 +141,11 @@ function deployHistoricalNodeEndpoint(string $root): array {
         check(file_put_contents($target, $bytes) === strlen($bytes), 'Historical blob deployment failed');
     }
     ksort($files); $expected = $previous['files']; ksort($expected);
-    check($files === $expected && count($files) === 16, 'Historical source must be the complete 16-file v1.0.0 tree');
-    check(json_decode(file_get_contents($root . '/plugins/NodeEndpoint/config.json'), true)['version'] === '1.0.0', 'Historical source version missing');
-    check(!is_file($root . '/plugins/NodeEndpoint/Services/AdminIntegration.php'), 'Historical tree was replaced by current files');
+    check($files === $expected && count($files) === ($version === '1.0.0' ? 16 : 25), 'Historical source must be the complete pinned tree');
+    check(json_decode(file_get_contents($root . '/plugins/NodeEndpoint/config.json'), true)['version'] === $version, 'Historical source version missing');
+    if ($version === '1.0.0') {
+        check(!is_file($root . '/plugins/NodeEndpoint/Services/AdminIntegration.php'), 'Historical tree was replaced by current files');
+    }
     return ['commit' => $commit, 'files' => $files];
 }
 $passed = 0;

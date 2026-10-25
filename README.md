@@ -1,8 +1,12 @@
 # Xboard
 
-当前独立版本：**2026.10.25.1**。默认内置 NodeEndpoint **1.0.8**、SmartExpiry **1.2.0**、QRCode Extend **1.2.0（审计副本）** 和 FlowScope **2.4.0**；全新安装时自动安装并启用。已有面板升级保留各插件配置、公共 CA 和管理员已有的禁用选择，可显式选择全部启用。
+当前独立版本：**2026.10.25.2**。默认内置 NodeEndpoint **1.0.9**、SmartExpiry **1.2.0**、QRCode Extend **1.2.0（审计副本）** 和 FlowScope **2.4.0**；全新安装时自动安装并启用。已有面板升级保留各插件配置、公共 CA 和管理员已有的禁用选择，可显式选择全部启用。
 
-本版修复限速和路由保存后的同步与节点应用问题。已有面板按[本次更新教程](docs/installation/upgrade-2026.10.25.zh-CN.md)操作，分别提供宝塔原生和 aaPanel + Docker 流程；**后端与独立 xboard-node `v1.13-orphan.5` 必须配套升级**。无需卸载插件或重建 CA，不对已有机器重新执行新装/`REPLACE`。在线 WS 节点保存后主动接收更新，HTTP 轮询受原周期影响；正常限速更新保留连接，路由/出站策略更新主动关闭旧流。
+本版新增 Hysteria2 按面板配置自动管理 UDP 端口转发，以及节点端 `node` 管理菜单；保留此前限速和路由修复。已有面板按[本次更新教程](docs/installation/upgrade-2026.10.25.2.zh-CN.md)操作，分别提供宝塔原生和 aaPanel + Docker 流程；**先更新后端，再逐台升级独立 xboard-node `v1.13-orphan.6`**。无需卸载插件或重建 CA，不对已有机器重新执行新装/`REPLACE`。升级保留机器身份、Token、配置与公共 CA。
+
+Hysteria2 节点选择版本 `2`，连接端口可填 `42450-42453`、服务监听端口填 `42443`、跳跃间隔填 `5` 秒；Node 收到配置后自动建立、更新或撤销自身 UDP 转发，无需手写 NAT。节点需要 Linux nftables 和 `CAP_NET_ADMIN`；云安全组仍须允许广告 UDP 范围，宿主 INPUT 允许转发后的监听口。Docker 的权限、宿主端口发布与网络命名空间需另行核对。更改范围可能中断已有代理连接。
+
+标准 systemd 节点首次升级后，SSH 输入小写 `node`：选择 `1` 在线更新最新正式版、`2` 重启、`3` 卸载、`4` 修改对接面板地址／Token、`5` 查看最近100行日志、`6` 查看状态。Token 隐藏输入，先验证新地址与认证再应用；保留原 machine/node ID、实例和 CA。未来直接在此选择 `1`，由固定自维护仓库的正式 Release 取得并校验安装器和二进制。已有 Node.js 的 `node` 命令时不会覆盖；详见[节点管理和自动跳跃说明](docs/operations/node-management-hy2.zh-CN.md)。
 
 宝塔 / aaPanel 原生安装可按 [宝塔安装教程（沿用原教程步骤）](docs/installation/aapanel.zh-CN.md) 操作；权限、归档升级和恢复边界见 [完整安装和升级说明](docs/installation/bundled-native.zh-CN.md)。按教程准备并校验固定 Composer PHAR，完成新网站配置后，在站点目录以 Root 执行；用户名和 PHP 路径以本机为准，命令不传 `--host`：
 
@@ -25,11 +29,13 @@ bash init.sh --app-user www \
 curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.9/install.sh | bash -s -- --refresh-entry
 ```
 
-原生 HTTPS FPM / Octane 刷新流程保留原 CA、服务器证书、Token 和数据库，不写插件设置或防火墙。标准 Docker 现可使用宿主 Root 自动流程，详见 [Docker 安装与接入教程](docs/installation/aapanel-docker.zh-CN.md)。确认 FlowScope 2.4.0 启用、节点使用独立 Node v1.13-orphan.5 且能访问 IPv4 检测服务；旧 404 最多缓存 10 分钟后自动重报。IPv4 上报不要求 Python 采集器或开启周期流量。
+原生 HTTPS FPM / Octane 刷新流程保留原 CA、服务器证书、Token 和数据库，不写插件设置或防火墙。标准 Docker 现可使用宿主 Root 自动流程，详见 [Docker 安装与接入教程](docs/installation/aapanel-docker.zh-CN.md)。确认 FlowScope 2.4.0 启用、节点使用独立 Node v1.13-orphan.6 且能访问 IPv4 检测服务；旧 404 最多缓存 10 分钟后自动重报。IPv4 上报不要求 Python 采集器或开启周期流量。
 
 已有面板不要执行全新安装或生成 APP_KEY；使用已校验发行包的 Root 升级工具。四插件无需逐个上传。FlowScope 采集器仍在对应节点机器部署，云安全组需另行放行。原生 FPM 与 Docker 各有独立验证记录；本次 Docker 整套升级流程需先在备份副本演练。
 
 本次修补明确要求 Composer **2.2+**，安装器会在安装依赖前检查版本，并修正首次创建 Composer 缓存时的父目录权限。旧 Composer 的 runtime API 不满足锁定依赖时应指定可信新版 PHAR，保留锁定依赖版本，不执行 `composer update`。
+
+本版开发联测与发行包验证边界见 [v2026.10.25.2 验证范围](docs/installation/release-2026.10.25.2-validation.zh-CN.md)。
 
 原生部署验证见 [原生测试记录](docs/installation/bundled-validation.zh-CN.md)；本版 Docker 默认 MySQL 安装、重复执行、私有 TLS/WSS、并发设置和权限验证见 [Docker 自动部署记录](docs/installation/aapanel-docker-auto-validation.zh-CN.md)。
 
@@ -62,7 +68,7 @@ Use the [native PHP-FPM guide](docs/installation/bundled-native.zh-CN.md), or th
 ### 🔄 Upgrade Notice
 > 🚨 **Important:** This version involves significant changes. Please strictly follow the upgrade documentation and backup your database before upgrading. Note that upgrading and migration are different processes, do not confuse them.
 
-For this release, follow the [v2026.10.25.1 update guide](docs/installation/upgrade-2026.10.25.zh-CN.md) (Chinese). Upgrade the backend and independent Node `v1.13-orphan.5` together, keeping the original database, `APP_KEY`, machine bindings and private-CA trust.
+For this release, follow the [v2026.10.25.2 update guide](docs/installation/upgrade-2026.10.25.2.zh-CN.md) (Chinese). Upgrade the backend and independent Node `v1.13-orphan.6` together, keeping the original database, `APP_KEY`, machine bindings and private-CA trust.
 
 ### Development Guides
 - [Plugin Development Guide](./docs/en/development/plugin-development-guide.md) - Complete guide for developing XBoard plugins

@@ -1,8 +1,10 @@
 # aaPanel + Docker: bundled Xboard and the private node entry
 
-Existing panels: use the [v2026.10.25.1 update guide](../../installation/upgrade-2026.10.25.zh-CN.md) (Chinese) for preserved volumes and the matching Node upgrade. Do not rerun the fresh installer for a cross-version update.
+Existing panels: use the [v2026.10.25.2 update guide](../../installation/upgrade-2026.10.25.2.zh-CN.md) (Chinese) for preserved volumes and the matching Node upgrade. Do not rerun the fresh installer for a cross-version update.
 
-This guide targets `v2026.10.25.1`, including NodeEndpoint 1.0.8, SmartExpiry 1.2.0, audited QRCode Extend 1.2.0 and FlowScope 2.4.0. See the [Chinese guide](../../installation/aapanel-docker.zh-CN.md). Run the commands in the **host Root SSH session**.
+Pair this backend with independent Node `v1.13-orphan.6` for automatic Hysteria2 UDP range forwarding and the `node` management menu. Update the backend first, then each node with `upgrade`; keep existing identities, credentials and CA trust. Plugins do not need to be uninstalled. See the [operation notes](../../operations/node-management-hy2.zh-CN.md) and the [matching update guide](../../installation/upgrade-2026.10.25.2.zh-CN.md) (Chinese).
+
+This guide targets `v2026.10.25.2`, including NodeEndpoint 1.0.9, SmartExpiry 1.2.0, audited QRCode Extend 1.2.0 and FlowScope 2.4.0. See the [Chinese guide](../../installation/aapanel-docker.zh-CN.md). Run the commands in the **host Root SSH session**.
 
 ## 1. Prepare the website
 
@@ -33,7 +35,7 @@ Replace the directory below with the actual new website directory. Preserve exis
 
 ```bash
 cd /www/wwwroot/panel.example.com
-git clone --branch v2026.10.25.1 --single-branch \
+git clone --branch v2026.10.25.2 --single-branch \
   https://github.com/ksr-v/Xboard-Custom-Source.git .
 bash docker-install.sh
 ```
