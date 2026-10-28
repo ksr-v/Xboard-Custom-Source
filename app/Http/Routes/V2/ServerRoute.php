@@ -18,6 +18,8 @@ class ServerRoute
         ], function ($route) {
             $route->match(['GET', 'POST'], 'handshake', [ServerController::class, 'handshake']);
             $route->post('report', [ServerController::class, 'report']);
+            $route->post('device/acquire', [ServerController::class, 'acquireDevice']);
+            $route->post('device/release', [ServerController::class, 'releaseDevice']);
             $route->get('config', [UniProxyController::class, 'config']);
             $route->get('user', [UniProxyController::class, 'user']);
             $route->post('push', [UniProxyController::class, 'push']);

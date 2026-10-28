@@ -3,25 +3,26 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\Services\DeviceStateService;
 use Illuminate\Console\Command;
 
 class CleanupOnlineStatus extends Command
 {
-    protected $signature = 'cleanup:online-status';
+    protected $signature = 'cleanup:online-status {--user-id=* : Restrict reconciliation to specific users}';
 
     protected $description = 'Reset stale online_count for users whose devices have expired from Redis';
 
     public function handle(): void
     {
-        $affected = User::where('online_count', '>', 0)
-            ->where(function ($query) {
-                $query->where('last_online_at', '<', now()->subMinutes(10))
-                    ->orWhereNull('last_online_at');
-            })
-            ->update(['online_count' => 0]);
+        $affected = 0;
+        $query = User::where('online_count', '>', 0);
+        if ($ids = $this->option('user-id')) { $query->whereIn('id', array_map('intval', $ids)); }
+        $query->select('id')->chunkById(200, function ($users) use (&$affected) {
+            $affected += app(DeviceStateService::class)->refreshUserCounts($users->pluck('id')->all());
+        });
 
         if ($affected > 0) {
-            $this->info("Reset online_count for {$affected} stale users.");
+            $this->info("Reconciled online_count for {$affected} users.");
         }
     }
 }

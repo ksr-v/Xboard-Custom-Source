@@ -101,7 +101,8 @@ class UserController extends Controller
 
         // 处理数组值的 'in' 操作
         if (is_array($value)) {
-            $query->whereIn($field === 'group_ids' ? 'group_id' : $field, $value);
+            $column = $field === 'online_count' ? DB::raw('COALESCE(online_count, 0)') : ($field === 'group_ids' ? 'group_id' : $field);
+            $query->whereIn($column, $value);
             return;
         }
 
@@ -123,6 +124,7 @@ class UserController extends Controller
         // 处理计算字段
         $queryField = match ($field) {
             'total_used' => DB::raw('(u + d)'),
+            'online_count' => DB::raw('COALESCE(online_count, 0)'),
             default => $field
         };
 
@@ -139,7 +141,8 @@ class UserController extends Controller
         collect($request->input('sort'))->each(function ($sort) use ($builder) {
             $field = $sort['id'];
             $direction = $sort['desc'] ? 'DESC' : 'ASC';
-            $builder->orderBy($field, $direction);
+            if ($field === 'online_count') { $builder->orderByRaw('COALESCE(online_count, 0) ' . $direction); }
+            else { $builder->orderBy($field, $direction); }
         });
     }
 
@@ -183,6 +186,16 @@ class UserController extends Controller
         $current = $request->input('current', 1);
         $pageSize = $request->input('pageSize', 10);
 
+        $onlineQuery = collect([...(array) $request->input('filter', []), ...(array) $request->input('sort', [])])
+            ->contains(fn ($rule) => is_array($rule) && ($rule['id'] ?? null) === 'online_count');
+        if ($onlineQuery) {
+            // Filtering and pagination must use reconciled counts, not a stale
+            // positive row that is corrected only after it has been selected.
+            User::where('online_count', '>', 0)->select('id')->chunkById(200, function ($users): void {
+                app(\App\Services\DeviceStateService::class)->refreshUserCounts($users->pluck('id')->all());
+            });
+        }
+
         $userModel = User::query()
             ->with(['plan:id,name', 'invite_user:id,email', 'group:id,name'])
             ->select((new User())->getTable() . '.*')
@@ -195,7 +208,11 @@ class UserController extends Controller
         $users = $userModel->orderBy('id', 'desc')
             ->paginate($pageSize, ['*'], 'page', $current);
 
-        $users->getCollection()->transform(function ($user): array {
+        app(\App\Services\DeviceStateService::class)->refreshUserCounts($users->getCollection()->pluck('id')->all());
+        $liveCounts = User::whereIn('id', $users->getCollection()->pluck('id'))->pluck('online_count', 'id');
+
+        $users->getCollection()->transform(function ($user) use ($liveCounts): array {
+            $user->online_count = $liveCounts[$user->id] ?? 0;
             return self::transformUserData($user);
         });
 

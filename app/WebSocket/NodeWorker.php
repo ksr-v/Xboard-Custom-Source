@@ -305,6 +305,8 @@ class NodeWorker
         if (!empty($conn->machineNodeIds)) {
             $machineId = $conn->machineId ?? 'unknown';
             foreach ($conn->machineNodeIds as $nodeId) {
+                $currentConnection = NodeRegistry::get($nodeId);
+                if ($currentConnection !== null && $currentConnection !== $conn) { continue; }
                 NodeRegistry::remove($nodeId, $conn);
                 Cache::forget("node_ws_alive:{$nodeId}");
 
@@ -329,6 +331,8 @@ class NodeWorker
         // 旧模式：单节点
         if (!empty($conn->nodeId)) {
             $nodeId = $conn->nodeId;
+            $currentConnection = NodeRegistry::get($nodeId);
+            if ($currentConnection !== null && $currentConnection !== $conn) { return; }
             NodeRegistry::remove($nodeId, $conn);
             Cache::forget("node_ws_alive:{$nodeId}");
 

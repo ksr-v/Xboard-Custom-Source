@@ -150,9 +150,7 @@ class ServerService
     public static function processAlive(int $nodeId, array $alive): void
     {
         $service = app(DeviceStateService::class);
-        foreach ($alive as $uid => $ips) {
-            $service->setDevices((int) $uid, $nodeId, (array) $ips);
-        }
+        $service->replaceNodeSnapshot($nodeId, $alive);
     }
 
     /**
