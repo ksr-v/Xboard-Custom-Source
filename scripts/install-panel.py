@@ -364,7 +364,10 @@ def endpoint_plan(args, app, quick):
         except ValueError as error:
             raise ValueError(str(error) + '；现有 Root 入口需使用 --repair-address 显式修复地址，保留现有 CA；未改动配置') from error
         require(host == plan['host'] and (args.port is None or args.port == plan['port']), '现有入口地址/端口不同，请单独审计 modify；不会重签 CA')
-        return plan, True
+        selected = dict(plan)
+        if args.nginx is not None:
+            selected['nginx'] = args.nginx
+        return selected, True
     require(not args.non_interactive, '首次独立入口需要 SSH 交互确认；新 CA 口令自动加密托管，可显式 --skip-endpoint 延期')
     host = quick.select_communication_host(explicit=args.host)
     port = args.port or 8443

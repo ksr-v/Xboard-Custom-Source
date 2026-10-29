@@ -68,11 +68,59 @@ class EndpointPlanTests(unittest.TestCase):
         expected = self.existing()
         plan, existing = install.endpoint_plan(self.args, self.app, self.quick)
         self.assertTrue(existing)
-        self.assertIs(plan, expected)
+        self.assertIsNot(plan, expected)
+        self.assertEqual(plan, {**expected, 'nginx': '/fixture/nginx'})
+        self.assertNotIn('nginx', expected)
         self.quick.select_communication_host.assert_called_once_with(current='8.8.8.8', explicit=None)
         self.manager.Environment.assert_not_called()
         self.quick.discover.assert_not_called()
         self.user_calls.assert_not_called()
+
+    def complete_existing(self, selected):
+        (self.app / 'root-assets').mkdir()
+        helper = self.app / 'root-assets' / install.WEB_MANAGER_ASSET
+        helper.write_bytes((ROOT / 'root-assets' / install.WEB_MANAGER_ASSET).read_bytes())
+        self.quick.install_web_manager = Mock()
+        self.quick.configure_firewall = Mock(return_value={'status': 'ensured'})
+        ca = SimpleNamespace(sync_panel_ca=Mock(return_value={'status': 'imported'}))
+        with patch.dict(sys.modules, {'panel_ca': ca}), patch('builtins.print'):
+            install.complete_endpoint(self.app, SimpleNamespace(pw_name='fixture-user'), '/fixture/php',
+                                      self.quick, selected, True)
+        return helper
+
+    def test_existing_record_without_nginx_keeps_explicit_master_for_helper_without_mutating_record(self):
+        original = self.existing()
+        before = dict(original)
+        self.assertNotIn('nginx', original)  # Immutable tools 1.0.6 does not store this field.
+        self.args.nginx = '/fixture/isolated-nginx'
+        selected, existing = install.endpoint_plan(self.args, self.app, self.quick)
+        self.assertTrue(existing)
+        helper = self.complete_existing(selected)
+        self.quick.install_web_manager.assert_called_once_with(helper_file=helper, nginx='/fixture/isolated-nginx', confirmed=True)
+        self.assertEqual(original, before)
+        selected['host'] = 'modified-copy.example'
+        self.assertEqual(original, before)
+
+    def test_existing_record_without_explicit_master_keeps_the_original_helper_fallback(self):
+        for stored in (None, '/fixture/previous-nginx'):
+            with self.subTest(stored=stored):
+                original = self.existing()
+                if stored is not None:
+                    original['nginx'] = stored
+                before = dict(original)
+                self.args.nginx = None
+                selected, existing = install.endpoint_plan(self.args, self.app, self.quick)
+                self.assertTrue(existing)
+                self.assertIsNot(selected, original)
+                self.assertEqual(selected, before)
+                with patch.object(install, 'install_web_manager') as helper, \
+                     patch.dict(sys.modules, {'panel_ca': SimpleNamespace(sync_panel_ca=Mock(return_value={'status': 'imported'}))}), \
+                     patch('builtins.print'):
+                    self.quick.configure_firewall = Mock(return_value={'status': 'ensured'})
+                    install.complete_endpoint(self.app, SimpleNamespace(pw_name='fixture-user'), '/fixture/php',
+                                              self.quick, selected, True)
+                helper.assert_called_once_with(self.app, self.quick, stored)
+                self.assertEqual(original, before)
 
     def test_existing_host_or_port_change_requires_separate_modify(self):
         self.existing()

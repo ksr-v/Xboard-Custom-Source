@@ -61,6 +61,7 @@ if ($phase === 'stage-current') {
         $row['version'] === '1.1.0' && $row['config'] === $state['row']['config'] && (bool) $row['is_enabled'] === $state['enabled'], 'Old native identity/config/administrator choice changed');
     check(\Plugin\NodeEndpoint\Plugin::VERSION === '1.1.0' && class_exists(\Plugin\NodeEndpoint\Services\AdminIntegration::class), 'Fresh Composer did not load current classes');
     check(Schema::hasTable('node_endpoint_ca_credentials'), 'Existing native deployment did not migrate its credential vault');
+    check(Schema::hasTable('node_endpoint_web_jobs'), 'Existing native deployment did not migrate durable Root job ownership');
     check(Plugin::count() === 6 && Plugin::whereIn('code', ['smart_expiry', 'qrcodeextend', 'flowscope', 'subinfo_customizer'])->where('is_enabled', true)->count() === 4, 'Other bundled plugins were not installed normally');
     $installer->synchronize();
     check((bool) Plugin::where('code', 'node_endpoint')->value('is_enabled') === $state['enabled'], 'Repeat changed administrator disabled choice');
