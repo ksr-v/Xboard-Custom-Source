@@ -1,6 +1,6 @@
 # Hysteria2 端口跳跃与节点自动 UDP 转发
 
-跳跃 NAT 需要包含该功能的面板后端和 xboard-node。当前 Node `v1.13-orphan.8` 另为实际 Hysteria2 UDP 监听口增加 owned INPUT 管理，单端口 HY2 也适用，详见[启用、关闭与防火墙边界](node-management-hy2.zh-CN.md#实际-udp-监听口自动-input)。旧 Node 忽略自动转发字段，已有节点需单独升级。
+跳跃 NAT 需要包含该功能的面板后端和 xboard-node。Node v8 已为实际 Hysteria2 UDP 监听口增加 owned INPUT 管理，当前 v9 保留该能力，单端口 HY2 也适用，详见[启用、关闭与防火墙边界](node-management-hy2.zh-CN.md#实际-udp-监听口自动-input)。旧 Node 忽略自动转发字段，已有节点需单独升级。
 
 ## 面板配置
 
@@ -25,7 +25,7 @@
 
 `port_hopping` 只表达节点主机上要管理的 UDP 端口转发范围，不是 TLS/QUIC 或客户端配置。Node 应把该范围转发至同一配置的 `server_port`。客户端订阅仍从连接端口生成范围和可用的跳跃间隔；部分订阅格式只提供单端口，因此不能据此认定所有客户端均会跳跃。
 
-自动 NAT 与 INPUT 均需要节点主机允许相关特权操作。标准 v8 安装器显式启用后，仅为实际 UDP 监听口维护 iptables-nft / legacy 的 IPv4、IPv6 INPUT，启动、配置变化和每 30 秒核对自身规则；本地关闭优先，自定义无启用环境变量时默认关闭。额外原生 nftables INPUT / firewalld 需人工处理，云安全组和 Docker 端口发布另行配置。重载后恢复存在窗口，面板保存成功不等于远端已允许 UDP；不修改提供商持久文件、默认策略或保存全规则。
+自动 NAT 与 INPUT 均需要节点主机允许相关特权操作。标准 v9 安装器显式启用后，仅为实际 UDP 监听口维护 iptables-nft / legacy 的 IPv4、IPv6 INPUT，启动、配置变化和每 30 秒核对自身规则；本地关闭优先，自定义无启用环境变量时默认关闭。额外原生 nftables INPUT / firewalld 需人工处理，云安全组和 Docker 端口发布另行配置。重载后恢复存在窗口，面板保存成功不等于远端已允许 UDP；不修改提供商持久文件、默认策略或保存全规则。
 
 ## 更新和兼容行为
 

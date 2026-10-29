@@ -1,6 +1,8 @@
 # Hysteria2 自动转发、UDP INPUT 与节点管理
 
-配套版本：面板 `v2026.10.30.1`、NodeEndpoint `1.1.1` 和独立 Node `v1.13-orphan.8`。已有节点按[升级教程](../installation/upgrade-2026.10.30.1.zh-CN.md)保留配置升级，不执行新装 `REPLACE`。Root installer `v1.0.10` / Root tools `1.0.6` / helper `1.0.0` 不变，无需重建 CA。
+配套版本：面板 `v2026.10.30.2`、NodeEndpoint `1.1.2` 和独立 Node `v1.13-orphan.9`。已有节点按[升级教程](../installation/upgrade-2026.10.30.2.zh-CN.md)保留配置升级，不执行新装 `REPLACE`。Root installer `v1.0.10` / Root tools `1.0.6` / helper `1.0.0` 不变，无需重建 CA。
+
+ACME 混合大小写修复与 nftables 输出兼容的最终范围及结果见[本轮验证记录](../installation/release-2026.10.30.2-validation.zh-CN.md)；后者已确认旧 nft 0.9.0 的成功 null 空表输出；候选仅在独立空表检查成立时兼容，4.19 内核尚未启动验收。以下 INPUT / NAT 能力继承 v8，不将历史通过数作为 v9 重跑结果。
 
 ## Hysteria2 端口跳跃
 
@@ -13,6 +15,8 @@
 Node v8 在标准安装器显式启用后，管理本实例实际 Hysteria2 UDP 监听口的 INPUT 放行，包含未启用跳跃的单端口 HY2。上例 INPUT 只开放 `42443/udp`，不开放整个广告范围或 TCP；指定监听 IP 时限定对应地址与 IP 版本，放行允许所有来源访问该监听口。
 
 支持 Linux 主机 iptables-nft / iptables-legacy 的 IPv4 与 IPv6。额外原生 nftables INPUT basechain 和 firewalld 本次不自动修改，需人工放行；独立 nft `accept` 无法覆盖其他链的 `drop`。环境需要 nftables、相应 iptables 工具、`CAP_NET_ADMIN` 和可写 `/run`，不关闭 `NoNewPrivileges`。Docker 内仅能作用于所在网络命名空间，容器权限和宿主端口发布另行处理。
+
+旧 nftables `0.9.0` 的自动 INPUT 仅支持显式 legacy 工具；已有 nft compat INPUT 或额外原生 INPUT 链时会拒绝自动管理，不切换系统 alternatives。
 
 自动 INPUT 管理使用进程级独占租约，同一网络环境只允许一个启用该能力的 Node 进程；该进程内可以有多个节点实例。多个独立 Node 服务不同时争抢规则，应由管理员手动管理其他服务的 INPUT。
 
@@ -67,12 +71,10 @@ node
 
 ## 后续在线更新
 
-首次升级到本版需要执行一次[固定版本升级命令](../installation/upgrade-2026.10.30.1.zh-CN.md#节点与插件验收)。之后选择 `1`，从固定自维护仓库 `ksr-v/Xboard-Node--Custom-Source` 的最新正式 Release 取得同 tag 的 `install.sh` 和 `SHA256SUMS`，核对唯一摘要、资产来源和可用的 API digest，检查 Bash 语法后执行该安装器的 `upgrade`。Node 和 xbctl 继续使用安装器固定的二进制 SHA-256。
+首次升级到本版需要执行一次[固定版本升级命令](../installation/upgrade-2026.10.30.2.zh-CN.md#节点与插件验收)。之后选择 `1`，从固定自维护仓库 `ksr-v/Xboard-Node--Custom-Source` 的最新正式 Release 取得同 tag 的 `install.sh` 和 `SHA256SUMS`，核对唯一摘要、资产来源和可用的 API digest，检查 Bash 语法后执行该安装器的 `upgrade`。Node 和 xbctl 继续使用安装器固定的二进制 SHA-256。
 
 网络失败、部分下载、摘要异常或 API 限流会停止；不回退执行 dev 脚本。升级保留绑定、配置、CA 与健康端口，但会重启节点并中断已有连接；重复更新同一正式版同样会重启。后续每次正式发行须同时提供配套安装器、摘要清单和两个架构的 Node／xbctl。
 
 ## 验证范围
 
-本版最终 Node 资产、组件与隔离流量验证以[本版验证记录](../installation/release-2026.10.30.1-validation.zh-CN.md)及对应 JSON 为准，当前尚在准备，未预写通过数。
-
-历史 v6 的 Hysteria2 自动转发 47 项及节点菜单 13 项检查分别见[历史 NAT 报告](https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/blob/v1.1.0/docs/HYSTERIA2_AUTO_FORWARDING_REPORT.md)与[历史菜单报告](https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/blob/v1.1.0/docs/NODE_MANAGEMENT_TEST_REPORT.md)。这些结果不替代 v8 INPUT、IPv6、商业客户端、长期负载、Docker 或生产迁移验收。
+本轮 v9 的 Node 回归、本地与公开资产核验及面板发行附件，见[验证范围](../installation/release-2026.10.30.2-validation.zh-CN.md)。已发布 [v8 配套记录](../installation/release-2026.10.30.1-validation.zh-CN.md)保留其 Go、race、namespace、Python、PHP 和公开下载结果，不当作本轮通过数。实际 CA 签发、原生 ARM64、商业客户端、Docker、长期负载和生产迁移仅在有对应证据时记录为通过。

@@ -121,7 +121,7 @@ function runFixtureProcess(array $arguments, ?array $environment = null): string
 }
 function deployHistoricalNodeEndpoint(string $root, string $version = '1.0.0'): array {
     global $sourceRoot;
-    check(in_array($version, ['1.0.0', '1.0.8', '1.0.10', '1.1.0'], true), 'Unsupported historical fixture version');
+    check(in_array($version, ['1.0.0', '1.0.8', '1.0.10', '1.1.0', '1.1.1'], true), 'Unsupported historical fixture version');
     $tag = 'v' . $version;
     $reference = getenv('NODE_ENDPOINT_REFERENCE') ?: dirname($sourceRoot, 2);
     $git = ['git', '-c', 'safe.directory=' . str_replace('\\', '/', $reference), '-C', $reference];
@@ -145,7 +145,7 @@ function deployHistoricalNodeEndpoint(string $root, string $version = '1.0.0'): 
         check(file_put_contents($target, $bytes) === strlen($bytes), 'Historical blob deployment failed');
     }
     ksort($files); $expected = $previous['files']; ksort($expected);
-    check($files === $expected && count($files) === ['1.0.0' => 16, '1.0.8' => 25, '1.0.10' => 25, '1.1.0' => 28][$version], 'Historical source must be the complete pinned tree');
+    check($files === $expected && count($files) === ['1.0.0' => 16, '1.0.8' => 25, '1.0.10' => 25, '1.1.0' => 28, '1.1.1' => 28][$version], 'Historical source must be the complete pinned tree');
     check(json_decode(file_get_contents($root . '/plugins/NodeEndpoint/config.json'), true)['version'] === $version, 'Historical source version missing');
     if ($version === '1.0.0') {
         check(!is_file($root . '/plugins/NodeEndpoint/Services/AdminIntegration.php'), 'Historical tree was replaced by current files');
