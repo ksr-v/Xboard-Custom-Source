@@ -59,6 +59,16 @@ location / {
 
 检查 Nginx 配置并启动 / 重载 Nginx、PHP-FPM。此时 Composer 和数据库尚未安装，网页尚不可用；但安装器需要发现真实运行的站点与 FPM 后端，不能预先猜测 socket 或套用 Octane 代理。
 
+### 网站域名 HTTPS 与 Cloudflare
+
+浏览器访问的网站通常使用 HTTP `80` / HTTPS `443`。下一节的 `--port 8443` 用于 NodeEndpoint 独立节点通讯入口；安装器不会因此自动为网站域名配置 `443` 或网站 SSL 证书。
+
+使用 Cloudflare 代理及 **Full (strict)** 时，在宝塔该域名网站的 SSL 设置中安装未过期、覆盖实际域名的证书和对应私钥，启用 HTTPS `443`，保留该站的 `public/` 运行目录及 PHP-FPM 配置。证书可由公共可信 CA 或 Cloudflare Origin CA 签发；Cloudflare 会校验证书有效期、签发者和域名。检查并重载 Nginx 后，再确认 Cloudflare 的 Full (strict) 回源正常。要求见 [Cloudflare Full (strict) 文档](https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/full-strict/)。
+
+Cloudflare Origin CA 证书用于 Cloudflare 到源站的连接，关闭代理后浏览器直接访问源站可能提示不受信任。NodeEndpoint 自建私有 CA 属于节点信任链，不能直接当作 Cloudflare Full (strict) 所需的网站证书。Origin CA 的部署及信任范围见 [Cloudflare 官方说明](https://developers.cloudflare.com/ssl/origin-configuration/origin-ca/)。
+
+核对 Cloudflare 的 A / AAAA 记录指向实际可达的源站，并在本机防火墙及云安全组允许网站所需的 `80/TCP`、`443/TCP`；若限制回源来源，规则须允许 Cloudflare。安装器为节点通讯入口处理的 `8443/TCP` 规则不替代网站端口规则。完成源站 HTTPS 配置后保持 Full (strict)，不通过改成 Flexible 来跳过回源 HTTPS。
+
 ## 4. 以 Root 运行安装入口
 
 替换实际站点目录、网站用户及 PHP 路径，再执行：
@@ -83,21 +93,63 @@ bash init.sh --app-user www \
 
 如果安装在应用初始化后中断，保留数据库、`.env` 和输出，按实际失败阶段恢复；不要重复执行全新安装、删除 APP_KEY 或重建 CA。未知 FPM / Root 布局会拒绝自动处理，应先修正站点配置。
 
-## 5. 启动队列和调度
+## 5. 必做：宝塔计划任务和队列守护
 
-在 Supervisor 中为本站建立一个队列任务，运行用户为网站用户（示例 `www`），工作目录为实际站点目录，启动命令为：
+原生 PHP-FPM 安装器不会自动创建 cron 或 Supervisor 任务。第四节安装完成后，还要手工完成下面两项：**每分钟运行一次调度**，以及**持续运行 Horizon 队列**。订单检查、流量重置、在线状态清理等依赖调度；队列任务由 Horizon 处理。
+
+下方的 `实际站点目录`、网站用户 `www` 和 PHP 路径均应替换为本站实际值，并与安装时保持一致。站点目录是包含 `artisan` 的应用根目录。
+
+### 5.1 宝塔计划任务：每分钟执行调度
+
+打开宝塔左侧 **「计划任务」→「添加任务」**，按下面填写：
+
+| 项目 | 设置 |
+| --- | --- |
+| 任务类型 | Shell 脚本 |
+| 任务名称 | Xboard 定时调度（多站点时加本站名称） |
+| 执行周期 | 每 1 分钟执行一次，相当于 `* * * * *` |
+| 执行用户 | root；下面的脚本会降权为网站用户 `www` |
+| 脚本内容 | 使用下方命令，替换实际目录后保存 |
 
 ```bash
-/www/server/php/83/bin/php artisan horizon
+runuser -u www -- /www/server/php/83/bin/php /www/wwwroot/实际站点目录/artisan schedule:run
 ```
 
-启用自动启动和异常重启。另以同一网站用户每分钟执行一次调度；若管理界面仅能以 Root 运行计划任务，使用降权命令：
+保存后点击这条任务的 **「执行」**，查看执行日志，确认没有 PHP、数据库、Redis 或权限错误。再等待下一分钟，确认日志中新增了自动执行记录；只有手动执行成功还不能证明周期已配置正确。
+
+同一站点保留一套定时调度。若已有执行相同命令的 cron 或持续运行的 `schedule:work`，沿用已有配置并核对运行记录，避免重复添加。前台用户列表约 5 秒刷新不会替代此任务。
+
+### 5.2 Supervisor：持续运行 Horizon 队列
+
+在宝塔的进程守护管理 / Supervisor 中为本站添加守护任务：
+
+| 项目 | 设置 |
+| --- | --- |
+| 任务名称 | xboard-horizon（多站点时加本站名称） |
+| 运行用户 | 网站用户，例如 `www` |
+| 运行目录 | `/www/wwwroot/实际站点目录` |
+| 启动命令 | 使用下方命令，替换实际目录 |
+| 守护进程数量 | 1；Horizon 自行管理队列工作进程 |
+| 自动启动 / 异常重启 | 均启用 |
 
 ```bash
-runuser -u www -- /www/server/php/83/bin/php /www/wwwroot/实际新站目录/artisan schedule:run
+/www/server/php/83/bin/php /www/wwwroot/实际站点目录/artisan horizon
 ```
 
-路径与 PHP 版本应和安装时相同，只配置一套调度。设备状态每分钟清理依赖正常调度；前台列表约 5 秒刷新并不代替后台任务。可选 WS 部署应另按实际入口、进程及网络验证，本页不声称真实 WS 链路已验收。
+保存并启动守护任务，确认其状态持续为运行中；若启动后退出，先查看该任务的输出日志。Horizon 由 Supervisor 持续运行，5.1 的每分钟调度仍需保留。
+
+### 5.3 检查配置
+
+可在 Root SSH 中以网站用户检查队列状态和已注册的调度：
+
+```bash
+runuser -u www -- /www/server/php/83/bin/php /www/wwwroot/实际站点目录/artisan horizon:status
+runuser -u www -- /www/server/php/83/bin/php /www/wwwroot/实际站点目录/artisan schedule:list
+```
+
+`horizon:status` 应显示 Horizon 正在运行。`schedule:list` 只验证调度表能够加载，实际周期执行应以 5.1 的宝塔自动执行记录为准。
+
+可选 WS 部署应另按实际入口、进程及网络验证，本页不声称真实 WS 链路已验收。
 
 ## 6. 安装配套节点并检查
 
@@ -112,3 +164,30 @@ FlowScope 的采集器仍在对应节点部署，面板插件启用不等于采�
 刷新后台，打开左侧“订阅信息管理”。默认三行显示订阅日期/UID、剩余/总流量、到期/重置天数；可保存 0–4 行、九个动态变量及两种日期格式。预览使用示例数据，正式订阅使用当前用户数据。保存后下一次获取订阅生效。
 
 该插件启用时接管订阅顶部信息；禁用后恢复原生逻辑并保留模板。只隐藏信息行不会移除真实节点。未知订阅核心或后台构建会拒绝启用，应使用本发行完整归档，不绕过兼容校验。
+
+## 8. 新装后出现 Cloudflare 521 或 HTTP 500
+
+[Cloudflare 521](https://developers.cloudflare.com/support/troubleshooting/http-status-codes/cloudflare-5xx-errors/error-521/) 表示回源连接被拒绝。先检查 Nginx 是否运行、网站是否监听加密模式所需端口，以及 DNS 和防火墙是否正确。Full / Full (strict) 下缺少 `443` 监听是排查方向之一，不能仅凭 521 就断定没有安装证书。
+
+在源站 SSH 执行以下只读检查，把命令中的域名替换为实际网站域名：
+
+```bash
+ss -lntp | grep -E ':(80|443)[[:space:]]'
+/www/server/nginx/sbin/nginx -t
+curl -I -H 'Host:实际域名' http://127.0.0.1/
+curl -kI --resolve 实际域名:443:127.0.0.1 https://实际域名/
+```
+
+若 Nginx 仅绑定特定本机 IP，将 `127.0.0.1` 换成该绑定地址。最后一条保留域名和 TLS SNI，`-k` 仅用于诊断本地源站响应，不改变网站或 Cloudflare 的证书校验设置。
+
+如果 HTTPS 返回 521、HTTP 返回 500，应分别核对 HTTPS 连接和 HTTP 500 的原因。500 说明该请求已获得服务器错误响应；结合请求时间检查本站 Nginx 错误日志、PHP-FPM 日志及 `storage/logs/` 下最新的 Laravel 日志（默认按日生成）。公开响应头只能作为线索，最终原因以源站配置与日志为准。
+
+先列出实际日志，再将最后一行的文件名替换为列表中对应请求日期的日志，常见名称为 `laravel-YYYY-MM-DD.log`：
+
+```bash
+cd /www/wwwroot/实际站点目录
+ls -lt storage/logs/
+tail -n 80 storage/logs/实际日志文件名
+```
+
+保留当前数据库、`.env` / APP_KEY、插件设置和安装输出；不要通过重跑全新安装、删除 `.env` 或重新生成 APP_KEY 处理 521 / 500。分享诊断输出前隐藏密码、Token、APP_KEY 和私钥。
