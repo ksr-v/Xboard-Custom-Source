@@ -1,0 +1,507 @@
+{
+  "passed": 125,
+  "total": 125,
+  "checks": [
+    {
+      "name": "PHP 8.3 and MySQL",
+      "passed": true
+    },
+    {
+      "name": "four bundled plugins baseline enabled",
+      "passed": true
+    },
+    {
+      "name": "all eight default-plugin tables exist",
+      "passed": true
+    },
+    {
+      "name": "new install includes enabled fifth bundled plugin",
+      "passed": true
+    },
+    {
+      "name": "lifecycle disable",
+      "passed": true
+    },
+    {
+      "name": "four defaults enabled after disable",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "baseline native info plus two real nodes",
+      "passed": true
+    },
+    {
+      "name": "protocol HTTP clash",
+      "passed": true
+    },
+    {
+      "name": "baseline Clash contains two real proxy definitions",
+      "passed": true
+    },
+    {
+      "name": "protocol HTTP sing-box",
+      "passed": true
+    },
+    {
+      "name": "baseline sing-box contains two real outbounds",
+      "passed": true
+    },
+    {
+      "name": "NodeEndpoint settings readable before plugin",
+      "passed": true
+    },
+    {
+      "name": "FlowScope compatibility enabled before plugin",
+      "passed": true
+    },
+    {
+      "name": "FlowScope machine settings readable before plugin",
+      "passed": true
+    },
+    {
+      "name": "FlowScope fixture machine detail readable before plugin",
+      "passed": true
+    },
+    {
+      "name": "QRCodeExtend public runtime preserved before plugin",
+      "passed": true
+    },
+    {
+      "name": "native Admin page HTTP",
+      "passed": true
+    },
+    {
+      "name": "native composer chain includes NodeEndpoint and FlowScope",
+      "passed": true
+    },
+    {
+      "name": "repeat bundle synchronization succeeds",
+      "passed": true
+    },
+    {
+      "name": "sync preserves explicit disabled state",
+      "passed": true
+    },
+    {
+      "name": "lifecycle enable",
+      "passed": true
+    },
+    {
+      "name": "four defaults enabled after enable",
+      "passed": true
+    },
+    {
+      "name": "admin config accessible",
+      "passed": true
+    },
+    {
+      "name": "non-admin denied None",
+      "passed": true
+    },
+    {
+      "name": "non-admin denied lifetime",
+      "passed": true
+    },
+    {
+      "name": "save settings",
+      "passed": true
+    },
+    {
+      "name": "persistent reload equals saved settings",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "0 custom rows with exact real nodes",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "filter prompt suppressed at 0 rows",
+      "passed": true
+    },
+    {
+      "name": "save settings",
+      "passed": true
+    },
+    {
+      "name": "persistent reload equals saved settings",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "1 custom rows with exact real nodes",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "filter prompt suppressed at 1 rows",
+      "passed": true
+    },
+    {
+      "name": "save settings",
+      "passed": true
+    },
+    {
+      "name": "persistent reload equals saved settings",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "2 custom rows with exact real nodes",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "filter prompt suppressed at 2 rows",
+      "passed": true
+    },
+    {
+      "name": "save settings",
+      "passed": true
+    },
+    {
+      "name": "persistent reload equals saved settings",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "3 custom rows with exact real nodes",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "filter prompt suppressed at 3 rows",
+      "passed": true
+    },
+    {
+      "name": "save settings",
+      "passed": true
+    },
+    {
+      "name": "persistent reload equals saved settings",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "4 custom rows with exact real nodes",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "filter prompt suppressed at 4 rows",
+      "passed": true
+    },
+    {
+      "name": "save settings",
+      "passed": true
+    },
+    {
+      "name": "persistent reload equals saved settings",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "nine actual variables lifetime MM-DD",
+      "passed": true
+    },
+    {
+      "name": "real nodes preserved for lifetime",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP dated",
+      "passed": true
+    },
+    {
+      "name": "nine actual variables dated MM-DD",
+      "passed": true
+    },
+    {
+      "name": "real nodes preserved for dated",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP overused",
+      "passed": true
+    },
+    {
+      "name": "nine actual variables overused MM-DD",
+      "passed": true
+    },
+    {
+      "name": "real nodes preserved for overused",
+      "passed": true
+    },
+    {
+      "name": "save settings",
+      "passed": true
+    },
+    {
+      "name": "persistent reload equals saved settings",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "nine actual variables lifetime YYYY-MM-DD",
+      "passed": true
+    },
+    {
+      "name": "real nodes preserved for lifetime",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP dated",
+      "passed": true
+    },
+    {
+      "name": "nine actual variables dated YYYY-MM-DD",
+      "passed": true
+    },
+    {
+      "name": "real nodes preserved for dated",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP overused",
+      "passed": true
+    },
+    {
+      "name": "nine actual variables overused YYYY-MM-DD",
+      "passed": true
+    },
+    {
+      "name": "real nodes preserved for overused",
+      "passed": true
+    },
+    {
+      "name": "save settings",
+      "passed": true
+    },
+    {
+      "name": "persistent reload equals saved settings",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "order and per-row disable",
+      "passed": true
+    },
+    {
+      "name": "unsafe/invalid template rejected 0",
+      "passed": true
+    },
+    {
+      "name": "unsafe/invalid template rejected 1",
+      "passed": true
+    },
+    {
+      "name": "unsafe/invalid template rejected 2",
+      "passed": true
+    },
+    {
+      "name": "unsafe/invalid template rejected 3",
+      "passed": true
+    },
+    {
+      "name": "unsafe/invalid template rejected 4",
+      "passed": true
+    },
+    {
+      "name": "unsafe/invalid template rejected 5",
+      "passed": true
+    },
+    {
+      "name": "unsafe/invalid template rejected 6",
+      "passed": true
+    },
+    {
+      "name": "unsafe/invalid template rejected 7",
+      "passed": true
+    },
+    {
+      "name": "unsafe/invalid template rejected 8",
+      "passed": true
+    },
+    {
+      "name": "invalid UTF-8 rejected",
+      "passed": true
+    },
+    {
+      "name": "Clash parses and preserves exact real proxy connection fields",
+      "passed": true
+    },
+    {
+      "name": "Clash custom information count and order",
+      "passed": true
+    },
+    {
+      "name": "protocol HTTP sing-box",
+      "passed": true
+    },
+    {
+      "name": "sing-box real outbounds remain unchanged",
+      "passed": true
+    },
+    {
+      "name": "lifecycle disable",
+      "passed": true
+    },
+    {
+      "name": "four defaults enabled after disable",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "disable restores exact native subscription",
+      "passed": true
+    },
+    {
+      "name": "disabled API inaccessible",
+      "passed": true
+    },
+    {
+      "name": "lifecycle disable",
+      "passed": true
+    },
+    {
+      "name": "four defaults enabled after disable",
+      "passed": true
+    },
+    {
+      "name": "lifecycle enable",
+      "passed": true
+    },
+    {
+      "name": "four defaults enabled after enable",
+      "passed": true
+    },
+    {
+      "name": "disable/re-enable retains settings",
+      "passed": true
+    },
+    {
+      "name": "lifecycle upgrade",
+      "passed": true
+    },
+    {
+      "name": "four defaults enabled after upgrade",
+      "passed": true
+    },
+    {
+      "name": "upgrade retains settings",
+      "passed": true
+    },
+    {
+      "name": "save settings",
+      "passed": true
+    },
+    {
+      "name": "persistent reload equals saved settings",
+      "passed": true
+    },
+    {
+      "name": "subscription HTTP lifetime",
+      "passed": true
+    },
+    {
+      "name": "restore defaults applies next subscription",
+      "passed": true
+    },
+    {
+      "name": "NodeEndpoint settings readable with plugin",
+      "passed": true
+    },
+    {
+      "name": "FlowScope compatibility enabled with plugin",
+      "passed": true
+    },
+    {
+      "name": "FlowScope machine settings readable with plugin",
+      "passed": true
+    },
+    {
+      "name": "FlowScope fixture machine detail readable with plugin",
+      "passed": true
+    },
+    {
+      "name": "QRCodeExtend public runtime preserved with plugin",
+      "passed": true
+    },
+    {
+      "name": "four-plugin HTTP coexistence settings and runtime unchanged",
+      "passed": true
+    },
+    {
+      "name": "Admin composer chain has exactly one loader per dynamic plugin",
+      "passed": true
+    },
+    {
+      "name": "four plugin records/config untouched",
+      "passed": true
+    },
+    {
+      "name": "all default-plugin table rows untouched",
+      "passed": true
+    },
+    {
+      "name": "compiled Admin resources untouched",
+      "passed": true
+    },
+    {
+      "name": "users and real node database data untouched",
+      "passed": true
+    },
+    {
+      "name": "machine identity and token database data untouched",
+      "passed": true
+    }
+  ],
+  "private_details_omitted": true
+}

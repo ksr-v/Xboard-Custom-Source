@@ -18,6 +18,8 @@ SOURCES = (
      '3b30042a0e16047a67dddb73ffaf85e4a2a54918', 'Qrcodeextend/'),
     ('flowscope', 'Flowscope', '2.4.0', 'ksr-v/xb-flowscope',
      '9ae54a38e695d3b6acc429bbcdfbafba35ccd4d6', 'FlowScope/'),
+    ('subinfo_customizer', 'SubinfoCustomizer', '1.0.1', 'ksr-v/xb-SubInfoCustomizer',
+     '55709cdd1c6eb6ec047f6d6206de35eae53539c7', 'SubInfoCustomizer/'),
 )
 COLLECTOR = ('bootstrap.py', 'flowscope_collector.py', 'install.sh',
              'flowscope-collector.service', 'manage.sh')
@@ -70,7 +72,7 @@ def main():
     mapping = json.loads(args.source_map.read_text(encoding='utf-8'))
     target = ROOT / 'bundled-plugins'
     require(not target.exists() and not target.is_symlink(), 'Bundle already exists; build in a clean source checkout')
-    manifest = {'schema_version': 1, 'bundle_version': '2026.10.28.1', 'plugins': []}
+    manifest = {'schema_version': 1, 'bundle_version': '2026.10.29.1', 'plugins': []}
     with tempfile.TemporaryDirectory(prefix='.plugin-bundle-build-', dir=ROOT) as work:
         stage = Path(work) / 'bundled-plugins'
         stage.mkdir()
@@ -89,6 +91,10 @@ def main():
                     old = source_files(repository, old_commit, prefix)
                     old_version = json.loads(old['config.json'])['version']
                     previous.append({'version': old_version, 'source_commit': old_commit, 'files': hashes(old)})
+            if code == 'subinfo_customizer':
+                old_commit = git(repository, 'rev-parse', 'v1.0.0^{commit}').decode().strip()
+                old = source_files(repository, old_commit, prefix)
+                previous.append({'version': '1.0.0', 'source_commit': old_commit, 'files': hashes(old)})
             for name, data in sorted(files.items()):
                 destination = stage / directory / name
                 destination.parent.mkdir(parents=True, exist_ok=True)

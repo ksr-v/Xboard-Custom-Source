@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "bundle_version": "2026.10.28.1",
+  "bundle_version": "2026.10.29.1",
   "plugins": [
     {
       "code": "node_endpoint",
@@ -405,6 +405,66 @@
         "routes/api.php": "e7431de664fee1b8d04078e7cb074890d2494472134a327284cf14da39b0e0e6"
       },
       "accepted_previous": []
+    },
+    {
+      "code": "subinfo_customizer",
+      "directory": "SubinfoCustomizer",
+      "version": "1.0.1",
+      "source_repository": "https://github.com/ksr-v/xb-SubInfoCustomizer",
+      "source_commit": "55709cdd1c6eb6ec047f6d6206de35eae53539c7",
+      "files": {
+        "COMPATIBILITY.md": "0254f2a835abb328d3a160e321661031b17a810a7e1878f8bfe0aeafa8dfd1a5",
+        "Controllers/AssetController.php": "e4f487b6bedff5fc3ebe0b4a8a502bd2d919e83aea6a075864c1a7bfdeedb814",
+        "Controllers/SettingsController.php": "9832ed5239a3f4580323067b43fdf4f76d3b25a662208c4f262a7046c0f84dab",
+        "LICENSE": "98153aa9e8f3d290f54788c67a3fefbf7086abd4a29db8e6c5ae1ec39a3769fb",
+        "Middleware/Enabled.php": "8e024237669881c8b859a65097b5c406c1104c4b5cbec3abcc55955a47c10919",
+        "Plugin.php": "bcf65e628b6199d21146e0c487c8e5c1145e14e9cf399ec3ad33bccd77ffcc56",
+        "README.md": "e3782a992c5b98a02787057445c43fff7e9070912cd3311ae0bdd2de2b051d4f",
+        "ROLLBACK.md": "e5672ea4db5d0cb91929499d622ee56e23b4ffc359bd53b9a3fa11d9367e18bc",
+        "Services/AdminIntegration.php": "dc4c94d70a24ce0defe3f132175e0065d5a9123ad4f9ad60aee7df54627b689a",
+        "Services/CoreBridgePatcher.php": "a2208756dbfd407d076a3f1f99326da779eeb2a90313a30fc2bf38f025c1325f",
+        "Services/Settings.php": "fc4b33f931b61901352919662d85bc40ebe02628f3dd97d916a43e8991c0a78d",
+        "Services/TemplateService.php": "d14521e4b2b21d3b5fff944ce6023d77ff884412b5f78cd1944c2a2a9a02f3fb",
+        "TECHNICAL-DESIGN.md": "cf9ee31029a842aabe5832d6249df5e7135743287d3e6a5a12239191c3ab8a0a",
+        "TEST-REPORT-v1.0.1.md": "50bd3d3e9de93082e2c2693a650e10e092ecd47f403152a69022c6c971223e15",
+        "TEST-REPORT.md": "b2c4714acd1e8ece66d54a6078103ea9c7eabd2e272cb64bcaa4b8ca00ef5067",
+        "config.json": "9ce0ba26400cf3613ecb0945238209091589c133f494714a8b58d9329333f8a4",
+        "database/migrations/2026_10_27_000001_create_subinfo_customizer_settings.php": "86d20f5f797a0c5ee20fc3ff20f47604c7ecbcda399595bea9af0c03d5627386",
+        "resources/assets/subinfo-customizer.css": "738e5707a61fbc81ca2a7906c5e6c2c0a7cc5753b358223d986292e91a76cab1",
+        "resources/assets/subinfo-customizer.js": "ab3221fc9aa1d7ba04b3c9198f6e161d3c3696a690b4519c54339513c15d15c9",
+        "resources/views/admin.blade.php": "0f313589c990958946419b12dfefc5ccc4a38920346fd3aaa305d0014ff5aa91",
+        "routes/api.php": "27c1b55116c375d3fc3f57cf82f7ed26330e321913cb19ff6d7bf2d48363a399",
+        "routes/web.php": "d7b1e495e24dfe142754c3e11ff13eb22901ee7629e4514fba650fe3b915824a"
+      },
+      "accepted_previous": [
+        {
+          "version": "1.0.0",
+          "source_commit": "e52179b0542e797de9df95127e0a101ee1d25e0e",
+          "files": {
+            "COMPATIBILITY.md": "3af70619ab6b5993ee8763bd3f669779cbf62a5279a24fe63b8de5527ed6712c",
+            "Controllers/AssetController.php": "e4f487b6bedff5fc3ebe0b4a8a502bd2d919e83aea6a075864c1a7bfdeedb814",
+            "Controllers/SettingsController.php": "9832ed5239a3f4580323067b43fdf4f76d3b25a662208c4f262a7046c0f84dab",
+            "LICENSE": "98153aa9e8f3d290f54788c67a3fefbf7086abd4a29db8e6c5ae1ec39a3769fb",
+            "Middleware/Enabled.php": "8e024237669881c8b859a65097b5c406c1104c4b5cbec3abcc55955a47c10919",
+            "Plugin.php": "7626e11954e8f9c2113a09a2cf7a68a0b18e6894b7a1c64a2da8c44f0667d7af",
+            "README.md": "cd8a8a5f39097e526dab6c2997d5828db4649cfa00f2d17387c81255b07ce339",
+            "ROLLBACK.md": "e5672ea4db5d0cb91929499d622ee56e23b4ffc359bd53b9a3fa11d9367e18bc",
+            "Services/AdminIntegration.php": "dc4c94d70a24ce0defe3f132175e0065d5a9123ad4f9ad60aee7df54627b689a",
+            "Services/CoreBridgePatcher.php": "a2208756dbfd407d076a3f1f99326da779eeb2a90313a30fc2bf38f025c1325f",
+            "Services/Settings.php": "fc4b33f931b61901352919662d85bc40ebe02628f3dd97d916a43e8991c0a78d",
+            "Services/TemplateService.php": "d14521e4b2b21d3b5fff944ce6023d77ff884412b5f78cd1944c2a2a9a02f3fb",
+            "TECHNICAL-DESIGN.md": "cf9ee31029a842aabe5832d6249df5e7135743287d3e6a5a12239191c3ab8a0a",
+            "TEST-REPORT.md": "b2c4714acd1e8ece66d54a6078103ea9c7eabd2e272cb64bcaa4b8ca00ef5067",
+            "config.json": "32471a5523a41e2799acc31e7338ad787e87fd93c83f53049d73005a35e9707e",
+            "database/migrations/2026_10_27_000001_create_subinfo_customizer_settings.php": "86d20f5f797a0c5ee20fc3ff20f47604c7ecbcda399595bea9af0c03d5627386",
+            "resources/assets/subinfo-customizer.css": "738e5707a61fbc81ca2a7906c5e6c2c0a7cc5753b358223d986292e91a76cab1",
+            "resources/assets/subinfo-customizer.js": "c735a4d18ad4a3ca928ae3a38d54bb53ff9f2a63c988786ff8f9113aca528635",
+            "resources/views/admin.blade.php": "0f313589c990958946419b12dfefc5ccc4a38920346fd3aaa305d0014ff5aa91",
+            "routes/api.php": "27c1b55116c375d3fc3f57cf82f7ed26330e321913cb19ff6d7bf2d48363a399",
+            "routes/web.php": "d7b1e495e24dfe142754c3e11ff13eb22901ee7629e4514fba650fe3b915824a"
+          }
+        }
+      ]
     }
   ]
 }

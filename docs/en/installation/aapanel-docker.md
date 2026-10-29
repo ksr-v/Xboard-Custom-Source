@@ -1,3 +1,5 @@
+> The current release is **v2026.10.29.1**, which bundles SubInfoCustomizer as the fifth default plugin. Use the [current native installation guide](../../installation/install-2026.10.29.1.zh-CN.md) or [upgrade guide](../../installation/upgrade-2026.10.29.1.zh-CN.md). The historical four-plugin instructions below retain their original validation scope; see the [current validation record](../../installation/release-2026.10.29.1-validation.zh-CN.md).
+
 # aaPanel + Docker: bundled Xboard and the private node entry
 
 Existing panels: use the [v2026.10.25.2 update guide](../../installation/upgrade-2026.10.25.2.zh-CN.md) (Chinese) for preserved volumes and the matching Node upgrade. Do not rerun the fresh installer for a cross-version update.

@@ -1,0 +1,18 @@
+{
+  "name": "SubInfoCustomizer",
+  "code": "subinfo_customizer",
+  "version": "1.0.1",
+  "type": "feature",
+  "description": "订阅信息管理：统一模板、0–4 行信息、动态变量与实时预览。支持指定 Xboard-Custom-Source、PHP 8.2/8.3、Laravel 12，需 mbstring。",
+  "author": "SubInfoCustomizer contributors",
+  "license": "MIT",
+  "require": { "xboard": ">=1.0.0" },
+  "config": {
+    "management_page": {
+      "type": "string",
+      "label": "设置入口",
+      "default": "后台左侧菜单 → 订阅信息管理",
+      "description": "请在独立管理页面编辑信息行；此说明字段不会改变设置或路由。"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "passed": 11,
+  "total": 11,
+  "checks": [
+    {
+      "name": "template counts 0–4, order and disabled row",
+      "passed": true
+    },
+    {
+      "name": "all whitelisted variables, Unicode and plain text",
+      "passed": true
+    },
+    {
+      "name": "server validation rejects over-limit and malformed settings",
+      "passed": true
+    },
+    {
+      "name": "binary traffic formatting and negative clamp",
+      "passed": true
+    },
+    {
+      "name": "real User accounting and dates; reset boundary uses an explicit service stub",
+      "passed": true
+    },
+    {
+      "name": "native UserService/TrafficResetService reset=0 vs null under a controlled CLI Carbon clock (not natural FPM)",
+      "passed": true
+    },
+    {
+      "name": "pseudo-node collision handling preserves every real node",
+      "passed": true
+    },
+    {
+      "name": "bridge LF/CRLF/mixed apply/remove and repeated lifecycle are byte-exact",
+      "passed": true
+    },
+    {
+      "name": "unknown core changes and corrupt ownership markers refuse writes",
+      "passed": true
+    },
+    {
+      "name": "injected lock-path fault leaves core bytes untouched",
+      "passed": true
+    },
+    {
+      "name": "settings persist valid data and controller offers recovery for corrupt JSON (DB transaction rolled back)",
+      "passed": true
+    }
+  ],
+  "private_details_omitted": true
+}

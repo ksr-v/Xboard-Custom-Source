@@ -1,0 +1,47 @@
+{
+  "result": "PASS",
+  "tested_at": "2026-10-29T15:24:24+08:00",
+  "environment": {
+    "os": "Windows",
+    "sapi": "cli",
+    "php": "8.2.33",
+    "laravel": "12.54.1",
+    "autoload": "real Composer ClassLoader with fixture application mapping",
+    "database": "isolated SQLite",
+    "php_ini": "dedicated temporary php82.ini; no global configuration changed"
+  },
+  "bundle_version": "2026.10.29.1",
+  "subinfo_version": "1.0.1",
+  "suites": [
+    {
+      "file": "tests/BundledPlugins/integration.php",
+      "passed": 22,
+      "failed": 0,
+      "skipped": 2,
+      "skip_reason": "Real native installation of historical independent SubInfoCustomizer v1.0.0 requires PHP 8.3; enabled and disabled historical upgrade cases are delegated to the PHP 8.3 run.",
+      "evidence": "php82-integration-20261029T0724122742518.log"
+    },
+    {
+      "file": "tests/BundledPlugins/update_retry.php",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0,
+      "evidence": "php82-update_retry-20261029T0721206271055.log"
+    }
+  ],
+  "totals": {
+    "passed": 27,
+    "failed": 0,
+    "skipped": 2
+  },
+  "scope": "CLI integration, actual bundled lifecycle and source provenance, bridge and composed Admin output, archive retry state recovery",
+  "not_tested": [
+    "native Linux PHP-FPM HTTP",
+    "Docker installation or startup",
+    "live browser interaction",
+    "real proxy or external network traffic"
+  ],
+  "root_actions": false,
+  "production_modified": false,
+  "network": "Only pinned historical Git source blobs were retrieved for provenance fixtures; no application service used external network."
+}

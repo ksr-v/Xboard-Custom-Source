@@ -7,7 +7,7 @@ use Illuminate\Console\Command;
 
 final class BundledPlugins extends Command
 {
-    protected $signature = 'xboard:bundled-plugins {--stage-only : Verify and deploy files before loading plugin classes} {--enable-all : Explicitly enable all four bundled plugins}';
+    protected $signature = 'xboard:bundled-plugins {--stage-only : Verify and deploy files before loading plugin classes} {--enable-all : Explicitly enable all bundled plugins}';
     protected $description = 'Verify and synchronize the independent release bundled plugins as the site user';
 
     public function handle(BundledPluginInstaller $installer): int

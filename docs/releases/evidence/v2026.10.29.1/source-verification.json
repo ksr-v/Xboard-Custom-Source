@@ -1,0 +1,40 @@
+{
+  "passed": true,
+  "bundle_version": "2026.10.29.1",
+  "plugins": [
+    {
+      "code": "node_endpoint",
+      "version": "1.0.10",
+      "source_commit": "a600680392dc97738594f5c07f1d5cb032b433f6",
+      "files_checked": 25
+    },
+    {
+      "code": "smart_expiry",
+      "version": "1.2.0",
+      "source_commit": "6f22f456512d1a0cdcad9c46e75e06e5793e6bb6",
+      "files_checked": 3
+    },
+    {
+      "code": "qrcodeextend",
+      "version": "1.2.0",
+      "source_commit": "3b30042a0e16047a67dddb73ffaf85e4a2a54918",
+      "files_checked": 12
+    },
+    {
+      "code": "flowscope",
+      "version": "2.4.0",
+      "source_commit": "9ae54a38e695d3b6acc429bbcdfbafba35ccd4d6",
+      "files_checked": 36
+    },
+    {
+      "code": "subinfo_customizer",
+      "version": "1.0.1",
+      "source_commit": "55709cdd1c6eb6ec047f6d6206de35eae53539c7",
+      "files_checked": 22
+    }
+  ],
+  "original_four_source_locks_unchanged": true,
+  "all_current_files_matched": true,
+  "subinfo_old_release_files_verified": 21,
+  "independent_zip_bytes_matched": true
+}

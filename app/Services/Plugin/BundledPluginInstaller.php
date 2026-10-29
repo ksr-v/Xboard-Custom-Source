@@ -15,6 +15,7 @@ final class BundledPluginInstaller
     private const DIRECTORIES = [
         'node_endpoint' => 'NodeEndpoint', 'smart_expiry' => 'SmartExpiry',
         'qrcodeextend' => 'Qrcodeextend', 'flowscope' => 'Flowscope',
+        'subinfo_customizer' => 'SubinfoCustomizer',
     ];
     private string $root;
 
@@ -128,7 +129,7 @@ final class BundledPluginInstaller
             return $report;
         } catch (\Throwable $error) {
             // Native enable marks the row before boot. Do not leave a failed
-            // integration appearing enabled or claim that all four are ready.
+            // integration appearing enabled or claim that every plugin is ready.
             if ($activeCode !== null) {
                 Plugin::where('code', $activeCode)->update(['is_enabled' => false]);
             }
@@ -222,7 +223,11 @@ final class BundledPluginInstaller
             if ($owned !== null && ($owned['directory'] ?? null) !== $item['directory']) {
                 throw new RuntimeException("Plugin ownership directory changed: {$code}.");
             }
-            $baseline = $owned !== null ? $this->fileMap($owned['files'] ?? null) : [];
+            // Native plugin deletion removes the complete runtime directory,
+            // while the bundle ownership record intentionally stays private.
+            // A missing directory can be staged again; an existing partial
+            // tree must still pass every owned-file check below.
+            $baseline = $owned !== null && is_dir($destination) ? $this->fileMap($owned['files'] ?? null) : [];
             if (!$baseline && $actual) {
                 $baseline = $currentVersion === $item['version'] ? $item['files']
                     : ($item['previous_files'][$currentVersion ?? ''] ?? []);

@@ -1,3 +1,5 @@
+> The current release is **v2026.10.29.1**, which bundles SubInfoCustomizer as the fifth default plugin. Use the [current native installation guide](../../installation/install-2026.10.29.1.zh-CN.md) or [upgrade guide](../../installation/upgrade-2026.10.29.1.zh-CN.md). The historical four-plugin instructions below retain their original validation scope; see the [current validation record](../../installation/release-2026.10.29.1-validation.zh-CN.md).
+
 # Xboard Deployment Guide for aaPanel Environment
 
 This guide keeps the aaPanel PHP-FPM deployment flow for the independent **v2026.10.25.2** release. For Chinese instructions, see [宝塔 / aaPanel 安装教程](../../installation/aapanel.zh-CN.md). This release includes NodeEndpoint 1.0.9, SmartExpiry 1.2.0, QRCode Extend **1.2.0 (audited copy)**, and FlowScope 2.4.0. A fresh installation installs and enables all four plugins.

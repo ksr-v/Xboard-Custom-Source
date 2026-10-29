@@ -41,6 +41,9 @@ function fixtureRoot(string $name): string {
     copyFixture($sourceRoot . '/bundled-plugins', $root . '/bundled-plugins');
     foreach (['plugins', 'plugins-core', 'bootstrap/cache', 'storage/app/private', 'storage/framework/views',
               'storage/logs', 'resources/views', 'public'] as $part) { mkdir($root . '/' . $part, 0700, true); }
+    $controller = 'app/Http/Controllers/V1/Client/ClientController.php';
+    mkdir(dirname($root . '/' . $controller), 0700, true);
+    check(copy($sourceRoot . '/' . $controller, $root . '/' . $controller), 'Could not copy the real subscription controller');
     return $root;
 }
 function check(bool $condition, string $message): void {
@@ -146,6 +149,33 @@ function deployHistoricalNodeEndpoint(string $root, string $version = '1.0.0'): 
     if ($version === '1.0.0') {
         check(!is_file($root . '/plugins/NodeEndpoint/Services/AdminIntegration.php'), 'Historical tree was replaced by current files');
     }
+    return ['commit' => $commit, 'files' => $files];
+}
+function deployHistoricalSubinfo(string $root): array {
+    global $sourceRoot;
+    $reference = getenv('SUBINFO_REFERENCE') ?: dirname($sourceRoot) . '/release-work/subinfo';
+    $git = ['git', '-c', 'safe.directory=' . str_replace('\\', '/', $reference), '-C', $reference];
+    $commit = trim(runFixtureProcess([...$git, 'rev-parse', 'v1.0.0^{commit}']));
+    $manifest = json_decode(file_get_contents($root . '/bundled-plugins/manifest.json'), true, 64, JSON_THROW_ON_ERROR);
+    $plugin = array_values(array_filter($manifest['plugins'], fn ($item) => $item['code'] === 'subinfo_customizer'))[0];
+    $previous = array_values(array_filter($plugin['accepted_previous'], fn ($item) => $item['version'] === '1.0.0'))[0];
+    check($commit === $previous['source_commit'], 'Independent SubInfo tag differs from accepted_previous');
+    $members = array_filter(explode("\n", trim(runFixtureProcess([...$git, 'ls-tree', '-r', '--name-only', $commit, 'SubInfoCustomizer/']))));
+    $files = [];
+    foreach ($members as $member) {
+        check(str_starts_with($member, 'SubInfoCustomizer/'), 'Unexpected independent SubInfo Git member');
+        $relative = substr($member, strlen('SubInfoCustomizer/'));
+        check(!str_contains($relative, '..') && !str_contains($relative, '\\'), 'Unsafe independent SubInfo member');
+        $bytes = runFixtureProcess([...$git, 'show', $commit . ':' . $member]);
+        $files[$relative] = hash('sha256', $bytes);
+        check(($previous['files'][$relative] ?? null) === $files[$relative], 'Independent SubInfo blob differs from accepted_previous');
+        $target = $root . '/plugins/SubinfoCustomizer/' . $relative;
+        if (!is_dir(dirname($target))) { mkdir(dirname($target), 0700, true); }
+        check(file_put_contents($target, $bytes) === strlen($bytes), 'Independent SubInfo blob deployment failed');
+    }
+    ksort($files); $expected = $previous['files']; ksort($expected);
+    check($files === $expected, 'Independent SubInfo fixture must be the complete pinned tree');
+    check(json_decode(file_get_contents($root . '/plugins/SubinfoCustomizer/config.json'), true)['version'] === '1.0.0', 'Independent SubInfo source version missing');
     return ['commit' => $commit, 'files' => $files];
 }
 $passed = 0;

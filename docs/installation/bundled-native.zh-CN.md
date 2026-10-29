@@ -1,3 +1,5 @@
+> 当前正式版为 **v2026.10.29.1**，默认加入 SubInfoCustomizer，合计五插件。原生新装请使用[本版安装说明](install-2026.10.29.1.zh-CN.md)，已有原生站点请使用[升级说明](upgrade-2026.10.29.1.zh-CN.md)。以下保留此前四插件部署细节；Docker 整套流程未在本次重复验收，准确范围见[本版验证记录](release-2026.10.29.1-validation.zh-CN.md)。
+
 # 独立 Xboard：内置插件与 Root 安装
 
 本版基于用户维护的 `ksr-v/Xboard-Custom-Source`，不拉取原版 Xboard、原版子模块或原版 Node 安装源。插件源码和公共 Root 工具资产随发行包提供；PHP 第三方依赖仍按原 `composer.lock` 安装。

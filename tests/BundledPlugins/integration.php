@@ -6,11 +6,12 @@ use App\Models\Plugin;
 use App\Services\Plugin\{BundledPluginInstaller, PluginManager};
 use Illuminate\Support\Facades\{DB, Schema};
 
-test('source manifest fixes all four versions and QR audit 1.2.0', function (): void {
+test('source manifest fixes all five versions and QR audit 1.2.0', function (): void {
     global $sourceRoot;
     $manifest = json_decode(file_get_contents($sourceRoot . '/bundled-plugins/manifest.json'), true);
     $versions = array_column($manifest['plugins'], 'version', 'code');
-    check($versions === ['node_endpoint' => '1.0.9', 'smart_expiry' => '1.2.0', 'qrcodeextend' => '1.2.0', 'flowscope' => '2.4.0'], 'Unexpected versions');
+    check($manifest['bundle_version'] === '2026.10.29.1', 'Unexpected bundle release');
+    check($versions === ['node_endpoint' => '1.0.10', 'smart_expiry' => '1.2.0', 'qrcodeextend' => '1.2.0', 'flowscope' => '2.4.0', 'subinfo_customizer' => '1.0.1'], 'Unexpected versions');
     foreach (['bootstrap.py', 'flowscope_collector.py', 'install.sh', 'flowscope-collector.service', 'manage.sh'] as $file) {
         check(is_file($sourceRoot . '/bundled-plugins/Flowscope/collector/' . $file), 'Missing collector asset');
     }
@@ -26,7 +27,7 @@ test('first staging and repeat are idempotent; unrelated plugin remains', functi
     mkdir($root . '/plugins/Other'); file_put_contents($root . '/plugins/Other/evidence.txt', 'preserve');
     $installer = new BundledPluginInstaller($root);
     $first = $installer->stage(); $second = $installer->stage();
-    check(count($first) === 4 && $second['qrcodeextend']['action'] === 'unchanged', 'Idempotency failed');
+    check(count($first) === 5 && $second['qrcodeextend']['action'] === 'unchanged' && $second['subinfo_customizer']['action'] === 'unchanged', 'Idempotency failed');
     check(file_get_contents($root . '/plugins/Other/evidence.txt') === 'preserve', 'Other plugin changed');
     file_put_contents($root . '/plugins/NodeEndpoint/Plugin.php', '// local edit', FILE_APPEND);
     expectFailure(fn () => $installer->stage(), 'modified files');
@@ -64,7 +65,7 @@ test('a locally modified real v1.0.0 deployment is refused before any bundle is 
 });
 
 foreach (['enabled', 'disabled'] as $historicalChoice) {
-    test('real Git-tag v1.0.0 native deployment upgrades to 1.0.9 in fresh processes; ' . $historicalChoice . ' choice survives', function () use ($historicalChoice): void {
+    test('real Git-tag v1.0.0 native deployment upgrades to 1.0.10 in fresh processes; ' . $historicalChoice . ' choice survives', function () use ($historicalChoice): void {
         global $sourceRoot, $work;
         $root = fixtureRoot('historical-' . $historicalChoice);
         $historical = deployHistoricalNodeEndpoint($root);
@@ -92,25 +93,129 @@ test('real Git-tag v1.0.8 source is accepted and upgraded without losing operato
     $installer = new BundledPluginInstaller($root);
     $report = $installer->stage();
     check($report['node_endpoint']['action'] === 'upgraded-files', 'Previous release source was not accepted');
-    check(json_decode(file_get_contents($root . '/plugins/NodeEndpoint/config.json'), true)['version'] === '1.0.9', 'Previous release source was not upgraded');
+    check(json_decode(file_get_contents($root . '/plugins/NodeEndpoint/config.json'), true)['version'] === '1.0.10', 'Previous release source was not upgraded');
     check(file_get_contents($root . '/plugins/NodeEndpoint/operator-notes.txt') === 'preserve-v1.0.8', 'Unowned operator file changed');
     check($installer->stage()['node_endpoint']['action'] === 'unchanged', 'Previous release upgrade was not idempotent');
 });
+
+test('modified independent SubInfo v1.0.0 is refused before any bundled plugin is written', function (): void {
+    $root = fixtureRoot('subinfo-tampered');
+    deployHistoricalSubinfo($root);
+    $path = $root . '/plugins/SubinfoCustomizer/Services/TemplateService.php';
+    file_put_contents($path, '// operator change', FILE_APPEND);
+    $before = hash_file('sha256', $path);
+    expectFailure(fn () => (new BundledPluginInstaller($root))->stage(), 'modified files');
+    check(hash_file('sha256', $path) === $before && count(glob($root . '/plugins/*')) === 1,
+        'Modified SubInfo or another bundled plugin was partially overwritten');
+    check(!is_file($root . '/storage/app/private/plugin-bundles/ownership.json'), 'Rejected source was claimed as managed');
+});
+
+test('newer independently installed SubInfo is preserved without downgrade', function (): void {
+    $root = fixtureRoot('subinfo-newer');
+    copyFixture($root . '/bundled-plugins/SubinfoCustomizer', $root . '/plugins/SubinfoCustomizer');
+    $path = $root . '/plugins/SubinfoCustomizer/config.json';
+    $config = json_decode(file_get_contents($path), true);
+    $config['version'] = '9.0.0'; file_put_contents($path, json_encode($config));
+    file_put_contents($root . '/plugins/SubinfoCustomizer/operator-note.txt', 'newer-independent-canary');
+    $before = hash_file('sha256', $path);
+    $report = (new BundledPluginInstaller($root))->stage();
+    check($report['subinfo_customizer']['action'] === 'preserved-newer' && hash_file('sha256', $path) === $before,
+        'Newer independent SubInfo was downgraded');
+    check(file_get_contents($root . '/plugins/SubinfoCustomizer/operator-note.txt') === 'newer-independent-canary', 'Newer SubInfo operator file changed');
+});
+
+test('a completely removed owned SubInfo directory can be restored from the verified bundle', function (): void {
+    $root = fixtureRoot('subinfo-owned-removed');
+    $installer = new BundledPluginInstaller($root);
+    $installer->stage();
+    $directory = $root . '/plugins/SubinfoCustomizer';
+    check((new Illuminate\Filesystem\Filesystem())->deleteDirectory($directory) && !file_exists($directory), 'Could not remove the dedicated owned fixture directory');
+    $report = $installer->stage();
+    check($report['subinfo_customizer']['action'] === 'installed-files', 'Completely removed owned SubInfo could not be restored');
+    $manifest = json_decode(file_get_contents($root . '/bundled-plugins/manifest.json'), true);
+    $subinfo = array_values(array_filter($manifest['plugins'], fn ($item) => $item['code'] === 'subinfo_customizer'))[0];
+    foreach ($subinfo['files'] as $file => $digest) {
+        check(hash_file('sha256', $directory . '/' . $file) === $digest, 'Restored SubInfo file differs from the verified bundle');
+    }
+    check($installer->stage()['subinfo_customizer']['action'] === 'unchanged', 'Restored owned SubInfo is not idempotent');
+});
+
+test('partially missing or emptied owned SubInfo directories are rejected without silent replacement', function (): void {
+    foreach (['partial', 'empty'] as $kind) {
+        $root = fixtureRoot('subinfo-owned-' . $kind);
+        $installer = new BundledPluginInstaller($root);
+        $installer->stage();
+        $directory = $root . '/plugins/SubinfoCustomizer';
+        $ownership = $root . '/storage/app/private/plugin-bundles/ownership.json';
+        $before = hash_file('sha256', $ownership);
+        if ($kind === 'partial') {
+            check(unlink($directory . '/Plugin.php'), 'Could not remove the partial fixture member');
+        } else {
+            check((new Illuminate\Filesystem\Filesystem())->deleteDirectory($directory), 'Could not empty the dedicated fixture directory');
+            mkdir($directory, 0700);
+        }
+        expectFailure(fn () => $installer->stage(), 'modified files');
+        check(hash_file('sha256', $ownership) === $before && !is_file($directory . '/Plugin.php'),
+            'Incomplete owned SubInfo was silently replaced or its ownership changed');
+    }
+});
+
+test('independent v1.0.0 ZIP verification extras survive adoption and repeat synchronization', function (): void {
+    $root = fixtureRoot('subinfo-independent-extras');
+    deployHistoricalSubinfo($root);
+    $directory = $root . '/plugins/SubinfoCustomizer';
+    mkdir($directory . '/tests', 0700);
+    file_put_contents($directory . '/tests/operator-evidence.json', '{"independent_zip":"keep"}');
+    file_put_contents($directory . '/operator-notes.txt', 'independent-extras-canary');
+    $installer = new BundledPluginInstaller($root);
+    $report = $installer->stage();
+    check($report['subinfo_customizer']['action'] === 'upgraded-files', 'Independent source with ZIP extras was not accepted');
+    check(file_get_contents($directory . '/tests/operator-evidence.json') === '{"independent_zip":"keep"}' &&
+        file_get_contents($directory . '/operator-notes.txt') === 'independent-extras-canary', 'Independent ZIP extras were removed or changed');
+    check($installer->stage()['subinfo_customizer']['action'] === 'unchanged', 'Independent ZIP extras prevent idempotent adoption');
+});
+
+// The historical v1.0.0 release itself only supported PHP 8.3. Its real native
+// install is exercised there; current fresh installation still runs on PHP 8.2.
+if (PHP_VERSION_ID >= 80300 && PHP_VERSION_ID < 80400) {
+    foreach (['enabled', 'disabled'] as $historicalChoice) {
+        test('independent SubInfo v1.0.0 upgrades in fresh processes and preserves ' . $historicalChoice . ' choice', function () use ($historicalChoice): void {
+            global $sourceRoot, $work;
+            $root = fixtureRoot('subinfo-historical-' . $historicalChoice);
+            deployHistoricalSubinfo($root);
+            copyFixture($sourceRoot . '/public/assets/admin', $root . '/public/assets/admin');
+            copy($sourceRoot . '/resources/views/admin.blade.php', $root . '/resources/views/admin.blade.php');
+            foreach (['install-old', 'stage-current', 'synchronize-current'] as $phase) {
+                $environment = getenv();
+                $environment['XBOARD_TEST_WORK'] = $work . '/subinfo-child-' . $historicalChoice . '-' . $phase;
+                $arguments = [PHP_BINARY];
+                if (php_ini_loaded_file()) { $arguments = [...$arguments, '-c', php_ini_loaded_file()]; }
+                $output = runFixtureProcess([...$arguments, __DIR__ . '/subinfo-upgrade.php', $phase, $root, $historicalChoice], $environment);
+                $result = json_decode(trim($output), true, 32, JSON_THROW_ON_ERROR);
+                check(($result['phase'] ?? null) === $phase && ($result['composer_loader'] ?? false), 'Independent SubInfo process evidence missing');
+                check(($result['result'] ?? '') === 'PASS', 'Independent SubInfo upgrade phase failed');
+            }
+        });
+    }
+} else {
+    echo "SKIP independent v1.0.0 native install: that historical release requires PHP 8.3\n";
+}
 
 $root = fixtureRoot('lifecycle');
 copyFixture($sourceRoot . '/public/assets/admin', $root . '/public/assets/admin');
 copy($sourceRoot . '/resources/views/admin.blade.php', $root . '/resources/views/admin.blade.php');
 $app = bootFixture($root);
 $installer = app(BundledPluginInstaller::class);
-test('native default installation installs and enables all four using real Composer autoload', function (): void {
+test('native default installation installs and enables all five using real Composer autoload', function (): void {
     PluginManager::installDefaultPlugins();
-    check(Plugin::count() === 4 && Plugin::where('is_enabled', true)->count() === 4, 'Four plugins are not enabled');
+    check(Plugin::count() === 5 && Plugin::where('is_enabled', true)->count() === 5, 'Five plugins are not enabled');
     check(Plugin::where('code', 'qrcodeextend')->value('version') === '1.2.0', 'Wrong QR version');
-    foreach (['node_endpoint_settings', 'flowscope_server_settings', 'flowscope_machine_settings', 'flowscope_install_tickets'] as $table) {
+    foreach (['node_endpoint_settings', 'flowscope_server_settings', 'flowscope_machine_settings', 'flowscope_install_tickets', 'subinfo_customizer_settings'] as $table) {
         check(Schema::hasTable($table), 'Missing migration table ' . $table);
     }
     foreach ([\Plugin\NodeEndpoint\Services\Endpoint::class, \Plugin\Qrcodeextend\Services\AdminBundlePatcher::class,
-              \Plugin\Flowscope\Services\InstallService::class, \Plugin\SmartExpiry\Services\AdminBridgePatcher::class] as $class) {
+              \Plugin\Flowscope\Services\InstallService::class, \Plugin\SmartExpiry\Services\AdminBridgePatcher::class,
+              \Plugin\SubinfoCustomizer\Services\CoreBridgePatcher::class] as $class) {
         check(class_exists($class), 'Real Composer could not load ' . $class);
     }
 });
@@ -123,27 +228,78 @@ test('repeat preserves settings and public CA; upgrade preserves existing identi
     $id = Plugin::where('code', 'node_endpoint')->value('id');
     $installer->synchronize();
     check(Plugin::where('code', 'node_endpoint')->value('id') === $id, 'Identity changed');
-    check(Plugin::where('code', 'node_endpoint')->value('version') === '1.0.9', 'Version not upgraded');
+    check(Plugin::where('code', 'node_endpoint')->value('version') === '1.0.10', 'Version not upgraded');
     check(Plugin::where('code', 'node_endpoint')->value('config') === '{"custom":"preserve"}', 'Config changed');
     check(\Plugin\NodeEndpoint\Services\Settings::read()['host'] === $settings['host'], 'Endpoint changed');
     check(file_get_contents($ca) === 'public CA canary', 'CA changed');
 });
 test('administrator disabled choice is preserved; enable-all is explicit', function () use ($installer): void {
     app(PluginManager::class)->disable('smart_expiry');
+    app(PluginManager::class)->disable('subinfo_customizer');
     $installer->synchronize();
     check(!Plugin::where('code', 'smart_expiry')->value('is_enabled'), 'Disabled plugin silently enabled');
+    check(!Plugin::where('code', 'subinfo_customizer')->value('is_enabled'), 'Disabled SubInfo silently enabled');
+    check((new \Plugin\SubinfoCustomizer\Services\CoreBridgePatcher(base_path()))->inspect() === 'source', 'Disabled SubInfo left its bridge active');
     $installer->synchronize(true);
     check(Plugin::where('code', 'smart_expiry')->value('is_enabled') === true, 'Explicit enable-all failed');
+    check(Plugin::where('code', 'subinfo_customizer')->value('is_enabled') === true, 'Explicit SubInfo enable-all failed');
 });
-test('both dynamic Admin integrations coexist with shared bundle patches', function () use ($app, $root): void {
+test('three dynamic Admin integrations coexist with shared bundle patches', function () use ($app, $root): void {
     $app->http = true;
     app(PluginManager::class)->initializeEnabledPlugins();
     $html = view('admin', ['title' => 'Fixture', 'version' => 'fixture', 'logo' => '', 'secure_path' => 'fixture'])->render();
     check(str_contains($html, 'node-endpoint') && str_contains($html, 'flowscope'), 'View composition lost an integration');
+    foreach (['data-ne-install-loader', 'data-flowscope-loader', 'data-subinfo-customizer-loader'] as $marker) {
+        check(substr_count($html, $marker) === 1, 'Missing or duplicated Admin loader: ' . $marker);
+    }
     $js = file_get_contents($root . '/public/assets/admin/assets/index-CEIYH7i8.js');
     check(str_contains($js, '/*qrcodeextend:start:v3*/') && str_contains($js, 'smart-expiry-edit-v7')
         && str_contains($js, 'smart-expiry-create-v7'), 'Shared Admin patch missing');
     $app->http = false;
+});
+
+test('SubInfo disable and reenable preserve settings, shared assets and all other plugin states', function () use ($root): void {
+    $settings = ['date_format' => 'YYYY-MM-DD', 'rows' => [
+        ['enabled' => true, 'template' => '保留:{uid}'], ['enabled' => false, 'template' => '未启用:{expire_date}'],
+    ]];
+    \Plugin\SubinfoCustomizer\Services\Settings::write($settings);
+    $core = $root . '/' . \Plugin\SubinfoCustomizer\Services\CoreBridgePatcher::RELATIVE_PATH;
+    $admin = $root . '/public/assets/admin/assets/index-CEIYH7i8.js';
+    $adminHash = hash_file('sha256', $admin);
+    $otherRows = DB::table('v2_plugins')->where('code', '!=', 'subinfo_customizer')->orderBy('id')->get()->toJson();
+    $manager = app(PluginManager::class);
+    $manager->disable('subinfo_customizer');
+    check(!str_contains(file_get_contents($core), \Plugin\SubinfoCustomizer\Services\CoreBridgePatcher::MARKER), 'SubInfo bridge survived disable');
+    check(\Plugin\SubinfoCustomizer\Services\Settings::read() === $settings, 'Disable lost SubInfo settings');
+    $manager->enable('subinfo_customizer');
+    $manager->enable('subinfo_customizer');
+    check(substr_count(str_replace("\r\n", "\n", file_get_contents($core)), \Plugin\SubinfoCustomizer\Services\CoreBridgePatcher::insertion()) === 1,
+        'SubInfo reenable duplicated the core bridge');
+    check(hash_file('sha256', $admin) === $adminHash &&
+        DB::table('v2_plugins')->where('code', '!=', 'subinfo_customizer')->orderBy('id')->get()->toJson() === $otherRows,
+        'SubInfo lifecycle changed shared assets or another plugin record');
+    check(\Plugin\SubinfoCustomizer\Services\Settings::read() === $settings, 'Reenable lost SubInfo settings');
+});
+
+test('a core archive refresh reapplies exactly one SubInfo bridge and preserves its saved settings', function () use ($root, $installer, $sourceRoot): void {
+    $settings = \Plugin\SubinfoCustomizer\Services\Settings::read();
+    $relative = \Plugin\SubinfoCustomizer\Services\CoreBridgePatcher::RELATIVE_PATH;
+    check(copy($sourceRoot . '/' . $relative, $root . '/' . $relative), 'Could not simulate refreshed release core');
+    $installer->synchronize();
+    $installer->synchronize();
+    check(substr_count(str_replace("\r\n", "\n", file_get_contents($root . '/' . $relative)), \Plugin\SubinfoCustomizer\Services\CoreBridgePatcher::insertion()) === 1,
+        'Core refresh did not restore exactly one bridge');
+    check(\Plugin\SubinfoCustomizer\Services\Settings::read() === $settings, 'Core refresh reset saved settings');
+});
+
+test('unknown core source is rejected without replacing operator content', function (): void {
+    $root = fixtureRoot('unknown-subinfo-core');
+    $path = $root . '/' . \Plugin\SubinfoCustomizer\Services\CoreBridgePatcher::RELATIVE_PATH;
+    file_put_contents($path, "\n// unknown core canary\n", FILE_APPEND);
+    $before = hash_file('sha256', $path);
+    expectFailure(fn () => (new \Plugin\SubinfoCustomizer\Services\CoreBridgePatcher($root))->apply(), '核心版本');
+    check(hash_file('sha256', $path) === $before && !str_contains(file_get_contents($path), \Plugin\SubinfoCustomizer\Services\CoreBridgePatcher::MARKER),
+        'Unknown core was altered or partially patched');
 });
 test('boot failure cannot leave an apparently enabled plugin', function () use ($app, $installer): void {
     $original = app(PluginManager::class);

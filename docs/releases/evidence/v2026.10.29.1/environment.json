@@ -1,0 +1,20 @@
+{
+  "php_version": "8.3.33",
+  "laravel_version": "12.54.1",
+  "database_driver": "mysql",
+  "database_server": "MariaDB 10.11.10",
+  "web_stack": "aaPanel Nginx -> PHP-FPM 8.3",
+  "opcache_loaded": false,
+  "listener": "127.0.0.1:18089",
+  "existing_applications_modified": false,
+  "global_php_ini_sha256": "96c52cc57124f92a539e72d208e5b88a2acb5122f95edeeddc5423d894f6842d",
+  "nginx_vhost_sha256": "47e1db803f498cb0159811a44e0a3fadcdd1c54535e9b932594f083491a21e77",
+  "source_snapshot_sha256": "c7357bf1215e61b5093f0161d631a9766a14abce919efd8c0f57f36798fe7f02",
+  "vendor_lock_sha256": "4d6314419f51e82a3211c1d931d69e198a2e989187553824eb410262969a6b9d",
+  "credentials_exported": false,
+  "limitations": [
+    "No Docker runtime available; no Docker validation.",
+    "No real proxy core, collector, browser or external WSS chain.",
+    "No enabled-OPcache FPM validation."
+  ]
+}

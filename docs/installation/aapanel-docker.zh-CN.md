@@ -1,3 +1,5 @@
+> 当前正式版为 **v2026.10.29.1**，默认加入 SubInfoCustomizer，合计五插件。原生新装请使用[本版安装说明](install-2026.10.29.1.zh-CN.md)，已有原生站点请使用[升级说明](upgrade-2026.10.29.1.zh-CN.md)。以下保留此前四插件部署细节；Docker 整套流程未在本次重复验收，准确范围见[本版验证记录](release-2026.10.29.1-validation.zh-CN.md)。
+
 # 宝塔 / aaPanel + Docker 安装（内置四插件）
 
 本教程配套独立后端 `v2026.10.25.2`，内置 NodeEndpoint 1.0.9、SmartExpiry 1.2.0、二维码审计副本 1.2.0 和 FlowScope 2.4.0。新装通过 `docker-install.sh` 合并 Xboard 安装与宿主 Root 节点入口配置；已有面板使用下方保留数据流程。

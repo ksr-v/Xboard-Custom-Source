@@ -1,0 +1,12 @@
+[
+  {
+    "suite": "integration.php",
+    "exit_code": 0,
+    "passed_case_lines": 24
+  },
+  {
+    "suite": "update_retry.php",
+    "exit_code": 0,
+    "passed_case_lines": 5
+  }
+]
