@@ -1,18 +1,43 @@
-# Hysteria2 自动转发与节点管理
+# Hysteria2 自动转发、UDP INPUT 与节点管理
 
-配套版本：后端 `v2026.10.25.2`、NodeEndpoint `1.0.9` 和独立 Node `v1.13-orphan.6`。已有安装先按[更新教程](../installation/upgrade-2026.10.25.2.zh-CN.md)更新后端，再升级节点；无需卸载其他插件，也不重建 CA。
+配套版本：面板 `v2026.10.30.1`、NodeEndpoint `1.1.1` 和独立 Node `v1.13-orphan.8`。已有节点按[升级教程](../installation/upgrade-2026.10.30.1.zh-CN.md)保留配置升级，不执行新装 `REPLACE`。Root installer `v1.0.10` / Root tools `1.0.6` / helper `1.0.0` 不变，无需重建 CA。
 
 ## Hysteria2 端口跳跃
 
-在面板 Hysteria 节点选择版本 `2`，连接端口填单个升序范围，例如 `42450-42453`，服务监听端口填单个 `42443`，跳跃间隔例如 `5` 秒。面板通过 HTTP 与 NodeWorker 下发一致的范围；Node 自动维护范围到监听端口的 UDP 转发。客户端仍需支持端口跳跃并取得更新的订阅配置。
+在面板 Hysteria 节点选择版本 `2`，连接端口填单个升序范围，例如 `42450-42453`，服务监听端口填单个 `42443`，跳跃间隔例如 `5` 秒。面板 HTTP 与 NodeWorker 下发相同范围，Node 维护范围到监听口的 UDP NAT。客户端还需支持跳跃并导入更新后的范围；部分订阅格式只提供单端口。
 
-更改范围会替换自身转发；改成单端口会撤销自身转发。正常退出、重启和卸载清理自身规则；异常断电或 SIGKILL 无法立即清理，同一实例重新启动后核对并接管自身遗留规则。范围更新可能关闭已有代理连接，客户端需要重连。
+更改范围更新自身 NAT，改为单端口撤销自身 NAT。正常停止清理自己的规则；SIGKILL / 断电后同一稳定实例重启时核对遗留所有权。冲突、权限不足或不支持的布局拒绝自动处理，不覆盖外部规则。变更范围可能中断现有代理连接。
 
-Node 仅操作带完整 owner 标记的自身 nftables 表，不修改全局 INPUT 放行策略、不清空其他规则、不覆盖系统 nftables 保存文件。云安全组应允许广告 UDP 范围，宿主 INPUT 应允许转发后的实际 UDP 监听口。UDP 服务占用、其他节点范围重叠、外部 NAT 冲突、权限不足或无法可靠判断的复杂规则会停止应用新配置并保留当前内核，按正常同步周期重试。
+## 实际 UDP 监听口自动 INPUT
 
-环境要求为 Linux NAT、nftables、`CAP_NET_ADMIN` 和可写 `/run`。新安装器补装 nftables，并在替换 Node 前检查工具可执行；不会关闭 `NoNewPrivileges`。Docker 内的规则只作用于容器所在网络命名空间，容器权限、宿主端口发布和云安全组需单独配置，本版未验证新的 Node Docker 镜像。
+Node v8 在标准安装器显式启用后，管理本实例实际 Hysteria2 UDP 监听口的 INPUT 放行，包含未启用跳跃的单端口 HY2。上例 INPUT 只开放 `42443/udp`，不开放整个广告范围或 TCP；指定监听 IP 时限定对应地址与 IP 版本，放行允许所有来源访问该监听口。
 
-旧面板不下发范围，旧 Node 忽略新字段。只更新 NodeEndpoint 插件不能替换后端或节点二进制，也不能使旧 Node 自动转发。
+支持 Linux 主机 iptables-nft / iptables-legacy 的 IPv4 与 IPv6。额外原生 nftables INPUT basechain 和 firewalld 本次不自动修改，需人工放行；独立 nft `accept` 无法覆盖其他链的 `drop`。环境需要 nftables、相应 iptables 工具、`CAP_NET_ADMIN` 和可写 `/run`，不关闭 `NoNewPrivileges`。Docker 内仅能作用于所在网络命名空间，容器权限和宿主端口发布另行处理。
+
+自动 INPUT 管理使用进程级独占租约，同一网络环境只允许一个启用该能力的 Node 进程；该进程内可以有多个节点实例。多个独立 Node 服务不同时争抢规则，应由管理员手动管理其他服务的 INPUT。
+
+标准安装或升级的 unit 使用 `Environment=XBOARD_NODE_MANAGED_INPUT=1`。安装器 `--skip-firewall` 设置为 `0`，已有 `0` 在升级中保留。本地配置关闭优先：
+
+```yaml
+firewall:
+  managed_input: false
+```
+
+顶层配置继承给实例，实例可本地明确覆盖；环境变量仍是授予权限的总开关。自定义 unit / 直接运行没有该启用环境变量时默认关闭，仅 YAML `true` 不能授予防火墙权限。
+
+Node 在启动、配置变更和每 `30` 秒独立检查中核对自身 INPUT / NAT；是否连接 WebSocket 不影响该周期。只为实际应用成功、内核运行且有用户的配置恢复规则；暂时失败保留旧状态并重试。撤销、停用或正常停止只删除本实例 owned 规则，不删除其他实例、管理员或提供商规则。
+
+UFW 的 iptables 兼容布局与 iptables-persistent / netfilter-persistent 重载可能移除运行时规则，后续周期可恢复，但存在连接中断窗口。Node 不修改 `/etc/iptables/rules.v4` / `rules.v6`、UFW 或提供商持久文件，不保存整个 ruleset，不改变 INPUT 默认策略。云安全组、上游 UDP 放行仍须允许广告范围，Node 无法处理主机外的拦截。
+
+关闭跳跃后单端口仍不能连接时，先确认版本、实际地址、UDP 监听、TLS / SNI 与认证，再区分 INPUT 和上游拦截。只读检查：
+
+```bash
+/usr/local/bin/xboard-node -v
+systemctl is-active xboard-node.service
+ss -lun '( sport = :42443 )'
+```
+
+使用实际服务名和监听口。不要公开订阅 URL、Token、密码、私钥、完整规则集或原始业务日志。面板 Root 网页任务管理的是批准的面板 TCP 通讯入口，不能代替节点上的 HY2 UDP INPUT。
 
 ## 输入 node 管理
 
@@ -42,12 +67,12 @@ node
 
 ## 后续在线更新
 
-首次升级到本版需要执行一次[固定版本升级命令](../installation/upgrade-2026.10.25.2.zh-CN.md#4-首次升级-node随后直接用菜单更新)。之后选择 `1`，从固定自维护仓库 `ksr-v/Xboard-Node--Custom-Source` 的最新正式 Release 取得同 tag 的 `install.sh` 和 `SHA256SUMS`，核对唯一摘要、资产来源和可用的 API digest，检查 Bash 语法后执行该安装器的 `upgrade`。Node 和 xbctl 继续使用安装器固定的二进制 SHA-256。
+首次升级到本版需要执行一次[固定版本升级命令](../installation/upgrade-2026.10.30.1.zh-CN.md#节点与插件验收)。之后选择 `1`，从固定自维护仓库 `ksr-v/Xboard-Node--Custom-Source` 的最新正式 Release 取得同 tag 的 `install.sh` 和 `SHA256SUMS`，核对唯一摘要、资产来源和可用的 API digest，检查 Bash 语法后执行该安装器的 `upgrade`。Node 和 xbctl 继续使用安装器固定的二进制 SHA-256。
 
 网络失败、部分下载、摘要异常或 API 限流会停止；不回退执行 dev 脚本。升级保留绑定、配置、CA 与健康端口，但会重启节点并中断已有连接；重复更新同一正式版同样会重启。后续每次正式发行须同时提供配套安装器、摘要清单和两个架构的 Node／xbctl。
 
 ## 验证范围
 
-Hysteria2 自动转发完成 47 项专用 VM 检查，覆盖 sing-box／Xray、真实面板保存与 NodeWorker、连续 TCP／UDP、范围变更／关闭、冲突、权限拒绝和退出清理。管理菜单完成 13 项真实 PTY／systemd／Node／xbctl 联测，涵盖编辑成功与失败、回滚、停止状态保留、受控在线更新及篡改拒绝；Linux 竞态检查也通过。
+本版最终 Node 资产、组件与隔离流量验证以[本版验证记录](../installation/release-2026.10.30.1-validation.zh-CN.md)及对应 JSON 为准，当前尚在准备，未预写通过数。
 
-完整证据见[自动转发报告](https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/blob/main/docs/HYSTERIA2_AUTO_FORWARDING_REPORT.md)和[管理菜单报告](https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/blob/main/docs/NODE_MANAGEMENT_TEST_REPORT.md)。实验使用独立测试环境，未访问生产节点或读取 Root 私有运行日志。公网更新、实际 ARM64运行、IPv6、商业客户端、长期压力、新 Node Docker 镜像和生产升级仍需在对应环境验证；开发联测不代表完整生产或灾难恢复验收。
+历史 v6 的 Hysteria2 自动转发 47 项及节点菜单 13 项检查分别见[历史 NAT 报告](https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/blob/v1.1.0/docs/HYSTERIA2_AUTO_FORWARDING_REPORT.md)与[历史菜单报告](https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/blob/v1.1.0/docs/NODE_MANAGEMENT_TEST_REPORT.md)。这些结果不替代 v8 INPUT、IPv6、商业客户端、长期负载、Docker 或生产迁移验收。
