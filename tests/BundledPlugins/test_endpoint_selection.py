@@ -1,5 +1,6 @@
 """Endpoint candidate selection and Root-before-settings ordering, without services or real state."""
 from contextlib import ExitStack
+import hashlib
 import importlib.util
 import os
 from pathlib import Path
@@ -113,7 +114,12 @@ class EndpointPlanTests(unittest.TestCase):
 class CompletionOrderTests(unittest.TestCase):
     def fixture(self):
         self.events = []
-        self.app = Path('/fixture/xboard')
+        temporary = tempfile.TemporaryDirectory(prefix='xboard-completion-order-')
+        self.addCleanup(temporary.cleanup)
+        self.app = Path(temporary.name).resolve() / 'xboard'
+        (self.app / 'root-assets').mkdir(parents=True)
+        self.helper_file = self.app / 'root-assets' / install.WEB_MANAGER_ASSET
+        self.helper_file.write_bytes((ROOT / 'root-assets' / install.WEB_MANAGER_ASSET).read_bytes())
         self.user = SimpleNamespace(pw_name='fixture-user')
         self.php = '/fixture/php'
         self.plan = {'host': '8.8.8.8', 'port': 8443, 'nginx': '/fixture/nginx', 'ws_backend': '',
@@ -121,13 +127,23 @@ class CompletionOrderTests(unittest.TestCase):
                               'include_dir': '/fixture/http', 'backend': 'unix:/fixture/php.sock'}}
         self.manager = SimpleNamespace(parser=Mock())
         self.manager.parser.return_value.parse_args.side_effect = lambda argv: SimpleNamespace(argv=argv)
-        self.quick = SimpleNamespace(configure_firewall=Mock(side_effect=self.firewall))
+        self.quick = SimpleNamespace(install_web_manager=Mock(side_effect=self.helper),
+                                     configure_firewall=Mock(side_effect=self.firewall))
+        self.helper_failure = None
+        self.firewall_failure = None
+
+    def helper(self, **kwargs):
+        self.events.append('helper')
+        if self.helper_failure:
+            raise self.helper_failure
 
     def firewall(self):
         self.events.append('firewall')
+        if self.firewall_failure:
+            raise self.firewall_failure
         return {'status': 'ensured'}
 
-    def complete(self, root_failure=None, existing=False):
+    def complete(self, root_failure=None, existing=False, panel_failure=None, ca_failure=None):
         def root(*args):
             self.events.append('root')
             if root_failure:
@@ -135,9 +151,13 @@ class CompletionOrderTests(unittest.TestCase):
 
         def panel(*args):
             self.events.append('settings')
+            if panel_failure:
+                raise panel_failure
 
         def ca():
             self.events.append('ca')
+            if ca_failure:
+                raise ca_failure
             return {'status': 'imported'}
 
         with patch.dict(sys.modules, {'manager': self.manager, 'panel_ca': SimpleNamespace(sync_panel_ca=ca)}), \
@@ -149,8 +169,9 @@ class CompletionOrderTests(unittest.TestCase):
     def test_root_success_precedes_panel_settings_firewall_and_public_ca_import(self):
         self.fixture()
         root, panel = self.complete()
-        self.assertEqual(self.events, ['root', 'settings', 'firewall', 'ca'])
+        self.assertEqual(self.events, ['root', 'settings', 'helper', 'firewall', 'ca'])
         root.assert_called_once()
+        self.quick.install_web_manager.assert_called_once_with(helper_file=self.helper_file, nginx='/fixture/nginx', confirmed=True)
         panel.assert_called_once_with(self.user, self.app, [self.php, 'artisan', 'xboard:configure-endpoint',
                                                            '--host=8.8.8.8', '--port=8443', '--ws-mode=rest'])
 
@@ -161,12 +182,13 @@ class CompletionOrderTests(unittest.TestCase):
                 with self.assertRaises(type(failure)):
                     self.complete(root_failure=failure)
                 self.assertEqual(self.events, ['root'])
+                self.quick.install_web_manager.assert_not_called()
                 self.quick.configure_firewall.assert_not_called()
 
     def test_existing_owned_entry_syncs_panel_without_reinstalling_root(self):
         self.fixture()
         root, panel = self.complete(existing=True)
-        self.assertEqual(self.events, ['settings', 'firewall', 'ca'])
+        self.assertEqual(self.events, ['settings', 'helper', 'firewall', 'ca'])
         root.assert_not_called()
         panel.assert_called_once()
 
@@ -174,9 +196,85 @@ class CompletionOrderTests(unittest.TestCase):
         self.fixture()
         self.plan['ws_backend'] = 'http://127.0.0.1:8076'
         root, panel = self.complete()
-        self.assertEqual(self.events, ['root', 'settings', 'firewall', 'ca'])
+        self.assertEqual(self.events, ['root', 'settings', 'helper', 'firewall', 'ca'])
         self.assertIn('--enable-ws', root.call_args.args[1].argv)
         self.assertIn('--ws-mode=rewrite', panel.call_args.args[2])
+
+    def test_settings_failure_stops_before_helper_firewall_or_ca(self):
+        self.fixture()
+        with self.assertRaisesRegex(RuntimeError, 'fixture settings failure'):
+            self.complete(panel_failure=RuntimeError('fixture settings failure'))
+        self.assertEqual(self.events, ['root', 'settings'])
+        self.quick.install_web_manager.assert_not_called()
+        self.quick.configure_firewall.assert_not_called()
+
+    def test_changed_helper_asset_is_rejected_after_entry_without_installing_or_running_followups(self):
+        self.fixture()
+        self.helper_file.write_bytes(self.helper_file.read_bytes() + b'\n# changed asset\n')
+        before = self.helper_file.read_bytes()
+        with self.assertRaisesRegex(RuntimeError, '摘要.*现有入口和 CA 保留'):
+            self.complete()
+        self.assertEqual(self.events, ['root', 'settings'])
+        self.quick.install_web_manager.assert_not_called()
+        self.quick.configure_firewall.assert_not_called()
+        self.assertEqual(self.helper_file.read_bytes(), before)
+
+    def test_helper_failure_is_not_retried_and_stops_before_firewall_or_ca(self):
+        self.fixture()
+        self.helper_failure = RuntimeError('fixture helper install failure')
+        with self.assertRaisesRegex(RuntimeError, 'fixture helper install failure'):
+            self.complete()
+        self.assertEqual(self.events, ['root', 'settings', 'helper'])
+        self.quick.install_web_manager.assert_called_once()
+        self.quick.configure_firewall.assert_not_called()
+
+    def test_firewall_failure_still_attempts_ca_and_reports_partial_completion(self):
+        self.fixture()
+        self.firewall_failure = RuntimeError('fixture firewall failure')
+        with patch('sys.stderr'), self.assertRaisesRegex(RuntimeError, 'firewall'):
+            self.complete()
+        self.assertEqual(self.events, ['root', 'settings', 'helper', 'firewall', 'ca'])
+        self.quick.install_web_manager.assert_called_once()
+        self.quick.configure_firewall.assert_called_once()
+
+    def test_ca_failure_after_helper_does_not_repeat_entry_or_firewall(self):
+        self.fixture()
+        with patch('sys.stderr'), self.assertRaisesRegex(RuntimeError, 'ca'):
+            self.complete(ca_failure=RuntimeError('fixture CA failure'))
+        self.assertEqual(self.events, ['root', 'settings', 'helper', 'firewall', 'ca'])
+        self.quick.install_web_manager.assert_called_once()
+        self.quick.configure_firewall.assert_called_once()
+
+
+class PinnedWebManagerInstallTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix='xboard-web-manager-pin-')
+        self.addCleanup(temporary.cleanup)
+        self.app = Path(temporary.name).resolve() / 'xboard'
+        (self.app / 'root-assets').mkdir(parents=True)
+        self.asset = self.app / 'root-assets' / install.WEB_MANAGER_ASSET
+        self.asset.write_bytes((ROOT / 'root-assets' / install.WEB_MANAGER_ASSET).read_bytes())
+        self.quick = SimpleNamespace(install_web_manager=Mock(return_value={'status': 'installed'}))
+
+    def test_released_helper_matches_its_independent_pin_before_bootstrap(self):
+        self.assertEqual(hashlib.sha256(self.asset.read_bytes()).hexdigest(), install.WEB_MANAGER_SHA256)
+        self.assertEqual(install.install_web_manager(self.app, self.quick, '/fixture/nginx'), {'status': 'installed'})
+        self.quick.install_web_manager.assert_called_once_with(helper_file=self.asset, nginx='/fixture/nginx', confirmed=True)
+
+    def test_untrusted_bytes_are_never_forwarded_or_executed(self):
+        self.asset.write_bytes(b"raise RuntimeError('untrusted application helper executed')\n")
+        with self.assertRaisesRegex(RuntimeError, '摘要'):
+            install.install_web_manager(self.app, self.quick, None)
+        self.quick.install_web_manager.assert_not_called()
+
+    def test_missing_or_oversized_assets_stop_before_bootstrap(self):
+        self.asset.unlink()
+        with self.assertRaisesRegex(RuntimeError, '摘要'):
+            install.install_web_manager(self.app, self.quick, None)
+        self.asset.write_bytes(b'x' * 1048577)
+        with self.assertRaisesRegex(RuntimeError, '摘要'):
+            install.install_web_manager(self.app, self.quick, None)
+        self.quick.install_web_manager.assert_not_called()
 
 
 if __name__ == '__main__':

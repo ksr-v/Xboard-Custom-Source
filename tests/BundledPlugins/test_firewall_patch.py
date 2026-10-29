@@ -163,8 +163,10 @@ class PinnedPatchGuards(unittest.TestCase):
 
     def test_asset_and_old_published_pins_remain_independent(self):
         self.assertEqual(hashlib.sha256(self.source.read_bytes()).hexdigest(), install.FIREWALL_PATCH_SHA256)
-        for file, expected in (('quick_install.py', 'b936a70bd69ffd95bf4f8e85ed5d8a4268599073ee1610543b79f84799d1bd27'),
-                               ('node-endpoint-tools-1.0.3.zip', 'ea46e0ea8fe1275204c9a7f1f3dd21157a3bdf34070917e1aad8e49cda537a93')):
+        self.assertEqual(install.BOOTSTRAP_SHA256, 'c50868e3fa53c64143fa4529769fb4df05013b258622369d9d5b6df4f82907d1')
+        for file, expected in (('quick_install.py', install.BOOTSTRAP_SHA256),
+                               ('node-endpoint-tools-1.0.3.zip', 'ea46e0ea8fe1275204c9a7f1f3dd21157a3bdf34070917e1aad8e49cda537a93'),
+                               ('node-endpoint-tools-1.0.6.zip', 'd1dd1258b68e34e7feca111a85c97bd0d435516093b49840633166fe066e566e')):
             self.assertEqual(hashlib.sha256((ROOT / 'root-assets' / file).read_bytes()).hexdigest(), expected)
 
     def test_import_uses_only_pinned_root_copy_and_reuses_unmodified_cache(self):

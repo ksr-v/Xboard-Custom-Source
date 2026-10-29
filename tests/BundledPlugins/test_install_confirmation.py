@@ -143,11 +143,12 @@ class ConfirmationTests(unittest.TestCase):
     def test_existing_root_entry_syncs_without_install_or_confirmation_wrapper(self):
         manager = SimpleNamespace(parser=Mock(), execute=Mock(), confirmation=Mock())
         ca = SimpleNamespace(sync_panel_ca=Mock(return_value={'status': 'imported'}))
-        quick = SimpleNamespace(configure_firewall=Mock(return_value={'status': 'ensured'}))
+        quick = SimpleNamespace(install_web_manager=Mock(), configure_firewall=Mock(return_value={'status': 'ensured'}))
         plan = {'host': '203.0.113.10', 'port': 8443, 'ws_backend': None}
         with patch.dict(sys.modules, {'manager': manager, 'panel_ca': ca}), \
              patch.object(install, 'as_user') as app_command, \
              patch.object(install, 'execute_endpoint_install') as endpoint_install, \
+             patch.object(install, 'install_web_manager') as helper_install, \
              patch('sys.stdout', new_callable=io.StringIO):
             install.complete_endpoint(Path('/fixture/site'), SimpleNamespace(), '/fixture/php', quick, plan, True)
         endpoint_install.assert_not_called()
@@ -155,6 +156,7 @@ class ConfirmationTests(unittest.TestCase):
         manager.execute.assert_not_called()
         manager.confirmation.assert_not_called()
         app_command.assert_called_once()
+        helper_install.assert_called_once_with(Path('/fixture/site'), quick, None)
         quick.configure_firewall.assert_called_once()
         ca.sync_panel_ca.assert_called_once()
 
@@ -162,7 +164,7 @@ class ConfirmationTests(unittest.TestCase):
         manager, args, original, events = self.fixture()
         manager.parser = Mock(return_value=SimpleNamespace(parse_args=Mock(return_value=args)))
         ca = SimpleNamespace(sync_panel_ca=Mock())
-        quick = SimpleNamespace(configure_firewall=Mock())
+        quick = SimpleNamespace(install_web_manager=Mock(), configure_firewall=Mock())
         plan = {'host': args.host, 'port': args.port, 'nginx': None, 'ws_backend': None,
                 'site': {'site_config': '/fixture/site.conf', 'site_name': 'fixture.test',
                          'include_dir': '/fixture/sites', 'backend': '/fixture/php.sock'}}
@@ -174,6 +176,7 @@ class ConfirmationTests(unittest.TestCase):
                 install.complete_endpoint(Path('/fixture/site'), SimpleNamespace(pw_name='fixture'),
                                           '/fixture/php', quick, plan, False)
         self.assertEqual(events, ['plan'])
+        quick.install_web_manager.assert_not_called()
         quick.configure_firewall.assert_not_called()
         ca.sync_panel_ca.assert_not_called()
         self.assertIs(manager.confirmation, original)

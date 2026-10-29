@@ -1,18 +1,18 @@
 # Xboard
 
-当前独立版本：**2026.10.29.1**。默认内置 NodeEndpoint **1.0.10**、SmartExpiry **1.2.0**、QRCode Extend **1.2.0（审计副本）**、FlowScope **2.4.0** 和 SubInfoCustomizer **1.0.1**；全新安装时自动安装并启用。已有面板升级保留各插件配置、公共 CA 和管理员已有的禁用选择，可显式选择全部启用。
+当前独立版本：**2026.10.29.2**。默认内置 NodeEndpoint **1.1.0**、SmartExpiry **1.2.0**、QRCode Extend **1.2.0（审计副本）**、FlowScope **2.4.0** 和 SubInfoCustomizer **1.0.1**。全新安装自动安装并启用五项；原生 PHP-FPM 的 Root 初始化随后配置独立 HTTPS 入口、导入公共 CA 并安装受限本机助手。已有面板升级保留各插件配置、公共 CA 和管理员禁用选择；只有显式选择全部启用才改变禁用状态。
 
-本版默认加入“订阅信息管理”，可编辑 0–4 行订阅顶部信息、九个动态变量及日期格式。已独立安装官方 SubInfoCustomizer 1.0.0 的站点自动升级并保留模板和禁用选择；此前未安装的站点会安装并启用。插件未知核心/后台构建仍拒绝启用。其余四插件与配套 Node 版本保持不变。
+本版为“节点通讯设置”增加当前后台管理员登录复用，以及 Root 操作预览、完整文字确认、分阶段进度、任务恢复和公共 CA 同步。旧站需先通过 Root SSH 初始化一次助手，之后可在网页执行已批准的固定任务。根 CA 轮换、私钥导出继续通过 SSH 处理。其余四插件版本与配套 Node `v1.13-orphan.7` 保持不变；“订阅信息管理”的模板及管理员选择继续保留。
 
-继续保留在线设备过期统计与跨节点 IP 限额修复，用户列表前台约每 5 秒刷新；创建用户默认选择 API 返回的首个实际计划，并继承该计划的设备限制。保留此前 Hysteria2 自动 UDP 转发、`node` 管理菜单、限速和路由修复。已有 aaPanel / PHP-FPM 面板按[本次更新教程](docs/installation/upgrade-2026.10.29.1.zh-CN.md)操作；尚未升级设备修复时先更新后端，再逐台升级独立 xboard-node `v1.13-orphan.7`。已使用该 Node 版本的机器无需仅为本次插件捆绑重复升级。无需卸载插件或重建 CA，不对已有机器重新执行新装/`REPLACE`。升级保留机器身份、Token、配置与公共 CA。
+继续保留在线设备过期统计与跨节点 IP 限额修复，用户列表前台约每 5 秒刷新；创建用户默认选择 API 返回的首个实际计划，并继承该计划的设备限制。保留此前 Hysteria2 自动 UDP 转发、`node` 管理菜单、限速和路由修复。已有 aaPanel / PHP-FPM 面板按[本次更新教程](docs/installation/upgrade-2026.10.29.2.zh-CN.md)操作；尚未升级设备修复时先更新后端，再逐台升级独立 xboard-node `v1.13-orphan.7`。已使用该 Node 版本的机器无需仅为本次插件捆绑重复升级。无需卸载插件或重建 CA，不对已有机器重新执行新装/`REPLACE`。升级保留机器身份、Token、配置与公共 CA。
 
-在线“设备”按每账号来源 IP 去重，同一 NAT 出口后的多台物理设备不能区分。严格跨节点限额需要所有相关 Node 升级；页面刷新周期不等于所有异常断网的清零时间。完整变化与安装资产见 [v2026.10.29.1 发行说明](docs/releases/v2026.10.29.1.md)。SubInfoCustomizer 从本版起加入默认五插件，独立仓库继续维护源码。
+在线“设备”按每账号来源 IP 去重，同一 NAT 出口后的多台物理设备不能区分。严格跨节点限额需要所有相关 Node 升级；页面刷新周期不等于所有异常断网的清零时间。完整变化与安装资产见 [v2026.10.29.2 发行说明](docs/releases/v2026.10.29.2.md)。SubInfoCustomizer 继续作为默认五插件之一，独立仓库继续维护源码。
 
 Hysteria2 节点选择版本 `2`，连接端口可填 `42450-42453`、服务监听端口填 `42443`、跳跃间隔填 `5` 秒；Node 收到配置后自动建立、更新或撤销自身 UDP 转发，无需手写 NAT。节点需要 Linux nftables 和 `CAP_NET_ADMIN`；云安全组仍须允许广告 UDP 范围，宿主 INPUT 允许转发后的监听口。Docker 的权限、宿主端口发布与网络命名空间需另行核对。更改范围可能中断已有代理连接。
 
 标准 systemd 节点首次升级后，SSH 输入小写 `node`：选择 `1` 在线更新最新正式版、`2` 重启、`3` 卸载、`4` 修改对接面板地址／Token、`5` 查看最近100行日志、`6` 查看状态。Token 隐藏输入，先验证新地址与认证再应用；保留原 machine/node ID、实例和 CA。未来直接在此选择 `1`，由固定自维护仓库的正式 Release 取得并校验安装器和二进制。已有 Node.js 的 `node` 命令时不会覆盖；详见[节点管理和自动跳跃说明](docs/operations/node-management-hy2.zh-CN.md)。
 
-宝塔 / aaPanel 原生全新安装按 [v2026.10.29.1 安装教程](docs/installation/install-2026.10.29.1.zh-CN.md) 操作；已有面板使用[本版归档升级说明](docs/installation/upgrade-2026.10.29.1.zh-CN.md)。按教程取得并校验本 tag 的 `xboard.tar.gz` 和固定 Composer PHAR，完成新网站配置后，在站点目录以 Root 执行；用户名和 PHP 路径以本机为准，命令不传 `--host`：
+宝塔 / aaPanel 原生全新安装按 [v2026.10.29.2 安装教程](docs/installation/install-2026.10.29.2.zh-CN.md) 操作；已有面板使用[本版归档升级说明](docs/installation/upgrade-2026.10.29.2.zh-CN.md)。按教程取得并校验本 tag 的 `xboard.tar.gz` 和固定 Composer PHAR，完成新网站配置后，在站点目录以 Root 执行；用户名和 PHP 路径以本机为准，命令不传 `--host`：
 
 ```bash
 bash init.sh --app-user www \
@@ -21,25 +21,27 @@ bash init.sh --app-user www \
   --port 8443
 ```
 
-首次配置时选择 `1` 自动检测本机公网 IPv4（默认，回车选择），或 `2` 手工输入 IP / 域名。自动模式显示候选，回车接受或输入其他实际地址；检测失败必须手工填写。手工模式不请求公网检测服务。已有真实 Root 入口或显式 `--host` 跳过该菜单，不自动覆盖原地址。安装器先准备文件权限，再降权执行 Composer、数据库迁移和插件生命周期，最后处理独立 HTTPS 入口、本机防火墙及公共 CA 导入。Root 工具和私钥位于应用目录之外。
+首次配置时选择 `1` 自动检测本机公网 IPv4（默认，回车选择），或 `2` 手工输入 IP / 域名。自动模式显示候选，回车接受或输入其他实际地址；检测失败必须手工填写。手工模式不请求公网检测服务。已有真实 Root 入口或显式 `--host` 跳过该菜单，不自动覆盖原地址。安装器先准备文件权限，再降权执行 Composer、数据库迁移和五插件安装启用，随后处理独立 HTTPS 入口、公共 CA、本机助手和防火墙。已有有效入口仍会安装助手，保留原 CA。显式 `--skip-endpoint` 会将独立入口、公共 CA 和助手一起延期，五插件仍安装启用。Root 工具和私钥位于应用目录之外。
 
 旧教程若已将 `203.0.113.10` 示例 IP 安装为实际入口，按[地址修复说明](docs/installation/bundled-native.zh-CN.md#已有入口误用了文档示例-ip)使用 `--repair-address`；沿用原 CA，为正确地址重签服务器证书并保存设置，不重装面板或重建 CA。
 
-日后在“节点通讯设置”更改 IP 并保存后，在“SSH 配置入口”点击“一键复制 Root 工具命令”，以 Root 通过 SSH 登录这台面板服务器执行。命令使用已保存地址；向导中核对端口和 WS 模式，完成入口修改后回到插件页“验证入口”。网页保存和复制操作不会直接执行 Root 命令。
+助手可用后，通过面板 HTTPS 地址打开同源 `/node-endpoint`，可复用当前后台管理员登录。保存设置后生成 Root 操作预览，核对目标并输入完整确认文字，才会执行入口配置、刷新、服务器证书续签或防火墙任务。任务按阶段显示，可恢复本人保留的最近任务；公共 CA 与状态需显式校验同步。助手尚未安装不影响插件启用，页面提供首次 SSH 初始化命令及手动导入回退。
 
-Root 入口继续使用 root-installer-v1.0.9 / tools 1.0.6，保留私有 HTTPS 入口的 FlowScope IPv4 上报路径。全新安装的 Root 计划会包含经过审计的精确 POST 路径。尚未包含该路径的已有入口，仅升级面板或插件不会自动改写原 Nginx，可在面板服务器以 Root 执行一次：
+Root 安装入口固定为 `root-installer-v1.0.10`，继续使用不可变 Root tools `1.0.6`，另安装受限助手 `1.0.0`。已有有效 HTTPS 入口的旧站，在升级面板后以 Root SSH 执行一次助手初始化；保留原入口与 CA：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.9/install.sh | bash -s -- --refresh-entry
+curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.10/install.sh | bash -s -- --enable-web-manager
 ```
 
-原生 HTTPS FPM / Octane 刷新流程保留原 CA、服务器证书、Token 和数据库，不写插件设置或防火墙。历史标准 Docker 宿主 Root 自动流程见 [Docker 安装与接入教程](docs/installation/aapanel-docker.zh-CN.md)。确认 FlowScope 2.4.0 启用、节点使用独立 Node v1.13-orphan.7 且能访问 IPv4 检测服务；旧 404 最多缓存 10 分钟后自动重报。IPv4 上报不要求 Python 采集器或开启周期流量。
+助手按网站系统 UID 授权，使用 Root 私有策略绑定应用、工具摘要和允许端口。每站应使用与实际 PHP-FPM 进程一致的专用 UID；多站共用 `www` 时共享同一授权边界，仅改变 CLI 的 `--app-user` 不会改变 FPM 身份。网页没有任意 Shell、任意文件路径或未批准端口接口，根 CA 轮换与私钥导出保留在 SSH。
 
-已有面板不要执行全新安装或生成 APP_KEY；使用已校验发行包的 Root 升级工具。五插件无需逐个上传。FlowScope 采集器仍在对应节点机器部署，云安全组需另行放行。原生 FPM 与 Docker 各有历史验证记录；本次五插件的原生 PHP-FPM 和 PHP 8.2 CLI 验证结果及边界见随包 `VALIDATION.md`；Docker 整套镜像/升级未重复验收。
+本版保留 FlowScope 的 IPv4 上报路径。旧入口若尚未包含该路由，在助手中预览并确认“刷新入口配置与证书状态”，或通过同一固定 Root 安装器执行 `--refresh-entry`。确认 FlowScope `2.4.0` 启用、节点使用独立 Node `v1.13-orphan.7` 且能访问 IPv4 检测服务；旧 404 最多缓存 10 分钟后自动重报。IPv4 上报不要求 Python 采集器或开启周期流量。历史标准 Docker 宿主 Root 自动流程见 [Docker 安装与接入教程](docs/installation/aapanel-docker.zh-CN.md)。
+
+已有面板不要执行全新安装或生成 APP_KEY；使用已校验发行包的 Root 升级工具。五插件无需逐个上传。FlowScope 采集器仍在对应节点机器部署，云安全组需另行放行。隔离原生 PHP-FPM 新站初始化已成功，真实 Root 操作 45/45、基础探测 4/4 通过；Python 239 项（含助手 33 项及 bootstrap 4 项）、Chrome UI 27 组和 PHP Web 桥接 27 组通过。**最终发行归档的升级与保全测试尚待授权，Linux PHP 8.3 整套插件测试尚未完成。** 模拟接口与真实部署分别计数，完整结果见本 tag 的验证记录。
 
 本次修补明确要求 Composer **2.2+**，安装器会在安装依赖前检查版本，并修正首次创建 Composer 缓存时的父目录权限。旧 Composer 的 runtime API 不满足锁定依赖时应指定可信新版 PHAR，保留锁定依赖版本，不执行 `composer update`。
 
-本版开发联测与发行包验证边界见 [v2026.10.29.1 验证范围](docs/installation/release-2026.10.29.1-validation.zh-CN.md)。
+本版开发联测与发行包验证边界见 [v2026.10.29.2 验证范围](docs/installation/release-2026.10.29.2-validation.zh-CN.md)。
 
 历史原生部署验证见 [原生测试记录](docs/installation/bundled-validation.zh-CN.md)；此前 Docker 默认 MySQL 安装、重复执行、私有 TLS/WSS、并发设置和权限验证见 [Docker 自动部署记录](docs/installation/aapanel-docker-auto-validation.zh-CN.md)。
 
@@ -65,14 +67,14 @@ Xboard is a modern panel system built on Laravel 11, focusing on providing a cle
 
 ## 🚀 Installation
 
-Use the [v2026.10.29.1 native PHP-FPM installation guide](docs/installation/install-2026.10.29.1.zh-CN.md). The earlier [aaPanel + Docker guide](docs/installation/aapanel-docker.zh-CN.md) ([English](docs/en/installation/aapanel-docker.md)) retains its historical deployment scope; this release did not repeat Docker installation or upgrade validation. Actual tested scope is recorded with the matching Release.
+Use the [v2026.10.29.2 native PHP-FPM installation guide](docs/installation/install-2026.10.29.2.zh-CN.md). A fresh Root initialization installs and enables all five plugins, configures the HTTPS endpoint and installs the restricted local helper. `--skip-endpoint` defers the endpoint, public CA and helper. Isolated native initialization, 45 real Root checks and 4 basic probes passed. Final archive upgrade/preservation testing awaits authorization, and the complete Linux PHP 8.3 plugin suite remains pending. The earlier [aaPanel + Docker guide](docs/installation/aapanel-docker.zh-CN.md) ([English](docs/en/installation/aapanel-docker.md)) retains its historical scope; see the matching Release for exact validation boundaries.
 
 ## 📖 Documentation
 
 ### 🔄 Upgrade Notice
 > 🚨 **Important:** This version involves significant changes. Please strictly follow the upgrade documentation and backup your database before upgrading. Note that upgrading and migration are different processes, do not confuse them.
 
-For this release, follow the [v2026.10.29.1 native PHP-FPM update guide](docs/installation/upgrade-2026.10.29.1.zh-CN.md) (Chinese). Upgrade the backend first, then independent Node `v1.13-orphan.7`, keeping the original database, `APP_KEY`, machine bindings and private-CA trust. The current device-state validation used native PHP-FPM; earlier Docker instructions retain their historical validation scope.
+For this release, follow the [v2026.10.29.2 native PHP-FPM update guide](docs/installation/upgrade-2026.10.29.2.zh-CN.md) (Chinese). Preserve the original database, `APP_KEY`, machine bindings, private CA, settings and disabled-plugin choices. Existing HTTPS endpoints need one Root SSH initialization of the helper. Its trust boundary is the site's system UID, which must match PHP-FPM; use a dedicated UID for site isolation. Independent Node remains `v1.13-orphan.7`; machines already on that version do not need another upgrade for this release.
 
 ### Development Guides
 - [Plugin Development Guide](./docs/en/development/plugin-development-guide.md) - Complete guide for developing XBoard plugins

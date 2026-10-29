@@ -10,8 +10,8 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCES = (
-    ('node_endpoint', 'NodeEndpoint', '1.0.10', 'ksr-v/Xboard-Independent-NodeEndpoint',
-     'a600680392dc97738594f5c07f1d5cb032b433f6', 'plugin/NodeEndpoint/'),
+    ('node_endpoint', 'NodeEndpoint', '1.1.0', 'ksr-v/Xboard-Independent-NodeEndpoint',
+     '41364290b0c0799c722b2e0d6aea63509cad7442', 'plugin/NodeEndpoint/'),
     ('smart_expiry', 'SmartExpiry', '1.2.0', 'ksr-v/xb-SmartExpiry',
      '6f22f456512d1a0cdcad9c46e75e06e5793e6bb6', ''),
     ('qrcodeextend', 'Qrcodeextend', '1.2.0', 'ksr-v/xb-qrcode-extend',
@@ -72,7 +72,7 @@ def main():
     mapping = json.loads(args.source_map.read_text(encoding='utf-8'))
     target = ROOT / 'bundled-plugins'
     require(not target.exists() and not target.is_symlink(), 'Bundle already exists; build in a clean source checkout')
-    manifest = {'schema_version': 1, 'bundle_version': '2026.10.29.1', 'plugins': []}
+    manifest = {'schema_version': 1, 'bundle_version': '2026.10.29.2', 'plugins': []}
     with tempfile.TemporaryDirectory(prefix='.plugin-bundle-build-', dir=ROOT) as work:
         stage = Path(work) / 'bundled-plugins'
         stage.mkdir()
@@ -86,7 +86,7 @@ def main():
             require(config['code'] == code and config['version'] == version, 'Pinned plugin identity differs')
             previous = []
             if code == 'node_endpoint':
-                for tag in ('v1.0.0', 'v1.0.1', 'v1.0.2', 'v1.0.3', 'v1.0.4', 'v1.0.5', 'v1.0.6', 'v1.0.7', 'v1.0.8', 'v1.0.9'):
+                for tag in ('v1.0.0', 'v1.0.1', 'v1.0.2', 'v1.0.3', 'v1.0.4', 'v1.0.5', 'v1.0.6', 'v1.0.7', 'v1.0.8', 'v1.0.9', 'v1.0.10'):
                     old_commit = git(repository, 'rev-parse', tag + '^{commit}').decode().strip()
                     old = source_files(repository, old_commit, prefix)
                     old_version = json.loads(old['config.json'])['version']

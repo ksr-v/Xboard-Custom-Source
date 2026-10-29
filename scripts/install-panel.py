@@ -17,10 +17,12 @@ import urllib.parse
 import urllib.request
 sys.dont_write_bytecode = True
 
-BOOTSTRAP_SHA256 = 'b936a70bd69ffd95bf4f8e85ed5d8a4268599073ee1610543b79f84799d1bd27'
+BOOTSTRAP_SHA256 = 'c50868e3fa53c64143fa4529769fb4df05013b258622369d9d5b6df4f82907d1'
 TOOLS_SHA256 = 'd1dd1258b68e34e7feca111a85c97bd0d435516093b49840633166fe066e566e'
 FIREWALL_PATCH_SHA256 = 'c230d11ec268c1754b26d032108e3d2ce2372af2674c9dfad021e1e98439adcb'
-BOOTSTRAP_URL = 'https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/releases/download/root-installer-v1.0.9/quick_install.py'
+BOOTSTRAP_URL = 'https://github.com/ksr-v/Xboard-Independent-NodeEndpoint/releases/download/root-installer-v1.0.10/quick_install.py'
+WEB_MANAGER_SHA256 = '9afb5f8b774600ce1578bebf067a3b1d99e90ab3f7b5245523181ba29cdd0f2a'
+WEB_MANAGER_ASSET = 'nodeendpoint-web-manager-1.0.0.py'
 SYSTEM_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
 CODE_DIRS = ('app', 'bootstrap', 'config', 'database', 'routes', 'resources', 'public', 'plugins',
              'plugins-core', 'bundled-plugins', 'root-assets', 'scripts', 'theme', 'vendor', '.git', 'storage')
@@ -412,6 +414,15 @@ def execute_endpoint_install(manager, args):
         manager.confirmation = original
 
 
+def install_web_manager(app, quick, nginx):
+    """Pass only the independently verified bundled asset to the Root bootstrap."""
+    helper = plain_path(app / 'root-assets' / WEB_MANAGER_ASSET)
+    require(helper.is_file() and helper.stat().st_size <= 1048576
+            and hashlib.sha256(helper.read_bytes()).hexdigest() == WEB_MANAGER_SHA256,
+            '网页 Root 助手资产摘要不匹配；现有入口和 CA 保留')
+    return quick.install_web_manager(helper_file=helper, nginx=nginx, confirmed=True)
+
+
 def complete_endpoint(app, user, php, quick, plan, existing):
     import manager
     from panel_ca import sync_panel_ca
@@ -427,6 +438,9 @@ def complete_endpoint(app, user, php, quick, plan, existing):
         execute_endpoint_install(manager, manager.parser().parse_args(argv))
     as_user(user, app, [php, 'artisan', 'xboard:configure-endpoint', '--host=' + plan['host'],
                        '--port=' + str(plan['port']), '--ws-mode=' + mode])
+    # The Root installer owns the fixed helper bootstrap. Web/PHP never gets
+    # permission to execute arbitrary Root commands or read private PKI files.
+    install_web_manager(app, quick, plan.get('nginx'))
     failures = []
     try:
         result = quick.configure_firewall()
@@ -475,6 +489,8 @@ def main():
         root_path(composer)
     quick = None if args.skip_endpoint or args.prepare_only else root_tools(app)
     plan, existing = endpoint_plan(args, app, quick) if quick else (None, False)
+    if quick:
+        print('本次原生初始化/升级包含受限网页 Root 助手：仅绑定本站系统 UID、已有入口和批准端口；网页任务需预览与确认。')
     if existing:
         require(plan.get('app_user') == user.pw_name and Path(plan.get('php', '')).resolve() == Path(php),
                 '现有 Root 入口的应用用户 / PHP 与本次不同，请先单独审计；未改动配置')
