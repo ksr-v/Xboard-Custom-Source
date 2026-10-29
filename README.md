@@ -37,7 +37,7 @@ curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoi
 
 本版保留 FlowScope 的 IPv4 上报路径。旧入口若尚未包含该路由，在助手中预览并确认“刷新入口配置与证书状态”，或通过同一固定 Root 安装器执行 `--refresh-entry`。确认 FlowScope `2.4.0` 启用、节点使用独立 Node `v1.13-orphan.7` 且能访问 IPv4 检测服务；旧 404 最多缓存 10 分钟后自动重报。IPv4 上报不要求 Python 采集器或开启周期流量。历史标准 Docker 宿主 Root 自动流程见 [Docker 安装与接入教程](docs/installation/aapanel-docker.zh-CN.md)。
 
-已有面板不要执行全新安装或生成 APP_KEY；使用已校验发行包的 Root 升级工具。五插件无需逐个上传。FlowScope 采集器仍在对应节点机器部署，云安全组需另行放行。隔离原生 PHP-FPM 新站初始化已成功，真实 Root 操作 45/45、基础探测 4/4 通过；Python 239 项（含助手 33 项及 bootstrap 4 项）、Chrome UI 27 组和 PHP Web 桥接 27 组通过。**最终发行归档的升级与保全测试尚待授权，Linux PHP 8.3 整套插件测试尚未完成。** 模拟接口与真实部署分别计数，完整结果见本 tag 的验证记录。
+已有面板不要执行全新安装或生成 APP_KEY；使用已校验发行包的 Root 升级工具。五插件无需逐个上传。FlowScope 采集器仍在对应节点机器部署，云安全组需另行放行。本轮隔离原生新站初始化、真实 Root 操作 45/45、基础探测 4/4，以及候选 3 归档原样升级和保全 33/33 均通过；数据库备份实际恢复后 dump 一致。Linux PHP 8.3 生命周期 25/25、升级恢复 5/5 和安装器 114/114 均无跳过；另有 Python 239 项（含助手 33 项及 bootstrap 4 项）、UI 27 组和 PHP Web 桥接 27 组通过。正式发行归档的精确摘要及对应验收以附件 JSON 为准，详见本 tag 的验证记录。
 
 本次修补明确要求 Composer **2.2+**，安装器会在安装依赖前检查版本，并修正首次创建 Composer 缓存时的父目录权限。旧 Composer 的 runtime API 不满足锁定依赖时应指定可信新版 PHAR，保留锁定依赖版本，不执行 `composer update`。
 
@@ -67,7 +67,7 @@ Xboard is a modern panel system built on Laravel 11, focusing on providing a cle
 
 ## 🚀 Installation
 
-Use the [v2026.10.29.2 native PHP-FPM installation guide](docs/installation/install-2026.10.29.2.zh-CN.md). A fresh Root initialization installs and enables all five plugins, configures the HTTPS endpoint and installs the restricted local helper. `--skip-endpoint` defers the endpoint, public CA and helper. Isolated native initialization, 45 real Root checks and 4 basic probes passed. Final archive upgrade/preservation testing awaits authorization, and the complete Linux PHP 8.3 plugin suite remains pending. The earlier [aaPanel + Docker guide](docs/installation/aapanel-docker.zh-CN.md) ([English](docs/en/installation/aapanel-docker.md)) retains its historical scope; see the matching Release for exact validation boundaries.
+Use the [v2026.10.29.2 native PHP-FPM installation guide](docs/installation/install-2026.10.29.2.zh-CN.md). A fresh Root initialization installs and enables all five plugins, configures the HTTPS endpoint and installs the restricted local helper. `--skip-endpoint` defers the endpoint, public CA and helper. Isolated native initialization, 45 real Root checks, 4 basic probes and 33 candidate-archive upgrade/preservation checks passed. Linux PHP 8.3 lifecycle/retry suites passed 25/25 and 5/5 without skips. The matching Release's JSON evidence records the final archive identity and exact validation. The earlier [aaPanel + Docker guide](docs/installation/aapanel-docker.zh-CN.md) ([English](docs/en/installation/aapanel-docker.md)) retains its historical scope.
 
 ## 📖 Documentation
 
