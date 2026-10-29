@@ -1,8 +1,8 @@
 # Xboard
 
-当前独立版本：**2026.10.29.2**。默认内置 NodeEndpoint **1.1.0**、SmartExpiry **1.2.0**、QRCode Extend **1.2.0（审计副本）**、FlowScope **2.4.0** 和 SubInfoCustomizer **1.0.1**。全新安装自动安装并启用五项；原生 PHP-FPM 的 Root 初始化随后配置独立 HTTPS 入口、导入公共 CA 并安装受限本机助手。已有面板升级保留各插件配置、公共 CA 和管理员禁用选择；只有显式选择全部启用才改变禁用状态。
+当前独立版本：**2026.10.29.2**。默认内置 NodeEndpoint **1.1.0**、SmartExpiry **1.2.0**、QRCode Extend **1.2.0（审计副本）**、FlowScope **2.4.0** 和 SubInfoCustomizer **1.0.1**。全新安装自动安装并启用五项；原生 PHP-FPM 的 Root 初始化随后配置独立 HTTPS 入口、导入公共 CA 并安装受限本机助手。已有面板升级保留各插件配置、公共 CA 和管理员禁用选择；只有显式选择全部启用才改变禁用状态。以 Root 执行归档升级且不加 `--skip-endpoint` 时，也会为已有有效原生入口安装或更新助手，授权范围与新初始化相同。
 
-本版为“节点通讯设置”增加当前后台管理员登录复用，以及 Root 操作预览、完整文字确认、分阶段进度、任务恢复和公共 CA 同步。旧站需先通过 Root SSH 初始化一次助手，之后可在网页执行已批准的固定任务。根 CA 轮换、私钥导出继续通过 SSH 处理。其余四插件版本与配套 Node `v1.13-orphan.7` 保持不变；“订阅信息管理”的模板及管理员选择继续保留。
+本版为“节点通讯设置”增加当前后台管理员登录复用，以及 Root 操作预览、完整文字确认、分阶段进度、任务恢复和公共 CA 同步。Root 归档升级默认包含助手处理；仅插件上传、手动源码升级或显式跳过入口时，才需另行初始化尚未安装的助手。之后可在网页执行已批准的固定任务。根 CA 轮换、私钥导出继续通过 SSH 处理。其余四插件版本与配套 Node `v1.13-orphan.7` 保持不变；“订阅信息管理”的模板及管理员选择继续保留。
 
 继续保留在线设备过期统计与跨节点 IP 限额修复，用户列表前台约每 5 秒刷新；创建用户默认选择 API 返回的首个实际计划，并继承该计划的设备限制。保留此前 Hysteria2 自动 UDP 转发、`node` 管理菜单、限速和路由修复。已有 aaPanel / PHP-FPM 面板按[本次更新教程](docs/installation/upgrade-2026.10.29.2.zh-CN.md)操作；尚未升级设备修复时先更新后端，再逐台升级独立 xboard-node `v1.13-orphan.7`。已使用该 Node 版本的机器无需仅为本次插件捆绑重复升级。无需卸载插件或重建 CA，不对已有机器重新执行新装/`REPLACE`。升级保留机器身份、Token、配置与公共 CA。
 
@@ -27,7 +27,7 @@ bash init.sh --app-user www \
 
 助手可用后，通过面板 HTTPS 地址打开同源 `/node-endpoint`，可复用当前后台管理员登录。保存设置后生成 Root 操作预览，核对目标并输入完整确认文字，才会执行入口配置、刷新、服务器证书续签或防火墙任务。任务按阶段显示，可恢复本人保留的最近任务；公共 CA 与状态需显式校验同步。助手尚未安装不影响插件启用，页面提供首次 SSH 初始化命令及手动导入回退。
 
-Root 安装入口固定为 `root-installer-v1.0.10`，继续使用不可变 Root tools `1.0.6`，另安装受限助手 `1.0.0`。已有有效 HTTPS 入口的旧站，在升级面板后以 Root SSH 执行一次助手初始化；保留原入口与 CA：
+Root 安装入口固定为 `root-installer-v1.0.10`，继续使用不可变 Root tools `1.0.6`，另安装受限助手 `1.0.0`。默认 Root 归档升级已包含助手安装或更新，无需再单独执行下方命令。只有仅上传插件、手动更新源码或之前显式 `--skip-endpoint`、尚未安装助手的旧站，才在已有有效原生 HTTPS 入口的前提下，以 Root SSH 单独初始化，保留原入口与 CA：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.10/install.sh | bash -s -- --enable-web-manager
@@ -74,7 +74,7 @@ Use the [v2026.10.29.2 native PHP-FPM installation guide](docs/installation/inst
 ### 🔄 Upgrade Notice
 > 🚨 **Important:** This version involves significant changes. Please strictly follow the upgrade documentation and backup your database before upgrading. Note that upgrading and migration are different processes, do not confuse them.
 
-For this release, follow the [v2026.10.29.2 native PHP-FPM update guide](docs/installation/upgrade-2026.10.29.2.zh-CN.md) (Chinese). Preserve the original database, `APP_KEY`, machine bindings, private CA, settings and disabled-plugin choices. Existing HTTPS endpoints need one Root SSH initialization of the helper. Its trust boundary is the site's system UID, which must match PHP-FPM; use a dedicated UID for site isolation. Independent Node remains `v1.13-orphan.7`; machines already on that version do not need another upgrade for this release.
+For this release, follow the [v2026.10.29.2 native PHP-FPM update guide](docs/installation/upgrade-2026.10.29.2.zh-CN.md) (Chinese). Preserve the original database, `APP_KEY`, machine bindings, private CA, settings and disabled-plugin choices. A Root archive upgrade without `--skip-endpoint` installs or updates the helper for a valid native endpoint, with the same authorization as fresh initialization. A separate `--enable-web-manager` step is needed only after plugin-only/manual source updates or an explicit skip when the helper remains absent. Its trust boundary is the site's system UID, which must match PHP-FPM; use a dedicated UID for site isolation. Independent Node remains `v1.13-orphan.7`; machines already on that version do not need another upgrade for this release.
 
 ### Development Guides
 - [Plugin Development Guide](./docs/en/development/plugin-development-guide.md) - Complete guide for developing XBoard plugins

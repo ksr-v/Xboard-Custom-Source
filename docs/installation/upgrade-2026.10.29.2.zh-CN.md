@@ -29,6 +29,8 @@ tar -xzf xboard.tar.gz -C source
 
 替换实际站点、用户、PHP、Composer 和数据库备份路径。备份必须已完成、非空、权限为 `0600`；升级器不会生成数据库备份。锁定的 `composer.json` 与 `composer.lock` 必须与现有站点一致，不运行 `composer update` 绕过检查。
 
+**下方 Root 归档升级命令默认包含入口与助手处理。** `deploy-release.py` 会调用 `install-panel.py upgrade`；不加 `--skip-endpoint` 时，会为已有有效原生 HTTPS 入口安装或更新受限本机助手，授权范围与新初始化相同：由本站网站 UID 调用固定入口任务，并受 Root 私有策略及允许端口限制。它不会仅凭网页请求创建 Root 服务。若明确延期本次入口与助手处理，应显式传入 `--skip-endpoint`；这不会卸载已有助手或改变插件禁用选择。下面的默认命令保持不跳过。
+
 ```bash
 chmod 600 /root/实际数据库备份.sql
 python3 -I /root/xboard-upgrade-20261029-2/source/scripts/deploy-release.py \
@@ -40,7 +42,7 @@ python3 -I /root/xboard-upgrade-20261029-2/source/scripts/deploy-release.py \
   --database-backup /root/实际数据库备份.sql
 ```
 
-工具会校验归档、保存源码恢复记录，再以站点用户执行锁定依赖、迁移和默认插件同步。保留 `.env`、APP_KEY、运行数据、独立上传插件、默认插件配置及管理员启停选择。未知修改过的插件会拒绝覆盖；不要删除所有权校验或用旧整份 Admin 文件绕过。
+工具会校验归档、保存源码恢复记录，再以站点用户执行锁定依赖、迁移和默认插件同步；Root 协调器按上述默认范围处理既有入口和助手。保留 `.env`、APP_KEY、运行数据、独立上传插件、默认插件配置及管理员启停选择。未知修改过的插件会拒绝覆盖；不要删除所有权校验或用旧整份 Admin 文件绕过。
 
 成功后按实际配置重载该站点 PHP-FPM，并重启对应队列、Node WebSocket worker，恢复唯一调度任务。新租约逻辑需要新的 PHP 长驻进程；只重载 Nginx 不会更新旧 worker。
 
@@ -50,13 +52,13 @@ python3 -I /root/xboard-upgrade-20261029-2/source/scripts/deploy-release.py \
 
 本版继续保留默认首计划与设备在线修复。已经手动应用旧独立补丁工具的站点，归档升级后不要再次运行旧补丁器，它可能正确地拒绝新的文件版本。
 
-## 已有面板：一次性初始化 Root 助手
+## 助手核对与单独初始化的适用情形
 
-原生归档部署以网站用户更新应用和默认插件，保留管理员禁用选择。它不会仅凭网页请求创建 Root 服务；旧站需在 Root SSH 中更新一次 Root 安装入口并初始化本机助手。NodeEndpoint `1.1.0` 可在助手尚未安装时正常安装和启用，原有通讯入口继续工作。
+通过本页默认 Root 归档流程升级、且已有有效原生入口时，助手会随升级安装或更新，不需要另行初始化。仅上传插件、手动更新源码，或显式使用 `--skip-endpoint` 跳过本次入口处理而助手仍未安装时，才需单独运行下方首次初始化命令。NodeEndpoint `1.1.0` 可在助手尚未安装时正常安装和启用，原有通讯入口继续工作；网页本身不会创建 Root 服务。
 
-完成应用升级后，以管理员通过面板 HTTPS 地址打开同源 `/node-endpoint`。页面自动尝试复用当前后台登录，仍由服务端检查管理员权限；没有有效后台登录时保留账号密码和手动 Bearer Token 验证。助手不可用区域提供独立的“复制首次初始化命令”，以 Root 在面板服务器 SSH 中执行。使用该初始化命令，不用原有配置入口命令覆盖已有部署。
+完成应用升级后，以管理员通过面板 HTTPS 地址打开同源 `/node-endpoint`，核对助手状态。页面自动尝试复用当前后台登录，仍由服务端检查管理员权限；没有有效后台登录时保留账号密码和手动 Bearer Token 验证。需要单独初始化时，从助手不可用区域“复制首次初始化命令”，以 Root 在面板服务器 SSH 中执行。使用该初始化命令，不用原有配置入口命令覆盖已有部署。
 
-本版固定 Root 安装入口 `root-installer-v1.0.10`、不可变 Root tools `1.0.6` 和助手 `1.0.0`。已有有效原生 HTTPS 入口可执行以下固定命令，与网页提供的首次初始化命令一致：
+本版固定 Root 安装入口 `root-installer-v1.0.10`、不可变 Root tools `1.0.6` 和助手 `1.0.0`。符合上述单独初始化条件、且已有有效原生 HTTPS 入口时，可执行以下固定命令，与网页提供的首次初始化命令一致：
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ksr-v/Xboard-Independent-NodeEndpoint/root-installer-v1.0.10/install.sh | bash -s -- --enable-web-manager
