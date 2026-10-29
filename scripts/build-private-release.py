@@ -23,7 +23,10 @@ def require(condition, message):
 
 
 def git(root, *args):
-    return subprocess.check_output(['git', '-C', str(root), *args])
+    # Archive text must match Linux deployments regardless of the maintainer's
+    # Windows checkout settings. Dependency checks compare the exact bytes.
+    return subprocess.check_output(['git', '-c', 'core.autocrlf=false', '-c', 'core.eol=lf',
+                                    '-C', str(root), *args])
 
 
 def allowed(name):

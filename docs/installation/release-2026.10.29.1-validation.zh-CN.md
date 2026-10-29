@@ -35,6 +35,8 @@
 
 `scripts/build-private-release.py` 从干净、已提交的目标 HEAD 构建，核验五插件全部文件及固定 Root 资产摘要，排除 `.env`、vendor、storage、已安装插件目录和私钥。构建标识使用真实提交 UTC 日期与短 SHA，独立于人类可读 tag。
 
+正式归档验收曾在写入前发现 Windows `autocrlf` 导致依赖文件及 shell / Python 入口转换为 CRLF，Linux 升级器据此正确拒绝。该候选未发布，未改动应用源码或数据库。最终源码通过 Git attributes 与构建命令固定 LF，并重新构建、逐字节核对依赖及入口文件后执行归档验收；没有放宽部署器的依赖保护。
+
 正式附件 `ARCHIVE-VERIFICATION.json` 记录该 `xboard.tar.gz` 的精确摘要、大小、源码提交、全部归档成员和五插件清单核对结果。`DEPLOYMENT-VERIFICATION.json` 单独记录同一摘要归档在本次隔离原生应用上的真实升级及保全验收，不以候选快照的结果代替正式附件的制品测试。发行后还核对 GitHub 资产摘要与实际下载字节。
 
 ## 验证边界
