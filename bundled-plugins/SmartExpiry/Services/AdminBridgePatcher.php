@@ -26,6 +26,18 @@ final class AdminBridgePatcher
 
     public function apply(): string
     {
+        // Ordinary requests only need to verify an already complete bridge.
+        // Keep mutations serialized, and recheck transient multi-file states
+        // under the shared lock before rejecting or changing anything.
+        try {
+            [, $state] = $this->validateFiles();
+            if ($state === 'v7') {
+                return 'already patched';
+            }
+        } catch (\Throwable) {
+            // Another patcher may be replacing the shared Admin files.
+        }
+
         return $this->withLock(fn (): string => $this->applyUnlocked());
     }
 

@@ -63,7 +63,7 @@ class Kernel extends ConsoleKernel
 
         // Maintenance must stage verified files before any old plugin classes
         // are loaded into this process. Ordinary commands keep native behavior.
-        $maintenance = ['xboard:install', 'xboard:update', 'xboard:bundled-plugins', 'xboard:configure-endpoint'];
+        $maintenance = ['xboard:install', 'xboard:update', 'xboard:bundled-plugins', 'xboard:configure-endpoint', 'xboard:plugin-online-update'];
         if (!array_intersect($maintenance, $_SERVER['argv'] ?? [])) {
             try {
                 app(PluginManager::class)->initializeEnabledPlugins();

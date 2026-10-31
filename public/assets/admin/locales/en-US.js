@@ -3208,6 +3208,21 @@ window.XBOARD_TRANSLATIONS['en-US'] = {
       "uploadError": "Failed to upload plugin",
       "deleteSuccess": "Plugin deleted successfully",
       "deleteError": "Failed to delete plugin"
+    },
+    "online": {
+      "check": "Check plugin updates",
+      "checking": "Checking updates…",
+      "update": "Update to latest",
+      "updating": "Updating…",
+      "available": "Online updates · Latest v{{version}}",
+      "current": "Online updates · Up to date v{{version}}",
+      "ahead": "Installed version is newer than the stable release (v{{version}})",
+      "unchecked": "Online updates · Not checked",
+      "afterInstall": "Online updates available after installation",
+      "checkError": "Update check failed",
+      "success": "Plugin updated; settings and enabled state preserved",
+      "failed": "Online update failed",
+      "retry": "Please retry"
     }
   },
   "dashboard": {

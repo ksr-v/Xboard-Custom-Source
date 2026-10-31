@@ -87,7 +87,10 @@ final class BundledPluginInstaller
                     if (!$row || $row->version !== $report[$code]['version']) {
                         throw new RuntimeException("Newer {$code} files and database version do not agree. Complete their native installation before retrying.");
                     }
-                    if ($enableAll && $row && !$row->is_enabled) { $manager->enable($code); }
+                    // A panel upgrade can replace shared Admin assets even
+                    // when this newer plugin source is preserved. Reapply its
+                    // integration only when the saved choice enables it.
+                    if ($enableAll || $row->is_enabled) { $manager->enable($code); }
                     $report[$code]['lifecycle'] = 'newer version preserved';
                     continue;
                 }
@@ -176,7 +179,10 @@ final class BundledPluginInstaller
                     || !preg_match('/^[a-f0-9]{40}$/iD', $old['source_commit'] ?? '')) {
                     throw new RuntimeException('Invalid accepted previous plugin release.');
                 }
-                $previous[$old['version']] = $this->fileMap($old['files'] ?? null);
+                // A reviewed source fix can retain its semantic version. Keep
+                // every byte identity rather than replacing an older snapshot
+                // with the last entry for that version.
+                $previous[$old['version']][] = $this->fileMap($old['files'] ?? null);
             }
             $result[$code] = $item + ['accepted_previous' => []];
             $result[$code]['files'] = $files;
@@ -223,16 +229,45 @@ final class BundledPluginInstaller
             if ($owned !== null && ($owned['directory'] ?? null) !== $item['directory']) {
                 throw new RuntimeException("Plugin ownership directory changed: {$code}.");
             }
+            // Online updates can ship reviewed source fixes without changing
+            // the plugin's semantic version. An older panel bundle must not
+            // replace that newer owned source with its older same-version copy.
+            $ownedBundle = $owned['bundle_version'] ?? null;
+            if ($owned !== null && $currentVersion === $item['version']
+                && ($owned['version'] ?? null) === $currentVersion
+                && is_string($ownedBundle) && preg_match('/^\d+(?:\.\d+)+$/D', $ownedBundle)
+                && preg_match('/^\d+(?:\.\d+)+$/D', $item['bundle_version'])
+                && version_compare($ownedBundle, $item['bundle_version'], '>')) {
+                foreach ($this->fileMap($owned['files'] ?? null) as $file => $hash) {
+                    if (($actual[$file] ?? null) !== $hash) {
+                        throw new RuntimeException("Existing {$code} has unowned or modified files; review it before retrying. No plugin files were changed.");
+                    }
+                }
+                $report[$code] = ['action' => 'preserved-newer', 'version' => $currentVersion];
+                continue;
+            }
             // Native plugin deletion removes the complete runtime directory,
             // while the bundle ownership record intentionally stays private.
             // A missing directory can be staged again; an existing partial
             // tree must still pass every owned-file check below.
             $baseline = $owned !== null && is_dir($destination) ? $this->fileMap($owned['files'] ?? null) : [];
             if (!$baseline && $actual) {
-                $baseline = $currentVersion === $item['version'] ? $item['files']
-                    : ($item['previous_files'][$currentVersion ?? ''] ?? []);
-                if (!$baseline) {
+                $candidates = $item['previous_files'][$currentVersion ?? ''] ?? [];
+                if ($currentVersion === $item['version']) { array_unshift($candidates, $item['files']); }
+                if (!$candidates) {
                     throw new RuntimeException("Existing {$code} is not a verified managed release. Review/upgrade it through native plugin management before retrying; files were preserved.");
+                }
+                // Only a complete known source snapshot can be adopted. Extra
+                // operator notes remain unowned, but a mixture of files from
+                // different known snapshots is not a verified release.
+                $managedPaths = $item['files'];
+                foreach ($candidates as $candidate) { $managedPaths += $candidate; }
+                $managedActual = array_intersect_key($actual, $managedPaths);
+                foreach ($candidates as $candidate) {
+                    if ($managedActual === $candidate) { $baseline = $candidate; break; }
+                }
+                if (!$baseline) {
+                    throw new RuntimeException("Existing {$code} has unowned or modified files; review it before retrying. No plugin files were changed.");
                 }
             }
             foreach ($baseline as $file => $hash) {

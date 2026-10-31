@@ -73,17 +73,17 @@ if ($phase === 'stage-current') {
     check(count($backups) === 1 && hash_file('sha256', $backups[0]) === $state['old_plugin_sha256'], 'Actual historical plugin bytes were not backed up');
     check($installer->stage()['node_endpoint']['action'] === 'unchanged', 'Claimed source staging was not idempotent');
     $ownership = json_decode(file_get_contents($root . '/storage/app/private/plugin-bundles/ownership.json'), true);
-    check($ownership['plugins']['node_endpoint']['version'] === '1.1.2', 'Current source ownership was not recorded');
+    check($ownership['plugins']['node_endpoint']['version'] === '1.1.3', 'Current source ownership was not recorded');
 } else {
     $report = $installer->synchronize();
     check($report['node_endpoint']['lifecycle'] === ($state['enabled'] ? 'upgraded and enabled' : 'upgraded; disabled state preserved'), 'Native historical lifecycle not upgraded');
     $row = (array) DB::table('v2_plugins')->where('code', 'node_endpoint')->first();
     check($row['id'] === $state['row']['id'] && $row['installed_at'] === $state['row']['installed_at'] &&
-        $row['version'] === '1.1.2' && $row['config'] === $state['row']['config'] && (bool) $row['is_enabled'] === $state['enabled'], 'Old native identity/config/administrator choice changed');
-    check(\Plugin\NodeEndpoint\Plugin::VERSION === '1.1.2' && class_exists(\Plugin\NodeEndpoint\Services\AdminIntegration::class), 'Fresh Composer did not load current classes');
+        $row['version'] === '1.1.3' && $row['config'] === $state['row']['config'] && (bool) $row['is_enabled'] === $state['enabled'], 'Old native identity/config/administrator choice changed');
+    check(\Plugin\NodeEndpoint\Plugin::VERSION === '1.1.3' && class_exists(\Plugin\NodeEndpoint\Services\AdminIntegration::class), 'Fresh Composer did not load current classes');
     check(\Plugin\NodeEndpoint\Services\MachineInstallCommand::INSTALLER ===
-        'https://github.com/ksr-v/Xboard-Node--Custom-Source/releases/download/v1.13-orphan.9/install.sh',
-        'Fresh upgraded classes did not select the fixed v9 Node installer');
+        'https://github.com/ksr-v/Xboard-Node--Custom-Source/releases/latest/download/install.sh',
+        'Fresh upgraded classes did not select the latest stable Node installer');
     check(Schema::hasTable('node_endpoint_ca_credentials'), 'Existing native deployment did not migrate its credential vault');
     check(Schema::hasTable('node_endpoint_web_jobs'), 'Existing native deployment did not migrate durable Root job ownership');
     check(Plugin::count() === 6 && Plugin::whereIn('code', ['smart_expiry', 'qrcodeextend', 'flowscope', 'subinfo_customizer'])->where('is_enabled', true)->count() === 4, 'Other bundled plugins were not installed normally');

@@ -41,6 +41,17 @@ class AdminBundlePatcher
 
     public function patch(): string
     {
+        // Normal requests only need to verify the installed bridge. Do not
+        // queue behind another plugin's writer when no write is necessary.
+        try {
+            $check = $this->inspect($this->readBundle());
+            if ($check['valid'] && $check['state'] === 'patched') {
+                return 'Admin bridge is already patched; no changes made.';
+            }
+        } catch (\Throwable) {
+            // A cooperating writer may be replacing files. Recheck under the
+            // shared lock before rejecting the build or changing anything.
+        }
         return $this->withLock(function (): string {
             $current = $this->readBundle();
             $check = $this->inspect($current);

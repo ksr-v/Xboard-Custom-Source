@@ -36,6 +36,15 @@ PHP;
 
     public function apply(): string
     {
+        // Ordinary requests only need to verify the existing bridge. Do not
+        // queue them behind other plugins' Admin asset writers unnecessarily.
+        try {
+            if ($this->readState()[2] === 'patched') { return 'already patched'; }
+        } catch (\Throwable) {
+            // A concurrent writer may be replacing the file. Recheck under the
+            // shared lock before rejecting it; this never accepts invalid core.
+        }
+
         return $this->withLock(function (): string {
             [$original, , $state] = $this->readState();
             if ($state === 'patched') { return 'already patched'; }

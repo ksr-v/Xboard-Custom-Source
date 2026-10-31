@@ -10,8 +10,8 @@ test('source manifest fixes all five versions and QR audit 1.2.0', function (): 
     global $sourceRoot;
     $manifest = json_decode(file_get_contents($sourceRoot . '/bundled-plugins/manifest.json'), true);
     $versions = array_column($manifest['plugins'], 'version', 'code');
-    check($manifest['bundle_version'] === '2026.10.30.2', 'Unexpected bundle release');
-    check($versions === ['node_endpoint' => '1.1.2', 'smart_expiry' => '1.2.0', 'qrcodeextend' => '1.2.0', 'flowscope' => '2.4.0', 'subinfo_customizer' => '1.0.1'], 'Unexpected versions');
+    check($manifest['bundle_version'] === '2026.10.31.1', 'Unexpected bundle release');
+    check($versions === ['node_endpoint' => '1.1.3', 'smart_expiry' => '1.2.0', 'qrcodeextend' => '1.2.0', 'flowscope' => '2.4.0', 'subinfo_customizer' => '1.0.1'], 'Unexpected versions');
     foreach (['bootstrap.py', 'flowscope_collector.py', 'install.sh', 'flowscope-collector.service', 'manage.sh'] as $file) {
         check(is_file($sourceRoot . '/bundled-plugins/Flowscope/collector/' . $file), 'Missing collector asset');
     }
@@ -66,7 +66,7 @@ test('a locally modified real v1.0.0 deployment is refused before any bundle is 
 
 foreach (['1.0.0', '1.1.0', '1.1.1'] as $historicalVersion) {
 foreach (['enabled', 'disabled'] as $historicalChoice) {
-    test('real Git-tag v' . $historicalVersion . ' native deployment upgrades to 1.1.2 in fresh processes; ' . $historicalChoice . ' choice survives', function () use ($historicalChoice, $historicalVersion): void {
+    test('real Git-tag v' . $historicalVersion . ' native deployment upgrades to 1.1.3 in fresh processes; ' . $historicalChoice . ' choice survives', function () use ($historicalChoice, $historicalVersion): void {
         global $sourceRoot, $work;
         $root = fixtureRoot('historical-' . $historicalVersion . '-' . $historicalChoice);
         $historical = deployHistoricalNodeEndpoint($root, $historicalVersion);
@@ -111,7 +111,7 @@ foreach (['1.0.8', '1.0.10'] as $previousNodeVersion) {
         $installer = new BundledPluginInstaller($root);
         $report = $installer->stage();
         check($report['node_endpoint']['action'] === 'upgraded-files', 'Previous release source was not accepted');
-        check(json_decode(file_get_contents($root . '/plugins/NodeEndpoint/config.json'), true)['version'] === '1.1.2', 'Previous release source was not upgraded');
+        check(json_decode(file_get_contents($root . '/plugins/NodeEndpoint/config.json'), true)['version'] === '1.1.3', 'Previous release source was not upgraded');
         check(file_get_contents($root . '/plugins/NodeEndpoint/operator-notes.txt') === 'preserve-v' . $previousNodeVersion, 'Unowned operator file changed');
         check($installer->stage()['node_endpoint']['action'] === 'unchanged', 'Previous release upgrade was not idempotent');
     });
@@ -247,7 +247,7 @@ test('repeat preserves settings and public CA; upgrade preserves existing identi
     $id = Plugin::where('code', 'node_endpoint')->value('id');
     $installer->synchronize();
     check(Plugin::where('code', 'node_endpoint')->value('id') === $id, 'Identity changed');
-    check(Plugin::where('code', 'node_endpoint')->value('version') === '1.1.2', 'Version not upgraded');
+    check(Plugin::where('code', 'node_endpoint')->value('version') === '1.1.3', 'Version not upgraded');
     check(Plugin::where('code', 'node_endpoint')->value('config') === '{"custom":"preserve"}', 'Config changed');
     check(\Plugin\NodeEndpoint\Services\Settings::read()['host'] === $settings['host'], 'Endpoint changed');
     check(file_get_contents($ca) === 'public CA canary', 'CA changed');

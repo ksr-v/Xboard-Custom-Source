@@ -3236,6 +3236,21 @@ window.XBOARD_TRANSLATIONS['zh-CN'] = {
       "uploadError": "插件上传失败",
       "deleteSuccess": "插件删除成功",
       "deleteError": "插件删除失败"
+    },
+    "online": {
+      "check": "检查插件更新",
+      "checking": "正在检查更新…",
+      "update": "一键更新最新版",
+      "updating": "正在更新…",
+      "available": "在线更新 · 最新 v{{version}}",
+      "current": "在线更新 · 已是最新版 v{{version}}",
+      "ahead": "当前版本高于正式发布版（v{{version}}）",
+      "unchecked": "在线更新 · 尚未检查",
+      "afterInstall": "安装后支持在线更新",
+      "checkError": "检查更新失败",
+      "success": "插件已更新，配置与启停状态已保留",
+      "failed": "在线更新失败",
+      "retry": "请重试"
     }
   },
   "dashboard": {

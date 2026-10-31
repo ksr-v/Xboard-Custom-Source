@@ -273,15 +273,17 @@ class AdminRoute
             ], function ($router) {
                 $router->get('/types', [\App\Http\Controllers\V2\Admin\PluginController::class, 'types']);
                 $router->get('/getPlugins', [\App\Http\Controllers\V2\Admin\PluginController::class, 'index']);
-                $router->post('/upload', [\App\Http\Controllers\V2\Admin\PluginController::class, 'upload']);
-                $router->post('/delete', [\App\Http\Controllers\V2\Admin\PluginController::class, 'delete']);
-                $router->post('install', [\App\Http\Controllers\V2\Admin\PluginController::class, 'install']);
-                $router->post('uninstall', [\App\Http\Controllers\V2\Admin\PluginController::class, 'uninstall']);
-                $router->post('enable', [\App\Http\Controllers\V2\Admin\PluginController::class, 'enable']);
-                $router->post('disable', [\App\Http\Controllers\V2\Admin\PluginController::class, 'disable']);
+                $router->post('/upload', [\App\Http\Controllers\V2\Admin\PluginController::class, 'upload'])->middleware(\App\Http\Middleware\PluginMutationLock::class);
+                $router->post('/delete', [\App\Http\Controllers\V2\Admin\PluginController::class, 'delete'])->middleware(\App\Http\Middleware\PluginMutationLock::class);
+                $router->post('install', [\App\Http\Controllers\V2\Admin\PluginController::class, 'install'])->middleware(\App\Http\Middleware\PluginMutationLock::class);
+                $router->post('uninstall', [\App\Http\Controllers\V2\Admin\PluginController::class, 'uninstall'])->middleware(\App\Http\Middleware\PluginMutationLock::class);
+                $router->post('enable', [\App\Http\Controllers\V2\Admin\PluginController::class, 'enable'])->middleware(\App\Http\Middleware\PluginMutationLock::class);
+                $router->post('disable', [\App\Http\Controllers\V2\Admin\PluginController::class, 'disable'])->middleware(\App\Http\Middleware\PluginMutationLock::class);
                 $router->get('config', [\App\Http\Controllers\V2\Admin\PluginController::class, 'getConfig']);
-                $router->post('config', [\App\Http\Controllers\V2\Admin\PluginController::class, 'updateConfig']);
-                $router->post('upgrade', [\App\Http\Controllers\V2\Admin\PluginController::class, 'upgrade']);
+                $router->post('config', [\App\Http\Controllers\V2\Admin\PluginController::class, 'updateConfig'])->middleware(\App\Http\Middleware\PluginMutationLock::class);
+                $router->post('upgrade', [\App\Http\Controllers\V2\Admin\PluginController::class, 'upgrade'])->middleware(\App\Http\Middleware\PluginMutationLock::class);
+                $router->get('checkUpdates', [\App\Http\Controllers\V2\Admin\PluginController::class, 'checkUpdates']);
+                $router->post('updateOnline', [\App\Http\Controllers\V2\Admin\PluginController::class, 'updateOnline']);
             });
 
             // 流量重置管理

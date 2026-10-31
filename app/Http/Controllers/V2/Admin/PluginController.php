@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Plugin;
 use App\Services\Plugin\PluginManager;
 use App\Services\Plugin\PluginConfigService;
+use App\Services\Plugin\OnlinePluginUpdater;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -118,6 +119,8 @@ class PluginController extends Controller
                     'config' => $pluginConfig,
                     'readme' => $readmeContent,
                     'need_upgrade' => $needUpgrade,
+                    'online_update' => app(OnlinePluginUpdater::class)->supports($code),
+                    'update_mode' => app(OnlinePluginUpdater::class)->supports($code) ? 'online' : 'manual',
                     'admin_menus' => $config['admin_menus'] ?? null,
                     'admin_crud' => $config['admin_crud'] ?? null,
                 ];
@@ -196,6 +199,24 @@ class PluginController extends Controller
             return response()->json([
                 'message' => '插件升级失败：' . $e->getMessage()
             ], 400);
+        }
+    }
+
+    public function checkUpdates(Request $request, OnlinePluginUpdater $updater)
+    {
+        $request->validate(['code' => 'nullable|string|regex:/^[a-z0-9_]+$/']);
+        $codes = $request->filled('code') ? [$request->input('code')] : Plugin::pluck('code')->all();
+        return response()->json(['data' => $updater->check($codes)]);
+    }
+
+    public function updateOnline(Request $request, OnlinePluginUpdater $updater)
+    {
+        $request->validate(['code' => 'required|string|regex:/^[a-z0-9_]+$/']);
+        try {
+            $result = $updater->run($request->input('code'));
+            return response()->json(['message' => '插件在线更新完成，配置与启停状态已保留', 'data' => $result]);
+        } catch (\Throwable $error) {
+            return response()->json(['message' => $error->getMessage()], 400);
         }
     }
 

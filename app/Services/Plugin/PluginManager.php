@@ -488,12 +488,15 @@ class PluginManager
 
         $newVersion = $config['version'];
         $oldVersion = $dbPlugin->version;
+        $wasEnabled = (bool) $dbPlugin->is_enabled;
 
         if (version_compare($newVersion, $oldVersion, '<=')) {
             throw new \Exception('Plugin is already up to date');
         }
 
-        $this->disable($pluginCode);
+        if ($wasEnabled) {
+            $this->disable($pluginCode);
+        }
         $this->runMigrations($pluginCode);
 
         $plugin = $this->loadPlugin($pluginCode);
@@ -512,7 +515,9 @@ class PluginManager
             'updated_at' => now(),
         ]);
 
-        $this->enable($pluginCode);
+        if ($wasEnabled) {
+            $this->enable($pluginCode);
+        }
 
         return true;
     }

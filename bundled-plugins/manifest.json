@@ -1,31 +1,31 @@
 {
   "schema_version": 1,
-  "bundle_version": "2026.10.30.2",
+  "bundle_version": "2026.10.31.1",
   "plugins": [
     {
       "code": "node_endpoint",
       "directory": "NodeEndpoint",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "source_repository": "https://github.com/ksr-v/Xboard-Independent-NodeEndpoint",
       "source_commit": "49b0fd0a0920927c388fea487ff5ac6a469ac50e",
       "files": {
-        "Controllers/SettingsController.php": "d7f5a6668a9647ca3695a20db099b49da4fefc2f13f1740821f5d74471a661b9",
+        "Controllers/SettingsController.php": "be9be3653d0735b85f34d64fc7482ad045e42db8c7295a35e88ac12ba535cc7c",
         "Controllers/WebManagerController.php": "33a881e3ba040bc807e010ee3ac86f61abdbf686a2f73fc8aa37aee809b6664a",
         "Middleware/Enabled.php": "5a8d2c410b06fdd8e07bf959ef66a3f203cc7260f307bb5427db87bf0e7bae30",
         "Middleware/NativeMachineInstall.php": "8175665b4a145e11ab7080667c675e981ecae8ff09fa51100363277b82922d28",
         "Middleware/ScopedHandshake.php": "00ef3404f8573c3297901887d5fcb576417e219feee1eb6b5de01e4acb3c701e",
-        "Plugin.php": "de2574512b23f769d3fcd082ed18d0786d6d2aba39f4e44fb78801d9682f6e38",
+        "Plugin.php": "f503e70de7557e13cf585c05eaff764653c42266fb0b8e0f1e99217171ae7082",
         "Services/AdminIntegration.php": "ae4a77154684bc11bd8c9b0585c48f85e568c74d00c2bf6b8ad35bb01684832e",
         "Services/CaPassphrases.php": "055596e431ccababaa536061817a972df3aa16dde96d40d90da7f3dd2fb5fa01",
         "Services/Certificates.php": "5f49cada41f7651b9ae1074836ab5b2cec7e10e00a6350e2c78f6c6c88c6b70e",
-        "Services/CommandBuilder.php": "cbd47b54caa5cae227fac89050d2703f0ab48e506e836c664555881b2b4230db",
+        "Services/CommandBuilder.php": "17c8b712a0ffa911aaba1a47c9609d88da3e75d09412ce59f20b1fab7830530f",
         "Services/Endpoint.php": "47d7be327d3c5d7af7ba97d491dc525ead0efd2aadeacd871b7c6f760c845b0c",
-        "Services/MachineInstallCommand.php": "b4ec6a27bdab230a9aaeb499c4efd48f687945282cfca5e0ebd04a4861832be7",
+        "Services/MachineInstallCommand.php": "dc87dba95fa9664b45c9a682f0f55dffcb4feb45bc51c21726ce71ccf6743952",
         "Services/Probe.php": "c4ef5fead410db60d6526902f65f6ee365f1010214415803d74bd50dcf3593c3",
         "Services/RootCommandBuilder.php": "d097afbb9145b7cf7aacff93af134ac27aeedfa350a6b3b07165df4b951e1e45",
         "Services/Settings.php": "ce722c621a6f666f764d4683302c7564d90741a060d4a484f390e92b4489d0b4",
         "Services/WebManager.php": "d6c2699492fbec629d2085d1fd03bb2cba9eebc798865ebabcd81bf612b6fad9",
-        "config.json": "18ced990fd8cb60ceda050c2d888633a30a38ceecda7a13bff39e7c07caa7c66",
+        "config.json": "64d7fdbecff7170d83a3e19086484de39ccc8537ec5c1f3aa04c35ca70978274",
         "database/migrations/2026_10_09_000001_create_node_endpoint_settings.php": "31294a0af01d2d7d7fe29dcd5edb4ea65c6f51f22eb9d8c4d77b60de0c836c9d",
         "database/migrations/2026_10_18_000002_create_node_endpoint_ca_credentials.php": "f9d9b19c9918b273995e9821b9b8e37f36e07f164d82b1d6255a217d809dda46",
         "database/migrations/2026_10_29_000003_create_node_endpoint_web_jobs.php": "dc4bf47df10e80b0b0c727f626ceed74acce395fafbcd72fe666415aeb8d3c73",
@@ -34,7 +34,7 @@
         "resources/assets/native-install.js": "4eeee7f957ee93e2f555ad009716694c0d2dabe7c548169df7fac93c3b63cc81",
         "resources/assets/style.css": "7f5352b12f04e2e35313274d67ccd9d56fe83608203f8dadb30bd0286bae1d9f",
         "resources/views/admin.blade.php": "d0a78636f39e9254159a5ca7a970eca84f703805bd6b678e4c056c726a83787f",
-        "resources/views/index.html": "dcafdafcc56d9902d82559ed4c01f1a1aab9642f337cb708777704a0924c44ea",
+        "resources/views/index.html": "6ccec5aac0f0b44197f8c09538e227cf945901bd13833150d88608864988c8f5",
         "routes/api.php": "a1aca2ab985aed6df700da760c0096aae008714458d46b4361efcd68427cd9d4",
         "routes/web.php": "81d3e619688440291e84a0994a8c432d167e787caa94346eb2717e5733e89e1a"
       },
@@ -424,8 +424,86 @@
             "routes/api.php": "a1aca2ab985aed6df700da760c0096aae008714458d46b4361efcd68427cd9d4",
             "routes/web.php": "81d3e619688440291e84a0994a8c432d167e787caa94346eb2717e5733e89e1a"
           }
+        },
+        {
+          "version": "1.1.2",
+          "source_commit": "49b0fd0a0920927c388fea487ff5ac6a469ac50e",
+          "files": {
+            "Controllers/SettingsController.php": "d7f5a6668a9647ca3695a20db099b49da4fefc2f13f1740821f5d74471a661b9",
+            "Controllers/WebManagerController.php": "33a881e3ba040bc807e010ee3ac86f61abdbf686a2f73fc8aa37aee809b6664a",
+            "Middleware/Enabled.php": "5a8d2c410b06fdd8e07bf959ef66a3f203cc7260f307bb5427db87bf0e7bae30",
+            "Middleware/NativeMachineInstall.php": "8175665b4a145e11ab7080667c675e981ecae8ff09fa51100363277b82922d28",
+            "Middleware/ScopedHandshake.php": "00ef3404f8573c3297901887d5fcb576417e219feee1eb6b5de01e4acb3c701e",
+            "Plugin.php": "de2574512b23f769d3fcd082ed18d0786d6d2aba39f4e44fb78801d9682f6e38",
+            "Services/AdminIntegration.php": "ae4a77154684bc11bd8c9b0585c48f85e568c74d00c2bf6b8ad35bb01684832e",
+            "Services/CaPassphrases.php": "055596e431ccababaa536061817a972df3aa16dde96d40d90da7f3dd2fb5fa01",
+            "Services/Certificates.php": "5f49cada41f7651b9ae1074836ab5b2cec7e10e00a6350e2c78f6c6c88c6b70e",
+            "Services/CommandBuilder.php": "cbd47b54caa5cae227fac89050d2703f0ab48e506e836c664555881b2b4230db",
+            "Services/Endpoint.php": "47d7be327d3c5d7af7ba97d491dc525ead0efd2aadeacd871b7c6f760c845b0c",
+            "Services/MachineInstallCommand.php": "b4ec6a27bdab230a9aaeb499c4efd48f687945282cfca5e0ebd04a4861832be7",
+            "Services/Probe.php": "c4ef5fead410db60d6526902f65f6ee365f1010214415803d74bd50dcf3593c3",
+            "Services/RootCommandBuilder.php": "d097afbb9145b7cf7aacff93af134ac27aeedfa350a6b3b07165df4b951e1e45",
+            "Services/Settings.php": "ce722c621a6f666f764d4683302c7564d90741a060d4a484f390e92b4489d0b4",
+            "Services/WebManager.php": "d6c2699492fbec629d2085d1fd03bb2cba9eebc798865ebabcd81bf612b6fad9",
+            "config.json": "18ced990fd8cb60ceda050c2d888633a30a38ceecda7a13bff39e7c07caa7c66",
+            "database/migrations/2026_10_09_000001_create_node_endpoint_settings.php": "31294a0af01d2d7d7fe29dcd5edb4ea65c6f51f22eb9d8c4d77b60de0c836c9d",
+            "database/migrations/2026_10_18_000002_create_node_endpoint_ca_credentials.php": "f9d9b19c9918b273995e9821b9b8e37f36e07f164d82b1d6255a217d809dda46",
+            "database/migrations/2026_10_29_000003_create_node_endpoint_web_jobs.php": "dc4bf47df10e80b0b0c727f626ceed74acce395fafbcd72fe666415aeb8d3c73",
+            "resources/assets/app.js": "0bc020f73c9929c2e590a1bdea651f33a00f43c5922b8ac377931553d8943483",
+            "resources/assets/native-install.css": "b6f54d0f59c695bd532a0204ad269cb9cd6212216dda9e9fbfffe837c4d7c756",
+            "resources/assets/native-install.js": "4eeee7f957ee93e2f555ad009716694c0d2dabe7c548169df7fac93c3b63cc81",
+            "resources/assets/style.css": "7f5352b12f04e2e35313274d67ccd9d56fe83608203f8dadb30bd0286bae1d9f",
+            "resources/views/admin.blade.php": "d0a78636f39e9254159a5ca7a970eca84f703805bd6b678e4c056c726a83787f",
+            "resources/views/index.html": "dcafdafcc56d9902d82559ed4c01f1a1aab9642f337cb708777704a0924c44ea",
+            "routes/api.php": "a1aca2ab985aed6df700da760c0096aae008714458d46b4361efcd68427cd9d4",
+            "routes/web.php": "81d3e619688440291e84a0994a8c432d167e787caa94346eb2717e5733e89e1a"
+          }
         }
-      ]
+      ],
+      "source_provenance": {
+        "kind": "panel-working-tree-overlay",
+        "base_source_commit": "49b0fd0a0920927c388fea487ff5ac6a469ac50e",
+        "base_panel_commit": "01be17d6c1ffbefd820e631660cc4b0d1a121d9c",
+        "base_manifest_sha256": "8ee80235abdc84f76ebbd6cce7b54458004ce337b6732f20b77f72cc06118a11",
+        "base_files": {
+          "Controllers/SettingsController.php": "d7f5a6668a9647ca3695a20db099b49da4fefc2f13f1740821f5d74471a661b9",
+          "Controllers/WebManagerController.php": "33a881e3ba040bc807e010ee3ac86f61abdbf686a2f73fc8aa37aee809b6664a",
+          "Middleware/Enabled.php": "5a8d2c410b06fdd8e07bf959ef66a3f203cc7260f307bb5427db87bf0e7bae30",
+          "Middleware/NativeMachineInstall.php": "8175665b4a145e11ab7080667c675e981ecae8ff09fa51100363277b82922d28",
+          "Middleware/ScopedHandshake.php": "00ef3404f8573c3297901887d5fcb576417e219feee1eb6b5de01e4acb3c701e",
+          "Plugin.php": "de2574512b23f769d3fcd082ed18d0786d6d2aba39f4e44fb78801d9682f6e38",
+          "Services/AdminIntegration.php": "ae4a77154684bc11bd8c9b0585c48f85e568c74d00c2bf6b8ad35bb01684832e",
+          "Services/CaPassphrases.php": "055596e431ccababaa536061817a972df3aa16dde96d40d90da7f3dd2fb5fa01",
+          "Services/Certificates.php": "5f49cada41f7651b9ae1074836ab5b2cec7e10e00a6350e2c78f6c6c88c6b70e",
+          "Services/CommandBuilder.php": "cbd47b54caa5cae227fac89050d2703f0ab48e506e836c664555881b2b4230db",
+          "Services/Endpoint.php": "47d7be327d3c5d7af7ba97d491dc525ead0efd2aadeacd871b7c6f760c845b0c",
+          "Services/MachineInstallCommand.php": "b4ec6a27bdab230a9aaeb499c4efd48f687945282cfca5e0ebd04a4861832be7",
+          "Services/Probe.php": "c4ef5fead410db60d6526902f65f6ee365f1010214415803d74bd50dcf3593c3",
+          "Services/RootCommandBuilder.php": "d097afbb9145b7cf7aacff93af134ac27aeedfa350a6b3b07165df4b951e1e45",
+          "Services/Settings.php": "ce722c621a6f666f764d4683302c7564d90741a060d4a484f390e92b4489d0b4",
+          "Services/WebManager.php": "d6c2699492fbec629d2085d1fd03bb2cba9eebc798865ebabcd81bf612b6fad9",
+          "config.json": "18ced990fd8cb60ceda050c2d888633a30a38ceecda7a13bff39e7c07caa7c66",
+          "database/migrations/2026_10_09_000001_create_node_endpoint_settings.php": "31294a0af01d2d7d7fe29dcd5edb4ea65c6f51f22eb9d8c4d77b60de0c836c9d",
+          "database/migrations/2026_10_18_000002_create_node_endpoint_ca_credentials.php": "f9d9b19c9918b273995e9821b9b8e37f36e07f164d82b1d6255a217d809dda46",
+          "database/migrations/2026_10_29_000003_create_node_endpoint_web_jobs.php": "dc4bf47df10e80b0b0c727f626ceed74acce395fafbcd72fe666415aeb8d3c73",
+          "resources/assets/app.js": "0bc020f73c9929c2e590a1bdea651f33a00f43c5922b8ac377931553d8943483",
+          "resources/assets/native-install.css": "b6f54d0f59c695bd532a0204ad269cb9cd6212216dda9e9fbfffe837c4d7c756",
+          "resources/assets/native-install.js": "4eeee7f957ee93e2f555ad009716694c0d2dabe7c548169df7fac93c3b63cc81",
+          "resources/assets/style.css": "7f5352b12f04e2e35313274d67ccd9d56fe83608203f8dadb30bd0286bae1d9f",
+          "resources/views/admin.blade.php": "d0a78636f39e9254159a5ca7a970eca84f703805bd6b678e4c056c726a83787f",
+          "resources/views/index.html": "dcafdafcc56d9902d82559ed4c01f1a1aab9642f337cb708777704a0924c44ea",
+          "routes/api.php": "a1aca2ab985aed6df700da760c0096aae008714458d46b4361efcd68427cd9d4",
+          "routes/web.php": "81d3e619688440291e84a0994a8c432d167e787caa94346eb2717e5733e89e1a"
+        },
+        "changed_files": [
+          "Controllers/SettingsController.php",
+          "Plugin.php",
+          "Services/CommandBuilder.php",
+          "Services/MachineInstallCommand.php",
+          "config.json",
+          "resources/views/index.html"
+        ]
+      }
     },
     {
       "code": "smart_expiry",
@@ -435,10 +513,34 @@
       "source_commit": "6f22f456512d1a0cdcad9c46e75e06e5793e6bb6",
       "files": {
         "Plugin.php": "f0317bb7813e60f60b8c01d4d8ba1fe849004c63e893f50862b7291f2b79eb44",
-        "Services/AdminBridgePatcher.php": "42b77feb847a8b8113a00d2d0734434f897698da33e314399bcdd810d99bb692",
+        "Services/AdminBridgePatcher.php": "c483f0dd9dd5224dd3a4ff36817d23e77de774209af71ed1f2f11024ffa6e303",
         "config.json": "e2f3090da018ca49f709e2a1ca9e41dc077f2763f389020f580fab358005dd48"
       },
-      "accepted_previous": []
+      "accepted_previous": [
+        {
+          "version": "1.2.0",
+          "source_commit": "6f22f456512d1a0cdcad9c46e75e06e5793e6bb6",
+          "files": {
+            "Plugin.php": "f0317bb7813e60f60b8c01d4d8ba1fe849004c63e893f50862b7291f2b79eb44",
+            "Services/AdminBridgePatcher.php": "42b77feb847a8b8113a00d2d0734434f897698da33e314399bcdd810d99bb692",
+            "config.json": "e2f3090da018ca49f709e2a1ca9e41dc077f2763f389020f580fab358005dd48"
+          }
+        }
+      ],
+      "source_provenance": {
+        "kind": "panel-working-tree-overlay",
+        "base_source_commit": "6f22f456512d1a0cdcad9c46e75e06e5793e6bb6",
+        "base_panel_commit": "01be17d6c1ffbefd820e631660cc4b0d1a121d9c",
+        "base_manifest_sha256": "8ee80235abdc84f76ebbd6cce7b54458004ce337b6732f20b77f72cc06118a11",
+        "base_files": {
+          "Plugin.php": "f0317bb7813e60f60b8c01d4d8ba1fe849004c63e893f50862b7291f2b79eb44",
+          "Services/AdminBridgePatcher.php": "42b77feb847a8b8113a00d2d0734434f897698da33e314399bcdd810d99bb692",
+          "config.json": "e2f3090da018ca49f709e2a1ca9e41dc077f2763f389020f580fab358005dd48"
+        },
+        "changed_files": [
+          "Services/AdminBridgePatcher.php"
+        ]
+      }
     },
     {
       "code": "qrcodeextend",
@@ -450,9 +552,9 @@
         "Commands/PatchCommand.php": "445a3271dcdc6cb5c49a3ac69cbe9c71d751dee1743e8369f48fbb8fe2be4851",
         "Commands/RestoreCommand.php": "145bf82c5d0023fcdf16652428c52dcd0dd7d238ed9f701a1b4190a8cf337828",
         "Commands/StatusCommand.php": "7d8116585b7a4794e8288f333d5b53029fb99ca5dbca2fdfc45b78ba3b432518",
-        "Plugin.php": "2d73596c562a7c4bcb5bbae0229aff75918b3626d950e5089296389b4b65e8ad",
+        "Plugin.php": "ab99c90d1b259bd9bd0a8fd10105362cf7f49ca1b134fcc13c96064a480cb545",
         "README.md": "fe39091bc386a13ab3a12b6e416d0b756da36008fb4b043bf4b72d94a98909ef",
-        "Services/AdminBundlePatcher.php": "42f4b1e41f936bde1e340e629c4ca5e6e43d9cf457db1792077362a34f82a4c9",
+        "Services/AdminBundlePatcher.php": "9ae7ed11f431992fb11e83671ab8da731438e1f75985a7b6ae07f77f3afe235e",
         "config.json": "8c3fb32559777e3aa897255f674437bb427e6263d30176ccbeb52b7c8be884f9",
         "resources/assets/qrcodeextend.css": "211d35f815bda803b71c1c2b3f9bc4a9c1d315fa11db909019357174fd397337",
         "resources/assets/qrcodeextend.js": "a42423cfc6eef257eab795720374138e870d0ad3bf8532dc0e2110e22e79305a",
@@ -460,7 +562,50 @@
         "resources/assets/vendor/README.txt": "f347f88ec2f668653c4cd5687785994e7b6a4f92309bed6d272fad19273462bc",
         "resources/assets/vendor/qrcodegen.js": "782dfb84800af8ba2fd946a79a561f51e06612e3a0c2b8d493a45729f119447c"
       },
-      "accepted_previous": []
+      "accepted_previous": [
+        {
+          "version": "1.2.0",
+          "source_commit": "3b30042a0e16047a67dddb73ffaf85e4a2a54918",
+          "files": {
+            "Commands/PatchCommand.php": "445a3271dcdc6cb5c49a3ac69cbe9c71d751dee1743e8369f48fbb8fe2be4851",
+            "Commands/RestoreCommand.php": "145bf82c5d0023fcdf16652428c52dcd0dd7d238ed9f701a1b4190a8cf337828",
+            "Commands/StatusCommand.php": "7d8116585b7a4794e8288f333d5b53029fb99ca5dbca2fdfc45b78ba3b432518",
+            "Plugin.php": "2d73596c562a7c4bcb5bbae0229aff75918b3626d950e5089296389b4b65e8ad",
+            "README.md": "fe39091bc386a13ab3a12b6e416d0b756da36008fb4b043bf4b72d94a98909ef",
+            "Services/AdminBundlePatcher.php": "42f4b1e41f936bde1e340e629c4ca5e6e43d9cf457db1792077362a34f82a4c9",
+            "config.json": "8c3fb32559777e3aa897255f674437bb427e6263d30176ccbeb52b7c8be884f9",
+            "resources/assets/qrcodeextend.css": "211d35f815bda803b71c1c2b3f9bc4a9c1d315fa11db909019357174fd397337",
+            "resources/assets/qrcodeextend.js": "a42423cfc6eef257eab795720374138e870d0ad3bf8532dc0e2110e22e79305a",
+            "resources/assets/vendor/LICENSE.nayuki": "f9f4bba35e6ee9161fa917a4cb9943c463be6a6d447c7ce370239769c699ad57",
+            "resources/assets/vendor/README.txt": "f347f88ec2f668653c4cd5687785994e7b6a4f92309bed6d272fad19273462bc",
+            "resources/assets/vendor/qrcodegen.js": "782dfb84800af8ba2fd946a79a561f51e06612e3a0c2b8d493a45729f119447c"
+          }
+        }
+      ],
+      "source_provenance": {
+        "kind": "panel-working-tree-overlay",
+        "base_source_commit": "3b30042a0e16047a67dddb73ffaf85e4a2a54918",
+        "base_panel_commit": "01be17d6c1ffbefd820e631660cc4b0d1a121d9c",
+        "base_manifest_sha256": "8ee80235abdc84f76ebbd6cce7b54458004ce337b6732f20b77f72cc06118a11",
+        "base_files": {
+          "Commands/PatchCommand.php": "445a3271dcdc6cb5c49a3ac69cbe9c71d751dee1743e8369f48fbb8fe2be4851",
+          "Commands/RestoreCommand.php": "145bf82c5d0023fcdf16652428c52dcd0dd7d238ed9f701a1b4190a8cf337828",
+          "Commands/StatusCommand.php": "7d8116585b7a4794e8288f333d5b53029fb99ca5dbca2fdfc45b78ba3b432518",
+          "Plugin.php": "2d73596c562a7c4bcb5bbae0229aff75918b3626d950e5089296389b4b65e8ad",
+          "README.md": "fe39091bc386a13ab3a12b6e416d0b756da36008fb4b043bf4b72d94a98909ef",
+          "Services/AdminBundlePatcher.php": "42f4b1e41f936bde1e340e629c4ca5e6e43d9cf457db1792077362a34f82a4c9",
+          "config.json": "8c3fb32559777e3aa897255f674437bb427e6263d30176ccbeb52b7c8be884f9",
+          "resources/assets/qrcodeextend.css": "211d35f815bda803b71c1c2b3f9bc4a9c1d315fa11db909019357174fd397337",
+          "resources/assets/qrcodeextend.js": "a42423cfc6eef257eab795720374138e870d0ad3bf8532dc0e2110e22e79305a",
+          "resources/assets/vendor/LICENSE.nayuki": "f9f4bba35e6ee9161fa917a4cb9943c463be6a6d447c7ce370239769c699ad57",
+          "resources/assets/vendor/README.txt": "f347f88ec2f668653c4cd5687785994e7b6a4f92309bed6d272fad19273462bc",
+          "resources/assets/vendor/qrcodegen.js": "782dfb84800af8ba2fd946a79a561f51e06612e3a0c2b8d493a45729f119447c"
+        },
+        "changed_files": [
+          "Plugin.php",
+          "Services/AdminBundlePatcher.php"
+        ]
+      }
     },
     {
       "code": "flowscope",
@@ -524,7 +669,7 @@
         "README.md": "e3782a992c5b98a02787057445c43fff7e9070912cd3311ae0bdd2de2b051d4f",
         "ROLLBACK.md": "e5672ea4db5d0cb91929499d622ee56e23b4ffc359bd53b9a3fa11d9367e18bc",
         "Services/AdminIntegration.php": "dc4c94d70a24ce0defe3f132175e0065d5a9123ad4f9ad60aee7df54627b689a",
-        "Services/CoreBridgePatcher.php": "a2208756dbfd407d076a3f1f99326da779eeb2a90313a30fc2bf38f025c1325f",
+        "Services/CoreBridgePatcher.php": "9cc3bd636d2c92668fb313e1d2d92924258bb21c11e79dcba603e304a566b1f0",
         "Services/Settings.php": "fc4b33f931b61901352919662d85bc40ebe02628f3dd97d916a43e8991c0a78d",
         "Services/TemplateService.php": "d14521e4b2b21d3b5fff944ce6023d77ff884412b5f78cd1944c2a2a9a02f3fb",
         "TECHNICAL-DESIGN.md": "cf9ee31029a842aabe5832d6249df5e7135743287d3e6a5a12239191c3ab8a0a",
@@ -565,8 +710,69 @@
             "routes/api.php": "27c1b55116c375d3fc3f57cf82f7ed26330e321913cb19ff6d7bf2d48363a399",
             "routes/web.php": "d7b1e495e24dfe142754c3e11ff13eb22901ee7629e4514fba650fe3b915824a"
           }
+        },
+        {
+          "version": "1.0.1",
+          "source_commit": "55709cdd1c6eb6ec047f6d6206de35eae53539c7",
+          "files": {
+            "COMPATIBILITY.md": "0254f2a835abb328d3a160e321661031b17a810a7e1878f8bfe0aeafa8dfd1a5",
+            "Controllers/AssetController.php": "e4f487b6bedff5fc3ebe0b4a8a502bd2d919e83aea6a075864c1a7bfdeedb814",
+            "Controllers/SettingsController.php": "9832ed5239a3f4580323067b43fdf4f76d3b25a662208c4f262a7046c0f84dab",
+            "LICENSE": "98153aa9e8f3d290f54788c67a3fefbf7086abd4a29db8e6c5ae1ec39a3769fb",
+            "Middleware/Enabled.php": "8e024237669881c8b859a65097b5c406c1104c4b5cbec3abcc55955a47c10919",
+            "Plugin.php": "bcf65e628b6199d21146e0c487c8e5c1145e14e9cf399ec3ad33bccd77ffcc56",
+            "README.md": "e3782a992c5b98a02787057445c43fff7e9070912cd3311ae0bdd2de2b051d4f",
+            "ROLLBACK.md": "e5672ea4db5d0cb91929499d622ee56e23b4ffc359bd53b9a3fa11d9367e18bc",
+            "Services/AdminIntegration.php": "dc4c94d70a24ce0defe3f132175e0065d5a9123ad4f9ad60aee7df54627b689a",
+            "Services/CoreBridgePatcher.php": "a2208756dbfd407d076a3f1f99326da779eeb2a90313a30fc2bf38f025c1325f",
+            "Services/Settings.php": "fc4b33f931b61901352919662d85bc40ebe02628f3dd97d916a43e8991c0a78d",
+            "Services/TemplateService.php": "d14521e4b2b21d3b5fff944ce6023d77ff884412b5f78cd1944c2a2a9a02f3fb",
+            "TECHNICAL-DESIGN.md": "cf9ee31029a842aabe5832d6249df5e7135743287d3e6a5a12239191c3ab8a0a",
+            "TEST-REPORT-v1.0.1.md": "50bd3d3e9de93082e2c2693a650e10e092ecd47f403152a69022c6c971223e15",
+            "TEST-REPORT.md": "b2c4714acd1e8ece66d54a6078103ea9c7eabd2e272cb64bcaa4b8ca00ef5067",
+            "config.json": "9ce0ba26400cf3613ecb0945238209091589c133f494714a8b58d9329333f8a4",
+            "database/migrations/2026_10_27_000001_create_subinfo_customizer_settings.php": "86d20f5f797a0c5ee20fc3ff20f47604c7ecbcda399595bea9af0c03d5627386",
+            "resources/assets/subinfo-customizer.css": "738e5707a61fbc81ca2a7906c5e6c2c0a7cc5753b358223d986292e91a76cab1",
+            "resources/assets/subinfo-customizer.js": "ab3221fc9aa1d7ba04b3c9198f6e161d3c3696a690b4519c54339513c15d15c9",
+            "resources/views/admin.blade.php": "0f313589c990958946419b12dfefc5ccc4a38920346fd3aaa305d0014ff5aa91",
+            "routes/api.php": "27c1b55116c375d3fc3f57cf82f7ed26330e321913cb19ff6d7bf2d48363a399",
+            "routes/web.php": "d7b1e495e24dfe142754c3e11ff13eb22901ee7629e4514fba650fe3b915824a"
+          }
         }
-      ]
+      ],
+      "source_provenance": {
+        "kind": "panel-working-tree-overlay",
+        "base_source_commit": "55709cdd1c6eb6ec047f6d6206de35eae53539c7",
+        "base_panel_commit": "01be17d6c1ffbefd820e631660cc4b0d1a121d9c",
+        "base_manifest_sha256": "8ee80235abdc84f76ebbd6cce7b54458004ce337b6732f20b77f72cc06118a11",
+        "base_files": {
+          "COMPATIBILITY.md": "0254f2a835abb328d3a160e321661031b17a810a7e1878f8bfe0aeafa8dfd1a5",
+          "Controllers/AssetController.php": "e4f487b6bedff5fc3ebe0b4a8a502bd2d919e83aea6a075864c1a7bfdeedb814",
+          "Controllers/SettingsController.php": "9832ed5239a3f4580323067b43fdf4f76d3b25a662208c4f262a7046c0f84dab",
+          "LICENSE": "98153aa9e8f3d290f54788c67a3fefbf7086abd4a29db8e6c5ae1ec39a3769fb",
+          "Middleware/Enabled.php": "8e024237669881c8b859a65097b5c406c1104c4b5cbec3abcc55955a47c10919",
+          "Plugin.php": "bcf65e628b6199d21146e0c487c8e5c1145e14e9cf399ec3ad33bccd77ffcc56",
+          "README.md": "e3782a992c5b98a02787057445c43fff7e9070912cd3311ae0bdd2de2b051d4f",
+          "ROLLBACK.md": "e5672ea4db5d0cb91929499d622ee56e23b4ffc359bd53b9a3fa11d9367e18bc",
+          "Services/AdminIntegration.php": "dc4c94d70a24ce0defe3f132175e0065d5a9123ad4f9ad60aee7df54627b689a",
+          "Services/CoreBridgePatcher.php": "a2208756dbfd407d076a3f1f99326da779eeb2a90313a30fc2bf38f025c1325f",
+          "Services/Settings.php": "fc4b33f931b61901352919662d85bc40ebe02628f3dd97d916a43e8991c0a78d",
+          "Services/TemplateService.php": "d14521e4b2b21d3b5fff944ce6023d77ff884412b5f78cd1944c2a2a9a02f3fb",
+          "TECHNICAL-DESIGN.md": "cf9ee31029a842aabe5832d6249df5e7135743287d3e6a5a12239191c3ab8a0a",
+          "TEST-REPORT-v1.0.1.md": "50bd3d3e9de93082e2c2693a650e10e092ecd47f403152a69022c6c971223e15",
+          "TEST-REPORT.md": "b2c4714acd1e8ece66d54a6078103ea9c7eabd2e272cb64bcaa4b8ca00ef5067",
+          "config.json": "9ce0ba26400cf3613ecb0945238209091589c133f494714a8b58d9329333f8a4",
+          "database/migrations/2026_10_27_000001_create_subinfo_customizer_settings.php": "86d20f5f797a0c5ee20fc3ff20f47604c7ecbcda399595bea9af0c03d5627386",
+          "resources/assets/subinfo-customizer.css": "738e5707a61fbc81ca2a7906c5e6c2c0a7cc5753b358223d986292e91a76cab1",
+          "resources/assets/subinfo-customizer.js": "ab3221fc9aa1d7ba04b3c9198f6e161d3c3696a690b4519c54339513c15d15c9",
+          "resources/views/admin.blade.php": "0f313589c990958946419b12dfefc5ccc4a38920346fd3aaa305d0014ff5aa91",
+          "routes/api.php": "27c1b55116c375d3fc3f57cf82f7ed26330e321913cb19ff6d7bf2d48363a399",
+          "routes/web.php": "d7b1e495e24dfe142754c3e11ff13eb22901ee7629e4514fba650fe3b915824a"
+        },
+        "changed_files": [
+          "Services/CoreBridgePatcher.php"
+        ]
+      }
     }
   ]
 }
