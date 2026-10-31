@@ -3,12 +3,13 @@
 namespace App\Services\Plugin;
 
 use App\Models\Plugin;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 use Symfony\Component\Process\PhpExecutableFinder;
 use Symfony\Component\Process\Process;
 
-/** Updates only plugin sources from a checksummed official panel release. */
+/** Five maintained plugin releases and seven core sources from the official panel. */
 final class OnlinePluginUpdater
 {
     private const REPOSITORY = 'ksr-v/Xboard-Custom-Source';
@@ -34,6 +35,9 @@ final class OnlinePluginUpdater
         'subinfo_customizer' => 'https://github.com/ksr-v/xb-SubInfoCustomizer',
     ];
     private string $root;
+    private ?OfficialPluginReleaseSource $updateNativeSource = null;
+    private ?array $updatePanelPackage = null;
+    private ?\Throwable $updatePanelFailure = null;
 
     public function __construct(?string $root = null)
     {
@@ -49,18 +53,16 @@ final class OnlinePluginUpdater
     {
         $result = [];
         $codes = array_values(array_unique($codes));
-        $supported = array_filter($codes, fn ($code) => $this->supports($code));
-        $package = null;
-        $error = null;
-        if ($supported) {
-            try { $package = $this->package(); }
-            catch (\Throwable $failure) { $error = $failure->getMessage(); }
-        }
+        $sources = [];
         foreach ($codes as $code) {
             $row = Plugin::where('code', $code)->first();
             $entry = ['supported' => $this->supports($code), 'mode' => $this->supports($code) ? 'online' : 'manual',
                 'current_version' => $row?->version, 'latest_version' => null, 'has_update' => false, 'is_ahead' => false];
             if ($this->supports($code)) {
+                $key = $this->sourceKey($code);
+                $sources[$key] ??= $this->checkedPackage($code);
+                $package = $sources[$key]['package'] ?? null;
+                $error = $sources[$key]['error'] ?? null;
                 if ($error !== null) { $entry['error'] = $error; }
                 elseif (!isset($package['configs'][$code])) { $entry['error'] = '最新正式发行缺少此插件，未判断为最新版。'; }
                 else {
@@ -71,7 +73,7 @@ final class OnlinePluginUpdater
                     $entry['is_ahead'] = $row !== null && version_compare($row->version, $version, '>');
                     try {
                         $entry['has_update'] = $row !== null && (version_compare($version, $row->version, '>')
-                            || ($version === $row->version && !$this->sourceMatches($code, $package['files'][$code])));
+                            || ($version === $row->version && !$this->sourceMatches($code, $package['files'][$code], $version, $package['archive_sha256'])));
                     } catch (\Throwable $failure) { $entry['error'] = $failure->getMessage(); }
                 }
             }
@@ -106,7 +108,12 @@ final class OnlinePluginUpdater
         if (!$lock) { throw new RuntimeException('Cannot create plugin update lock.'); }
         chmod($lockPath, 0600);
         if (!flock($lock, LOCK_EX | LOCK_NB)) { fclose($lock); throw new RuntimeException('另一个插件正在更新，请稍后重试。'); }
-        try { return $this->updateLocked($code, $private); }
+        try {
+            $result = $this->updateLocked($code, $private);
+            try { Cache::forget($this->checkCacheKey($code)); }
+            catch (\Throwable $ignored) { /* A cache outage must not turn a committed plugin update into a reported failure. */ }
+            return $result;
+        }
         finally { flock($lock, LOCK_UN); fclose($lock); }
     }
 
@@ -114,7 +121,8 @@ final class OnlinePluginUpdater
     {
         $row = Plugin::where('code', $code)->first();
         if (!$row) { throw new RuntimeException('请先安装插件再在线更新。'); }
-        $package = $this->package();
+        // An update always resolves fresh metadata, then keeps this exact package through staging.
+        $package = $this->updatePackageFor($code);
         $config = $package['configs'][$code] ?? null;
         if (!$config) { throw new RuntimeException('Latest release does not contain the selected plugin.'); }
         if (str_starts_with(self::SOURCES[$code], 'bundled-plugins/')
@@ -122,8 +130,8 @@ final class OnlinePluginUpdater
             throw new RuntimeException('Downloaded plugin source lock differs from its files.');
         }
         if (version_compare($config['version'], $row->version, '<')
-            || ($config['version'] === $row->version && $this->sourceMatches($code, $package['files'][$code]))) {
-            return ['code' => $code, 'version' => $row->version, 'updated' => false];
+            || ($config['version'] === $row->version && $this->sourceMatches($code, $package['files'][$code], $config['version'], $package['archive_sha256']))) {
+            return ['code' => $code, 'version' => $row->version, 'updated' => false, 'source' => $this->resultSource($code, $package)];
         }
         $manager = app(PluginManager::class);
         $target = $manager->getPluginPath($code);
@@ -132,27 +140,40 @@ final class OnlinePluginUpdater
             throw new RuntimeException('插件目录不可写，请按安装文档修复站点用户权限。');
         }
         $this->assertTree($target);
+        // Ownership must be usable before staging or running any plugin lifecycle code.
+        $before = $row->toArray();
+        $ownershipPath = $this->root . '/storage/app/private/plugin-bundles/ownership.json';
+        $this->safe($ownershipPath);
+        $ownershipBefore = null;
+        $ownershipStateBefore = ['schema_version' => 1, 'plugins' => []];
+        if (file_exists($ownershipPath)) {
+            if (!is_file($ownershipPath) || filesize($ownershipPath) > 2097152
+                || ($ownershipBefore = file_get_contents($ownershipPath)) === false) {
+                throw new RuntimeException('Invalid plugin ownership record.');
+            }
+            if (strlen($ownershipBefore) > 2097152) { throw new RuntimeException('Invalid plugin ownership record.'); }
+            try { $ownershipStateBefore = json_decode($ownershipBefore, true, 64, JSON_THROW_ON_ERROR); }
+            catch (\Throwable $invalid) { throw new RuntimeException('Invalid plugin ownership record.', 0, $invalid); }
+            if (!is_array($ownershipStateBefore) || ($ownershipStateBefore['schema_version'] ?? null) !== 1
+                || !is_array($ownershipStateBefore['plugins'] ?? null)) {
+                throw new RuntimeException('Invalid plugin ownership record.');
+            }
+        }
         $operation = $private . '/backup-' . gmdate('Ymd-His') . '-' . bin2hex(random_bytes(6));
         $this->directory($operation, 0700);
+        $this->record($operation . '/ownership-before.json', $ownershipStateBefore);
         // Keep staging on the target filesystem for atomic rename.
         $stage = dirname($target) . '/.online-' . bin2hex(random_bytes(8));
         $this->directory($stage, 0755);
         $backup = dirname($target) . '/.previous-' . bin2hex(random_bytes(8));
         $backupLocation = $backup;
-        $before = $row->toArray();
-        $ownershipPath = $this->root . '/storage/app/private/plugin-bundles/ownership.json';
-        $this->safe($ownershipPath);
-        $ownershipBefore = is_file($ownershipPath) ? file_get_contents($ownershipPath) : null;
-        if ($ownershipBefore !== null && strlen($ownershipBefore) > 2097152) { throw new RuntimeException('Invalid plugin ownership record.'); }
-        $this->record($operation . '/state.json', ['code' => $code, 'before' => $before, 'release' => $package['tag'], 'status' => 'staging']);
+        $this->record($operation . '/state.json', ['code' => $code, 'before' => $before, 'release' => $package['tag'],
+            'ownership_existed' => $ownershipBefore !== null, 'status' => 'staging']);
         $swapped = false;
         $backupCreated = false;
         $lifecycleStarted = false;
         try {
-            $this->readArchive($package['archive'], function (string $name, string $data) use ($code, $stage): void {
-                $prefix = self::SOURCES[$code] . '/';
-                if (!str_starts_with($name, $prefix)) { return; }
-                $relative = substr($name, strlen($prefix));
+            $this->readPluginArchive($code, $package, function (string $relative, string $data) use ($stage): void {
                 $destination = $stage . '/' . $relative;
                 $this->directory(dirname($destination), 0755);
                 if (file_put_contents($destination, $data) !== strlen($data) || !chmod($destination, 0644)) {
@@ -173,22 +194,22 @@ final class OnlinePluginUpdater
             $swapped = true;
             $this->process(['xboard:plugin-online-update', $code, '--activate=' . $config['version'], '--enabled=' . ((bool) $row->is_enabled ? '1' : '0')]);
             if (str_starts_with(self::SOURCES[$code], 'bundled-plugins/')) {
-                $ownership = $ownershipBefore === null ? ['schema_version' => 1, 'plugins' => []] : json_decode($ownershipBefore, true, 64, JSON_THROW_ON_ERROR);
-                if (($ownership['schema_version'] ?? null) !== 1 || !is_array($ownership['plugins'] ?? null)) { throw new RuntimeException('Invalid plugin ownership record.'); }
+                $ownership = $ownershipStateBefore;
                 $item = $package['manifest'][$code] ?? null;
                 if (!$item || ($item['files'] ?? null) !== $package['files'][$code]) { throw new RuntimeException('Downloaded plugin source lock differs from its files.'); }
                 $ownership['plugins'][$code] = ['directory' => $item['directory'], 'version' => $config['version'],
                     'source_commit' => $item['source_commit'], 'source_repository' => $item['source_repository'],
-                    'bundle_version' => $package['bundle_version'], 'files' => $package['files'][$code]];
+                    'source_provenance' => $item['source_provenance'], 'files' => $package['files'][$code]];
                 $this->record($ownershipPath, $ownership);
             }
             // The target filesystem may differ from storage. Retain its backup
             // in place if moving to the private operation directory is unavailable.
             $backupLocation = @rename($backup, $operation . '/source') ? $operation . '/source' : $backup;
             $this->record($operation . '/state.json', ['code' => $code, 'before' => $before, 'release' => $package['tag'], 'status' => 'complete', 'source_backup' => $backupLocation]);
-            return ['code' => $code, 'version' => $config['version'], 'updated' => true];
+            return ['code' => $code, 'version' => $config['version'], 'updated' => true, 'source' => $this->resultSource($code, $package)];
         } catch (\Throwable $failure) {
             $restored = false;
+            $ownershipRestored = null;
             if ($backupCreated && is_dir($backupLocation)) {
                 $available = !file_exists($target);
                 if (!$available && is_dir($target) && !is_link($target)) {
@@ -199,8 +220,18 @@ final class OnlinePluginUpdater
                 if ($available) { $restored = @rename($backupLocation, $target); }
             }
             if ($restored || (!$backupCreated && $lifecycleStarted && is_file($target . '/Plugin.php'))) {
-                if ($ownershipBefore === null) { if (is_file($ownershipPath)) { unlink($ownershipPath); } }
-                else { $this->record($ownershipPath, json_decode($ownershipBefore, true, 64, JSON_THROW_ON_ERROR)); }
+                try {
+                    if ($ownershipBefore === null) {
+                        $this->safe($ownershipPath);
+                        if (file_exists($ownershipPath) && (!is_file($ownershipPath) || !unlink($ownershipPath))) {
+                            throw new RuntimeException('Cannot restore absent plugin ownership record.');
+                        }
+                    } else { $this->record($ownershipPath, $ownershipStateBefore); }
+                    $ownershipRestored = true;
+                } catch (\Throwable $ignored) {
+                    // Source/DB recovery must continue; the original graph is retained privately.
+                    $ownershipRestored = false;
+                }
                 Plugin::where('code', $code)->update(['version' => $before['version'], 'config' => $before['config'], 'is_enabled' => false]);
                 try {
                     if ($before['is_enabled']) { $this->process(['xboard:plugin-online-update', $code, '--restore']); }
@@ -209,10 +240,76 @@ final class OnlinePluginUpdater
             if ($backupCreated && !$restored) { Plugin::where('code', $code)->update(['is_enabled' => false]); }
             try {
                 $this->record($operation . '/state.json', ['code' => $code, 'before' => $before, 'status' => 'failed',
-                    'source_restored' => $restored, 'source_backup' => $backupLocation]);
+                    'source_restored' => $restored, 'source_backup' => $backupLocation,
+                    'ownership_existed' => $ownershipBefore !== null, 'ownership_restored' => $ownershipRestored]);
             } catch (\Throwable $ignored) { /* Preserve the original failure and retained source backup. */ }
             throw new RuntimeException('插件更新失败：' . $failure->getMessage() . ($restored ? ' 已恢复原插件源码；迁移记录与备份已保留。' : ' 备份记录已保留，请检查插件状态。'), 0, $failure);
         } finally { if (is_dir($stage)) { $this->removeTree($stage); } }
+    }
+
+    private function sourceKey(string $code): string
+    {
+        return isset(self::SOURCE_REPOSITORIES[$code]) ? 'native-' . $code : 'panel';
+    }
+
+    private function checkCacheKey(string $code): string
+    {
+        return 'plugin-online:verified-source:v2:' . hash('sha256', $this->root) . ':' . $this->sourceKey($code);
+    }
+
+    /** Cache check metadata briefly; failed sources never become a stale successful response. */
+    private function checkedPackage(string $code): array
+    {
+        $key = $this->checkCacheKey($code);
+        try {
+            $cached = Cache::get($key);
+            if (is_array($cached) && (isset($cached['package']) || isset($cached['error']))) { return $cached; }
+            try { $result = ['package' => $this->packageFor($code)]; }
+            catch (\Throwable $failure) { $result = ['error' => $failure->getMessage()]; }
+            Cache::put($key, $result, isset($result['error']) ? 15 : 300);
+            return $result;
+        } catch (\Throwable $failure) { return ['error' => $failure->getMessage()]; }
+    }
+
+    private function officialSource(): OfficialPluginReleaseSource
+    {
+        $cache = $this->privateDirectory() . '/cache';
+        $this->directory($cache, 0700);
+        return new OfficialPluginReleaseSource(fn ($url, $limit, $destination = null) => $this->download($url, $limit, $destination), $cache);
+    }
+
+    private function packageFor(string $code): array
+    {
+        return isset(self::SOURCE_REPOSITORIES[$code]) ? $this->officialSource()->package($code) : $this->package();
+    }
+
+    /** One fresh snapshot per source in this CLI operation, including sequential bulk updates. */
+    private function updatePackageFor(string $code): array
+    {
+        if (isset(self::SOURCE_REPOSITORIES[$code])) {
+            $this->updateNativeSource ??= $this->officialSource();
+            return $this->updateNativeSource->package($code);
+        }
+        if ($this->updatePanelFailure !== null) { throw $this->updatePanelFailure; }
+        try { return $this->updatePanelPackage ??= $this->package(); }
+        catch (\Throwable $failure) { $this->updatePanelFailure = $failure; throw $failure; }
+    }
+
+    private function resultSource(string $code, array $package): array
+    {
+        $source = ['source_repository' => self::SOURCE_REPOSITORIES[$code] ?? 'https://github.com/' . self::REPOSITORY,
+            'tag' => $package['tag'], 'version' => $package['configs'][$code]['version'], 'archive_sha256' => $package['archive_sha256']];
+        if (isset(self::SOURCE_REPOSITORIES[$code])) { $source['commit'] = $package['manifest'][$code]['source_commit']; }
+        return $source;
+    }
+
+    private function readPluginArchive(string $code, array $package, callable $member): void
+    {
+        if (isset(self::SOURCE_REPOSITORIES[$code])) { $this->officialSource()->readArchive($package, $member); return; }
+        $prefix = self::SOURCES[$code] . '/';
+        $this->readArchive($package['archive'], static function (string $name, string $data) use ($prefix, $member): void {
+            if (str_starts_with($name, $prefix)) { $member(substr($name, strlen($prefix)), $data); }
+        });
     }
 
     /** Refresh latest metadata, but reuse the already verified content-addressed archive. */
@@ -303,7 +400,7 @@ final class OnlinePluginUpdater
                 throw new RuntimeException('Downloaded plugin source lock identity or files are invalid.');
             }
         }
-        return ['archive' => $archive, 'configs' => $configs, 'files' => $files, 'manifest' => $manifest, 'bundle_version' => $bundleVersion, 'tag' => $tag,
+        return ['archive' => $archive, 'archive_sha256' => $hash, 'configs' => $configs, 'files' => $files, 'manifest' => $manifest, 'bundle_version' => $bundleVersion, 'tag' => $tag,
             'release_url' => 'https://github.com/' . self::REPOSITORY . '/releases/tag/' . $tag];
     }
 
@@ -410,7 +507,7 @@ final class OnlinePluginUpdater
         return $path;
     }
 
-    private function sourceMatches(string $code, array $files): bool
+    private function sourceMatches(string $code, array $files, ?string $version = null, ?string $archiveSha256 = null): bool
     {
         $target = app(PluginManager::class)->getPluginPath($code);
         $this->safe($target);
@@ -424,7 +521,9 @@ final class OnlinePluginUpdater
             }
         }
         ksort($actual);
-        return $actual === $files;
+        if ($actual === $files) { return true; }
+        return isset(self::SOURCE_REPOSITORIES[$code]) && $version !== null
+            && BundledPluginInstaller::matchesApprovedRuntimeSource($code, $version, $actual, $files, $archiveSha256);
     }
 
     private function safe(string $path): void

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "release_tag": "v2026.10.31.2",
+  "kind": "parented-isolated-source-snapshot",
+  "base_panel_commit": "22df0ad4f8b5917da0409ae94dc475b8d377a016",
+  "original_checkout_modified": false,
+  "original_git_modified": false,
+  "omitted_working_tree_overlays": [
+    "app/WebSocket/NodeWorker.php"
+  ],
+  "overlay_files": {
+    "README.md": "5ad140b260202be8a55212fab50da27351a440d9c761b21013e7ba5a980fb8c5",
+    "app/Console/Commands/PluginOnlineUpdate.php": "34789f88582026f815d7636a60d5081b59b7b07cf604ea82e53aa6df7b231b6b",
+    "app/Console/Commands/PluginsOnlineUpdate.php": "74a0d17c5712a028454cecc10f97a408011bb7579f80e9a67ba41998c19c3b44",
+    "app/Console/Kernel.php": "e613965767efc5b74a9d6625fdc336317a6665dbdd3acb628a27c71cd713a273",
+    "app/Services/Plugin/BundledPluginInstaller.php": "1d45037a7a595bc6843dd3afc22e69b76c37ae114c1b9e8f48cfac55a4d7a541",
+    "app/Services/Plugin/OfficialPluginReleaseSource.php": "7eca86a05bbba2febca9f45d6ab976d2ce6840a8b25c9893bf8ccdcaabd04091",
+    "app/Services/Plugin/OnlinePluginUpdater.php": "34d502c4656e94f54161bc2dccc786378e64a2d37b6e57029153ad4668a58f15",
+    "app/Services/Plugin/PluginManager.php": "f6884974a5cdfe79b7974eec2c525a0fe40f27031ff8f1780e90f054d0845e89",
+    "app/Services/Plugin/PluginUpdateCleanupGuard.php": "cb08bfa7c0331316b440453b84847a60750925998113fae8d6e92ab85a80b4d3",
+    "bundled-plugins/Qrcodeextend/Plugin.php": "2d73596c562a7c4bcb5bbae0229aff75918b3626d950e5089296389b4b65e8ad",
+    "bundled-plugins/Qrcodeextend/README.md": "1aae97a43a5a6f06fdcfe78256636d5f17c101864c246b952aa6d8206fa96aec",
+    "bundled-plugins/Qrcodeextend/Services/AdminBundlePatcher.php": "08ce494ab50c3011c6e9c0740d1149d1d561a7dd3562b044cc68a804fd09621a",
+    "bundled-plugins/Qrcodeextend/config.json": "a65566ecd26ce70fb3d36c5c07a81a4c2fd71c0a8f08aa68cddd23cf9cc148f5",
+    "bundled-plugins/Qrcodeextend/resources/assets/qrcodeextend.css": "7f1a7cc3d4c086dc37f4ec9c8e8782e67bbf1d6f3a9415512c0fb563e2b428de",
+    "bundled-plugins/Qrcodeextend/resources/assets/qrcodeextend.js": "535e930509857a6c054cb4158b1085deef53ccf24fd9b6ddf66792f7461e901f",
+    "bundled-plugins/manifest.json": "7361d2a5c07faa44b4217121099e9c1af39666374df200bc680faba86a7955d9",
+    "docs/operations/plugin-online-update.zh-CN.md": "2dce2765b8e727ef4bca15ceaa6930d3fafbec910ffd734d91ca94f3f396bd70",
+    "docs/releases/v2026.10.31.2.md": "7d26f30324aaf7cb3cc8d43f4e0baac888a8e2a68b9d1cde955f9956dd53f85b",
+    "tests/BundledPlugins/integration.php": "ea9eff49fb871825fc0e0aa2d992dc6b88f3f33bd7f15b3b65cf88796acb9321",
+    "tests/BundledPlugins/native-ownership.php": "b7021de781cc5c92081cb1c0e592c6ceea195170e9fe44c09ef26fb94bce086c",
+    "tests/BundledPlugins/online_update.php": "f850231b1c6ebe93f5dfc1a7d6de8cb2ac21e7b6decabb12ca44a39c29a7910f",
+    "tests/BundledPlugins/owned-hotfix-upgrade.php": "bdc783c238c75b39d905df2b4c8f354cbb6e6db29dd9ffbe1ed4469e0316562c",
+    "tests/PluginUpdates/README.md": "0c64f368acb03a255d2aa0c18f3592ff0f20a1ddc5a2f7e64e79da254bb0368d",
+    "tests/PluginUpdates/bulk-cli.php": "a8f4c874aa3bdf95d59c4d383f8976807782c12b5d3b7725ee839be96052e31f",
+    "tests/PluginUpdates/official-release-source.php": "d7cd2b7b2c5f548141cb31cb69b2f5b2428df55c31e8d9dc251f6b689fac1fae",
+    "tests/PluginUpdates/update-cleanup-guard.php": "fe4eeb40be6c0704cf379b6aeb290e98ac40167bb00cbaee868bcd04a4657258"
+  }
+}

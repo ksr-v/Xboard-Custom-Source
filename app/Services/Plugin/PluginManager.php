@@ -408,6 +408,12 @@ class PluginManager
         return true;
     }
 
+    /** Update-only cleanup preserves QR private backups while removing old integration. */
+    public function disableForUpdate(string $pluginCode): bool
+    {
+        return (new PluginUpdateCleanupGuard())->run($pluginCode, fn () => $this->disable($pluginCode));
+    }
+
     /**
      * 卸载插件
      */
@@ -495,7 +501,7 @@ class PluginManager
         }
 
         if ($wasEnabled) {
-            $this->disable($pluginCode);
+            $this->disableForUpdate($pluginCode);
         }
         $this->runMigrations($pluginCode);
 

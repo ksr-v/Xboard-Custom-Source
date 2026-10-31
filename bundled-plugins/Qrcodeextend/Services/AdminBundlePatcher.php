@@ -11,8 +11,12 @@ class AdminBundlePatcher
     public const TARGET_BUNDLE = 'assets/index-CEIYH7i8.js';
     public const LOCK_FILE = 'storage/framework/xboard-admin-patch.lock';
     private const ANCHOR = 'Q.jsxs($st,{className:"",onSelect:()=>{lT(t.original.id)';
-    private const START_MARKER = '/*qrcodeextend:start:v3*/';
-    private const END_MARKER = '/*qrcodeextend:end:v3*/';
+    private const START_MARKER = '/*qrcodeextend:start:v5*/';
+    private const END_MARKER = '/*qrcodeextend:end:v5*/';
+    private const V4_START_MARKER = '/*qrcodeextend:start:v4*/';
+    private const V4_END_MARKER = '/*qrcodeextend:end:v4*/';
+    private const V3_START_MARKER = '/*qrcodeextend:start:v3*/';
+    private const V3_END_MARKER = '/*qrcodeextend:end:v3*/';
     private const ANY_START = '/*qrcodeextend:start:';
     private const ANY_END = '/*qrcodeextend:end:';
     private string $root;
@@ -41,22 +45,23 @@ class AdminBundlePatcher
 
     public function patch(): string
     {
-        // Normal requests only need to verify the installed bridge. Do not
-        // queue behind another plugin's writer when no write is necessary.
-        try {
-            $check = $this->inspect($this->readBundle());
-            if ($check['valid'] && $check['state'] === 'patched') {
-                return 'Admin bridge is already patched; no changes made.';
-            }
-        } catch (\Throwable) {
-            // A cooperating writer may be replacing files. Recheck under the
-            // shared lock before rejecting the build or changing anything.
-        }
         return $this->withLock(function (): string {
             $current = $this->readBundle();
             $check = $this->inspect($current);
             if (!$check['valid']) throw new RuntimeException($check['diagnostic']);
             if ($check['state'] === 'patched') return 'Admin bridge is already patched; no changes made.';
+            if ($check['state'] === 'owned_v4') {
+                $patched = str_replace($this->ownedBlockV4(), $this->ownedBlock(), $current, $count);
+                if ($count !== 1) throw new RuntimeException("Expected one owned v4 bridge; found {$count}.");
+                $this->writeAndVerify($current, $patched, 'patched');
+                return 'Admin bridge upgraded from owned v4 to v5.';
+            }
+            if ($check['state'] === 'owned_v3') {
+                $patched = str_replace($this->ownedBlockV3(), $this->ownedBlock(), $current, $count);
+                if ($count !== 1) throw new RuntimeException("Expected one owned v3 bridge; found {$count}.");
+                $this->writeAndVerify($current, $patched, 'patched');
+                return 'Admin bridge upgraded from owned v3 to v5.';
+            }
             if ($check['state'] !== 'clean') throw new RuntimeException('Remove the unowned legacy qrcodeextend bridge before installing v1.1.0.');
             $patched = str_replace(self::ANCHOR, $this->ownedBlock() . self::ANCHOR, $current, $count);
             if ($count !== 1) throw new RuntimeException("Expected one Admin action anchor; found {$count}.");
@@ -72,8 +77,13 @@ class AdminBundlePatcher
             $check = $this->inspect($current);
             if (!$check['valid']) throw new RuntimeException($check['diagnostic']);
             if ($check['state'] === 'clean') return 'Admin bridge is already absent; no changes made.';
-            if ($check['state'] !== 'patched') throw new RuntimeException('Only a complete owned v3 bridge can be removed automatically.');
-            $clean = str_replace($this->ownedBlock(), '', $current, $count);
+            if (!in_array($check['state'], ['patched', 'owned_v4', 'owned_v3'], true)) throw new RuntimeException('Only a complete owned qrcodeextend bridge can be removed automatically.');
+            $block = match ($check['state']) {
+                'owned_v4' => $this->ownedBlockV4(),
+                'owned_v3' => $this->ownedBlockV3(),
+                default => $this->ownedBlock(),
+            };
+            $clean = str_replace($block, '', $current, $count);
             if ($count !== 1) throw new RuntimeException("Expected one owned qrcodeextend block; found {$count}.");
             $this->writeAndVerify($current, $clean, 'clean');
             return 'Removed only the owned qrcodeextend Admin bridge.';
@@ -90,13 +100,22 @@ class AdminBundlePatcher
         $anchors = substr_count($contents, self::ANCHOR);
         if ($anchors !== 1) return $this->invalid("Admin action anchor count is {$anchors}; expected exactly one.");
         if ($starts === 1) {
-            if (substr_count($contents, self::START_MARKER) !== 1 || substr_count($contents, self::END_MARKER) !== 1)
-                return $this->invalid('A foreign or obsolete qrcodeextend ownership marker was found.');
-            if (substr_count($contents, $this->ownedBlock()) !== 1)
-                return $this->invalid('The owned qrcodeextend block was modified; refusing to overwrite or remove it.');
-            if (strpos($contents, $this->ownedBlock() . self::ANCHOR) === false)
-                return $this->invalid('The owned qrcodeextend block moved away from its anchor.');
-            return $this->valid('patched', 'Managed qrcodeextend v3 bridge is valid.');
+            if (substr_count($contents, $this->ownedBlock()) === 1) {
+                if (strpos($contents, $this->ownedBlock() . self::ANCHOR) === false)
+                    return $this->invalid('The owned qrcodeextend block moved away from its anchor.');
+                return $this->valid('patched', 'Managed qrcodeextend v5 bridge is valid.');
+            }
+            if (substr_count($contents, $this->ownedBlockV4()) === 1) {
+                if (strpos($contents, $this->ownedBlockV4() . self::ANCHOR) === false)
+                    return $this->invalid('The owned qrcodeextend v4 block moved away from its anchor.');
+                return $this->valid('owned_v4', 'Managed qrcodeextend v4 bridge is ready for exact upgrade.');
+            }
+            if (substr_count($contents, $this->ownedBlockV3()) === 1) {
+                if (strpos($contents, $this->ownedBlockV3() . self::ANCHOR) === false)
+                    return $this->invalid('The owned qrcodeextend v3 block moved away from its anchor.');
+                return $this->valid('owned_v3', 'Managed qrcodeextend v3 bridge is ready for exact upgrade.');
+            }
+            return $this->invalid('The owned qrcodeextend block was modified; refusing to overwrite or remove it.');
         }
         if ($this->containsLegacyBridge($contents)) return $this->valid('legacy', 'An unowned legacy qrcodeextend bridge was detected.');
         return $this->valid('clean', 'Supported build and one stable anchor found.');
@@ -104,7 +123,29 @@ class AdminBundlePatcher
 
     private function ownedBlock(): string { return self::START_MARKER . $this->bridgeMenuItem() . self::END_MARKER; }
 
+    private function ownedBlockV4(): string { return self::V4_START_MARKER . $this->bridgeMenuItemV4() . self::V4_END_MARKER; }
+
+    private function ownedBlockV3(): string { return self::V3_START_MARKER . $this->bridgeMenuItemV3() . self::V3_END_MARKER; }
+
     private function bridgeMenuItem(): string
+    {
+        return str_replace(
+            ['/qrcodeextend.css', '/qrcodeextend.js'],
+            ['/qrcodeextend.css?v=1.3.1', '/qrcodeextend.js?v=1.3.1'],
+            $this->bridgeMenuItemV3()
+        );
+    }
+
+    private function bridgeMenuItemV4(): string
+    {
+        return str_replace(
+            ['/qrcodeextend.css', '/qrcodeextend.js'],
+            ['/qrcodeextend.css?v=1.3.0', '/qrcodeextend.js?v=1.3.0'],
+            $this->bridgeMenuItemV3()
+        );
+    }
+
+    private function bridgeMenuItemV3(): string
     {
         return 'Q.jsx($st,{onSelect:()=>{let e=()=>window.Qrcodeextend?.open?.(t.original);if(window.Qrcodeextend?.isReady?.())return e();window.addEventListener("qrcodeextend:ready",e,{once:!0});if(!document.querySelector("link[data-qrcodeextend]")){let e=document.createElement("link");e.rel="stylesheet",e.href="/plugins/qrcodeextend/qrcodeextend.css",e.dataset.qrcodeextend="",document.head.append(e)}if(!document.querySelector("script[data-qrcodeextend]")){let e=document.createElement("script");e.type="module",e.src="/plugins/qrcodeextend/qrcodeextend.js",e.dataset.qrcodeextend="",document.head.append(e)}},className:"p-0",children:Q.jsxs(xtt,{variant:"ghost",className:"w-full justify-start px-2 py-1.5",children:[Q.jsx("span",{className:"mr-2",children:"QR"}),r("columns.actions_menu.generate_qrcode")==="columns.actions_menu.generate_qrcode"?"生成订阅二维码":r("columns.actions_menu.generate_qrcode")]})}),';
     }

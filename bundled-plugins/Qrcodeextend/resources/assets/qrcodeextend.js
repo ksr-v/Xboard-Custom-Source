@@ -2,6 +2,7 @@ import qrcodegen from './vendor/qrcodegen.js';
 
 const translations = {
   'zh-CN': {
+    save: '保存二维码图片',
     menu: '生成订阅二维码',
     choose: '选择协议:',
     hint: '使用支持扫码的客户端进行订阅',
@@ -19,6 +20,7 @@ const translations = {
     trojan: 'Trojan'
   },
   'en-US': {
+    save: 'Save QR image',
     menu: 'Subscription QR Code',
     choose: 'Select Protocol:',
     hint: 'Use a client app that supports scanning QR code to subscribe',
@@ -36,6 +38,7 @@ const translations = {
     trojan: 'Trojan'
   },
   'ru-RU': {
+    save: 'Save QR image',
     menu: 'QR-код подписки',
     choose: 'Выберите протокол:',
     hint: 'Используйте приложение с поддержкой сканирования QR-кода для подписки',
@@ -53,6 +56,7 @@ const translations = {
     trojan: 'Trojan'
   },
   'ja-JP': {
+    save: 'Save QR image',
     choose: 'プロトコルの選択:',
     hint: '使用支持扫码的客户端进行订阅',
     missing: 'このユーザーのサブスクリプションアドレスを取得できません',
@@ -69,6 +73,7 @@ const translations = {
     trojan: 'Trojan'
   },
   'vi-VN': {
+    save: 'Save QR image',
     choose: 'Chọn Giao thức:',
     hint: 'Sử dụng ứng dụng quét mã để đăng ký',
     missing: 'Không thể lấy địa chỉ đăng ký của người dùng này',
@@ -85,6 +90,7 @@ const translations = {
     trojan: 'Trojan'
   },
   'ko-KR': {
+    save: 'Save QR image',
     choose: '프로토콜 선택:',
     hint: '스캔 가능한 클라이언트로 구독하기',
     missing: '이 사용자의 구독 주소를 가져올 수 없습니다',
@@ -155,6 +161,7 @@ let rootElement = null;
 let escapeHandler = null;
 let activeState = null;
 let qrRenderId = 0;
+let qrObjectUrl = null;
 let toastTimer = null;
 
 function getLocale() {
@@ -261,19 +268,27 @@ function drawQr(canvas, logo, payload, rendered) {
 function updateQr() {
   const canvas = rootElement?.querySelector('.qrcodeextend-canvas');
   const image = rootElement?.querySelector('.qrcodeextend-image');
-  if (!canvas || !image || !activeState) return;
+  const saveLink = rootElement?.querySelector('.qrcodeextend-save');
+  if (!canvas || !image || !saveLink || !activeState) return;
   const renderId = ++qrRenderId;
   const payload = buildPayload();
-  const publish = () => {
+  const publish = (allowLogoFallback = true) => {
     if (renderId !== qrRenderId || !rootElement?.contains(image)) return;
     try {
-      image.src = canvas.toDataURL('image/png');
-    } catch {
-      drawQr(canvas, '', payload, () => {
-        if (renderId === qrRenderId && rootElement?.contains(image)) {
-          image.src = canvas.toDataURL('image/png');
+      canvas.toBlob(blob => {
+        if (!blob && allowLogoFallback) {
+          drawQr(canvas, '', payload, () => publish(false));
+          return;
         }
-      });
+        if (!blob || renderId !== qrRenderId || !rootElement?.contains(image)) return;
+        const objectUrl = URL.createObjectURL(blob);
+        if (qrObjectUrl) URL.revokeObjectURL(qrObjectUrl);
+        qrObjectUrl = objectUrl;
+        image.src = objectUrl;
+        saveLink.href = objectUrl;
+      }, 'image/png');
+    } catch {
+      if (allowLogoFallback) drawQr(canvas, '', payload, () => publish(false));
     }
   };
   try {
@@ -314,6 +329,8 @@ function toggleType(type) {
 function close() {
   if (!rootElement) return;
   qrRenderId++;
+  if (qrObjectUrl) URL.revokeObjectURL(qrObjectUrl);
+  qrObjectUrl = null;
   const closingRoot = rootElement;
   closingRoot.classList.add('qrcodeextend-closing');
   window.setTimeout(() => closingRoot.remove(), 180);
@@ -349,9 +366,10 @@ function open(user) {
       <div class="qrcodeextend-selector-label">${text('choose')}</div>
       <div class="qrcodeextend-protocols"></div>
       <div class="qrcodeextend-code-frame">
-        <img class="qrcodeextend-image" alt="${text('qr')}" width="140" height="140" draggable="false" style="display:block;-webkit-touch-callout:default;user-select:auto">
+        <img class="qrcodeextend-image" alt="${text('qr')}" width="140" height="140" style="display:block;touch-action:auto;-webkit-touch-callout:default;user-select:auto">
         <canvas class="qrcodeextend-canvas" aria-hidden="true" style="display:none"></canvas>
       </div>
+      <a class="qrcodeextend-save" download="subscription-qrcode.png" style="justify-self:center" href="#">${text('save')}</a>
       <div class="qrcodeextend-hint">${text('hint')}</div>
     </section>`;
   const dialog = rootElement.querySelector('.qrcodeextend-dialog');

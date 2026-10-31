@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "bundle_version": "2026.10.31.1",
+  "bundle_version": "2026.10.31.2",
   "plugins": [
     {
       "code": "node_endpoint",
@@ -545,19 +545,19 @@
     {
       "code": "qrcodeextend",
       "directory": "Qrcodeextend",
-      "version": "1.2.0",
+      "version": "1.3.1",
       "source_repository": "https://github.com/ksr-v/xb-qrcode-extend",
-      "source_commit": "3b30042a0e16047a67dddb73ffaf85e4a2a54918",
+      "source_commit": "9176c3da8b5084a4ad98d38c3471fb4f2543a4ec",
       "files": {
         "Commands/PatchCommand.php": "445a3271dcdc6cb5c49a3ac69cbe9c71d751dee1743e8369f48fbb8fe2be4851",
         "Commands/RestoreCommand.php": "145bf82c5d0023fcdf16652428c52dcd0dd7d238ed9f701a1b4190a8cf337828",
         "Commands/StatusCommand.php": "7d8116585b7a4794e8288f333d5b53029fb99ca5dbca2fdfc45b78ba3b432518",
-        "Plugin.php": "ab99c90d1b259bd9bd0a8fd10105362cf7f49ca1b134fcc13c96064a480cb545",
-        "README.md": "fe39091bc386a13ab3a12b6e416d0b756da36008fb4b043bf4b72d94a98909ef",
-        "Services/AdminBundlePatcher.php": "9ae7ed11f431992fb11e83671ab8da731438e1f75985a7b6ae07f77f3afe235e",
-        "config.json": "8c3fb32559777e3aa897255f674437bb427e6263d30176ccbeb52b7c8be884f9",
-        "resources/assets/qrcodeextend.css": "211d35f815bda803b71c1c2b3f9bc4a9c1d315fa11db909019357174fd397337",
-        "resources/assets/qrcodeextend.js": "a42423cfc6eef257eab795720374138e870d0ad3bf8532dc0e2110e22e79305a",
+        "Plugin.php": "2d73596c562a7c4bcb5bbae0229aff75918b3626d950e5089296389b4b65e8ad",
+        "README.md": "1aae97a43a5a6f06fdcfe78256636d5f17c101864c246b952aa6d8206fa96aec",
+        "Services/AdminBundlePatcher.php": "08ce494ab50c3011c6e9c0740d1149d1d561a7dd3562b044cc68a804fd09621a",
+        "config.json": "a65566ecd26ce70fb3d36c5c07a81a4c2fd71c0a8f08aa68cddd23cf9cc148f5",
+        "resources/assets/qrcodeextend.css": "7f1a7cc3d4c086dc37f4ec9c8e8782e67bbf1d6f3a9415512c0fb563e2b428de",
+        "resources/assets/qrcodeextend.js": "535e930509857a6c054cb4158b1085deef53ccf24fd9b6ddf66792f7461e901f",
         "resources/assets/vendor/LICENSE.nayuki": "f9f4bba35e6ee9161fa917a4cb9943c463be6a6d447c7ce370239769c699ad57",
         "resources/assets/vendor/README.txt": "f347f88ec2f668653c4cd5687785994e7b6a4f92309bed6d272fad19273462bc",
         "resources/assets/vendor/qrcodegen.js": "782dfb84800af8ba2fd946a79a561f51e06612e3a0c2b8d493a45729f119447c"
@@ -580,31 +580,61 @@
             "resources/assets/vendor/README.txt": "f347f88ec2f668653c4cd5687785994e7b6a4f92309bed6d272fad19273462bc",
             "resources/assets/vendor/qrcodegen.js": "782dfb84800af8ba2fd946a79a561f51e06612e3a0c2b8d493a45729f119447c"
           }
+        },
+        {
+          "version": "1.2.0",
+          "source_commit": "3b30042a0e16047a67dddb73ffaf85e4a2a54918",
+          "files": {
+            "Commands/PatchCommand.php": "445a3271dcdc6cb5c49a3ac69cbe9c71d751dee1743e8369f48fbb8fe2be4851",
+            "Commands/RestoreCommand.php": "145bf82c5d0023fcdf16652428c52dcd0dd7d238ed9f701a1b4190a8cf337828",
+            "Commands/StatusCommand.php": "7d8116585b7a4794e8288f333d5b53029fb99ca5dbca2fdfc45b78ba3b432518",
+            "Plugin.php": "ab99c90d1b259bd9bd0a8fd10105362cf7f49ca1b134fcc13c96064a480cb545",
+            "README.md": "fe39091bc386a13ab3a12b6e416d0b756da36008fb4b043bf4b72d94a98909ef",
+            "Services/AdminBundlePatcher.php": "9ae7ed11f431992fb11e83671ab8da731438e1f75985a7b6ae07f77f3afe235e",
+            "config.json": "8c3fb32559777e3aa897255f674437bb427e6263d30176ccbeb52b7c8be884f9",
+            "resources/assets/qrcodeextend.css": "211d35f815bda803b71c1c2b3f9bc4a9c1d315fa11db909019357174fd397337",
+            "resources/assets/qrcodeextend.js": "a42423cfc6eef257eab795720374138e870d0ad3bf8532dc0e2110e22e79305a",
+            "resources/assets/vendor/LICENSE.nayuki": "f9f4bba35e6ee9161fa917a4cb9943c463be6a6d447c7ce370239769c699ad57",
+            "resources/assets/vendor/README.txt": "f347f88ec2f668653c4cd5687785994e7b6a4f92309bed6d272fad19273462bc",
+            "resources/assets/vendor/qrcodegen.js": "782dfb84800af8ba2fd946a79a561f51e06612e3a0c2b8d493a45729f119447c"
+          },
+          "source_provenance": {
+            "kind": "panel-working-tree-overlay",
+            "base_source_commit": "3b30042a0e16047a67dddb73ffaf85e4a2a54918",
+            "base_panel_commit": "01be17d6c1ffbefd820e631660cc4b0d1a121d9c",
+            "base_manifest_sha256": "8ee80235abdc84f76ebbd6cce7b54458004ce337b6732f20b77f72cc06118a11",
+            "base_files": {
+              "Commands/PatchCommand.php": "445a3271dcdc6cb5c49a3ac69cbe9c71d751dee1743e8369f48fbb8fe2be4851",
+              "Commands/RestoreCommand.php": "145bf82c5d0023fcdf16652428c52dcd0dd7d238ed9f701a1b4190a8cf337828",
+              "Commands/StatusCommand.php": "7d8116585b7a4794e8288f333d5b53029fb99ca5dbca2fdfc45b78ba3b432518",
+              "Plugin.php": "2d73596c562a7c4bcb5bbae0229aff75918b3626d950e5089296389b4b65e8ad",
+              "README.md": "fe39091bc386a13ab3a12b6e416d0b756da36008fb4b043bf4b72d94a98909ef",
+              "Services/AdminBundlePatcher.php": "42f4b1e41f936bde1e340e629c4ca5e6e43d9cf457db1792077362a34f82a4c9",
+              "config.json": "8c3fb32559777e3aa897255f674437bb427e6263d30176ccbeb52b7c8be884f9",
+              "resources/assets/qrcodeextend.css": "211d35f815bda803b71c1c2b3f9bc4a9c1d315fa11db909019357174fd397337",
+              "resources/assets/qrcodeextend.js": "a42423cfc6eef257eab795720374138e870d0ad3bf8532dc0e2110e22e79305a",
+              "resources/assets/vendor/LICENSE.nayuki": "f9f4bba35e6ee9161fa917a4cb9943c463be6a6d447c7ce370239769c699ad57",
+              "resources/assets/vendor/README.txt": "f347f88ec2f668653c4cd5687785994e7b6a4f92309bed6d272fad19273462bc",
+              "resources/assets/vendor/qrcodegen.js": "782dfb84800af8ba2fd946a79a561f51e06612e3a0c2b8d493a45729f119447c"
+            },
+            "changed_files": [
+              "Plugin.php",
+              "Services/AdminBundlePatcher.php"
+            ]
+          }
         }
       ],
       "source_provenance": {
-        "kind": "panel-working-tree-overlay",
-        "base_source_commit": "3b30042a0e16047a67dddb73ffaf85e4a2a54918",
-        "base_panel_commit": "01be17d6c1ffbefd820e631660cc4b0d1a121d9c",
-        "base_manifest_sha256": "8ee80235abdc84f76ebbd6cce7b54458004ce337b6732f20b77f72cc06118a11",
-        "base_files": {
-          "Commands/PatchCommand.php": "445a3271dcdc6cb5c49a3ac69cbe9c71d751dee1743e8369f48fbb8fe2be4851",
-          "Commands/RestoreCommand.php": "145bf82c5d0023fcdf16652428c52dcd0dd7d238ed9f701a1b4190a8cf337828",
-          "Commands/StatusCommand.php": "7d8116585b7a4794e8288f333d5b53029fb99ca5dbca2fdfc45b78ba3b432518",
-          "Plugin.php": "2d73596c562a7c4bcb5bbae0229aff75918b3626d950e5089296389b4b65e8ad",
-          "README.md": "fe39091bc386a13ab3a12b6e416d0b756da36008fb4b043bf4b72d94a98909ef",
-          "Services/AdminBundlePatcher.php": "42f4b1e41f936bde1e340e629c4ca5e6e43d9cf457db1792077362a34f82a4c9",
-          "config.json": "8c3fb32559777e3aa897255f674437bb427e6263d30176ccbeb52b7c8be884f9",
-          "resources/assets/qrcodeextend.css": "211d35f815bda803b71c1c2b3f9bc4a9c1d315fa11db909019357174fd397337",
-          "resources/assets/qrcodeextend.js": "a42423cfc6eef257eab795720374138e870d0ad3bf8532dc0e2110e22e79305a",
-          "resources/assets/vendor/LICENSE.nayuki": "f9f4bba35e6ee9161fa917a4cb9943c463be6a6d447c7ce370239769c699ad57",
-          "resources/assets/vendor/README.txt": "f347f88ec2f668653c4cd5687785994e7b6a4f92309bed6d272fad19273462bc",
-          "resources/assets/vendor/qrcodegen.js": "782dfb84800af8ba2fd946a79a561f51e06612e3a0c2b8d493a45729f119447c"
-        },
-        "changed_files": [
-          "Plugin.php",
-          "Services/AdminBundlePatcher.php"
-        ]
+        "kind": "github-release-asset",
+        "release_id": 427464449,
+        "release_tag": "v1.3.1",
+        "tag_object": "e3b97ed63a75becf4fe92df3e4e462e0f8fd14b7",
+        "tag_commit": "9176c3da8b5084a4ad98d38c3471fb4f2543a4ec",
+        "asset_id": 687335856,
+        "asset_name": "qrcodeextend-1.3.1.zip",
+        "archive_sha256": "7da6c72eb7cfe60ac7b255007735608520acd20d96f946b8bbef44c784281f0b",
+        "archive_size": 27669,
+        "checksum_source": "SHA256SUMS+github-asset-digest"
       }
     },
     {

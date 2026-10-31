@@ -1,6 +1,6 @@
 # QRCode Extend
 
-Adds a locally generated subscription QR-code action to Xboard's Admin user menu. Version 1.2.0 follows Xboard's native lifecycle and renders the final QR as a PNG image so mobile users can long-press it to save.
+Adds a locally generated subscription QR-code action to Xboard's Admin user menu. Version 1.3.1 makes the explicit PNG save action a visible, touch-friendly button and cache-busts the updated assets. Version 1.3.0 introduced Blob-backed PNG output for mobile long-press handling.
 
 ## Lifecycle
 
@@ -24,7 +24,7 @@ Those changes served safe restore, operator commands, asset cleanup, and Admin a
 
 ## Ownership and coexistence
 
-The injected block is bounded by exact `qrcodeextend:start:v3` and `qrcodeextend:end:v3` markers. Apply and removal run under the shared `storage/framework/xboard-admin-patch.lock` exclusive lock for their complete read → validate → transform → atomic-write → verify transaction.
+The injected block is bounded by exact `qrcodeextend:start:v5` and `qrcodeextend:end:v5` markers. Exact owned v3 and v4 blocks are upgraded without touching foreign bytes. Apply and removal run under the shared `storage/framework/xboard-admin-patch.lock` exclusive lock for their complete read → validate → transform → atomic-write → verify transaction.
 
 Rules:
 

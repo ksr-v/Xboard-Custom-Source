@@ -17,6 +17,43 @@ final class BundledPluginInstaller
         'qrcodeextend' => 'Qrcodeextend', 'flowscope' => 'Flowscope',
         'subinfo_customizer' => 'SubinfoCustomizer',
     ];
+    /** Exact published runtime-patch-lock-fix-20261030 overlay, applied as one set per plugin. */
+    private const APPROVED_RUNTIME_LOCKFIX = [
+        'smart_expiry' => ['versions' => ['1.2.0'], 'files' => [
+            'Services/AdminBridgePatcher.php' => [
+                '42b77feb847a8b8113a00d2d0734434f897698da33e314399bcdd810d99bb692',
+                'c483f0dd9dd5224dd3a4ff36817d23e77de774209af71ed1f2f11024ffa6e303',
+            ],
+        ]],
+        'qrcodeextend' => ['versions' => ['1.2.0'], 'files' => [
+            'Plugin.php' => [
+                '2d73596c562a7c4bcb5bbae0229aff75918b3626d950e5089296389b4b65e8ad',
+                'ab99c90d1b259bd9bd0a8fd10105362cf7f49ca1b134fcc13c96064a480cb545',
+            ],
+            'Services/AdminBundlePatcher.php' => [
+                '42f4b1e41f936bde1e340e629c4ca5e6e43d9cf457db1792077362a34f82a4c9',
+                '9ae7ed11f431992fb11e83671ab8da731438e1f75985a7b6ae07f77f3afe235e',
+            ],
+        ]],
+        'subinfo_customizer' => ['versions' => ['1.0.0', '1.0.1'], 'files' => [
+            'Services/CoreBridgePatcher.php' => [
+                'a2208756dbfd407d076a3f1f99326da779eeb2a90313a30fc2bf38f025c1325f',
+                '9cc3bd636d2c92668fb313e1d2d92924258bb21c11e79dcba603e304a566b1f0',
+            ],
+        ]],
+    ];
+    private const NATIVE_RELEASE_SOURCES = [
+        'node_endpoint' => ['ksr-v/Xboard-Independent-NodeEndpoint', 'NodeEndpoint-%s.zip', 'SHA256SUMS'],
+        'smart_expiry' => ['ksr-v/xb-SmartExpiry', 'SmartExpiry-%s-full.zip', 'github-asset-digest'],
+        'qrcodeextend' => ['ksr-v/xb-qrcode-extend', 'qrcodeextend-%s.zip', 'SHA256SUMS'],
+        'flowscope' => ['ksr-v/xb-flowscope', 'flowscope-%s.zip', 'SHA256SUMS-v%s'],
+        'subinfo_customizer' => ['ksr-v/xb-SubInfoCustomizer', 'SubInfoCustomizer-v%s.zip', 'SHA256SUMS'],
+    ];
+    /** Reviewed native packages whose development/documentation extras are omitted from the panel runtime. */
+    private const APPROVED_NATIVE_RUNTIME_SUBSETS = [
+        'smart_expiry' => ['1.2.0', 'b47e8cf11bb55684d820207888cf30bfb6b908010973a1612f70af42dbed8ea3'],
+        'subinfo_customizer' => ['1.0.1', 'fb9ebfeafe478009934fc68162c1258f4b40a436b350d222bd5f4c4bb8b53f84'],
+    ];
     private string $root;
 
     public function __construct(?string $root = null)
@@ -104,7 +141,7 @@ final class BundledPluginInstaller
                 } elseif (version_compare($row->version, $version, '<')) {
                     $enabled = (bool) $row->is_enabled;
                     $manager->update($code);
-                    if (!$enableAll && !$enabled) { $manager->disable($code); }
+                    if (!$enableAll && !$enabled) { $manager->disableForUpdate($code); }
                     $report[$code]['lifecycle'] = $enabled || $enableAll ? 'upgraded and enabled' : 'upgraded; disabled state preserved';
                 } else {
                     // A core update can restore the original Admin bundle.
@@ -229,6 +266,19 @@ final class BundledPluginInstaller
             if ($owned !== null && ($owned['directory'] ?? null) !== $item['directory']) {
                 throw new RuntimeException("Plugin ownership directory changed: {$code}.");
             }
+            if ($owned !== null && $currentVersion === $item['version']
+                && ($owned['source_provenance']['kind'] ?? null) === 'github-release-asset') {
+                $this->assertNativeOwnership($code, $owned, $currentVersion);
+                if ($actual !== $this->fileMap($owned['files'] ?? null)) {
+                    throw new RuntimeException("Verified native {$code} source has modified or missing files; review it before synchronization. No plugin files were changed.");
+                }
+                // Native plugin tags and panel bundle dates are separate
+                // version domains. Retain the verified native artifact even
+                // when its semantic version equals the bundled copy.
+                $report[$code] = ['action' => 'preserved-newer', 'version' => $currentVersion,
+                    'source' => 'github-release-asset'];
+                continue;
+            }
             // Online updates can ship reviewed source fixes without changing
             // the plugin's semantic version. An older panel bundle must not
             // replace that newer owned source with its older same-version copy.
@@ -251,18 +301,25 @@ final class BundledPluginInstaller
             // A missing directory can be staged again; an existing partial
             // tree must still pass every owned-file check below.
             $baseline = $owned !== null && is_dir($destination) ? $this->fileMap($owned['files'] ?? null) : [];
-            if (!$baseline && $actual) {
-                $candidates = $item['previous_files'][$currentVersion ?? ''] ?? [];
-                if ($currentVersion === $item['version']) { array_unshift($candidates, $item['files']); }
+            $ownershipMatches = $baseline && !array_diff_assoc($baseline, $actual);
+            if (!$ownershipMatches && $actual) {
+                // The published runtime lock fix intentionally left the old
+                // ownership record unchanged. A stale record may be reconciled
+                // only against one complete trusted graph, never per-file mixes.
+                $candidates = $this->trustedBaselines($code, $item, $currentVersion);
                 if (!$candidates) {
+                    if ($baseline) {
+                        throw new RuntimeException("Existing {$code} has unowned or modified files; review it before retrying. No plugin files were changed.");
+                    }
                     throw new RuntimeException("Existing {$code} is not a verified managed release. Review/upgrade it through native plugin management before retrying; files were preserved.");
                 }
                 // Only a complete known source snapshot can be adopted. Extra
                 // operator notes remain unowned, but a mixture of files from
                 // different known snapshots is not a verified release.
-                $managedPaths = $item['files'];
+                $managedPaths = $item['files'] + $baseline;
                 foreach ($candidates as $candidate) { $managedPaths += $candidate; }
                 $managedActual = array_intersect_key($actual, $managedPaths);
+                $baseline = [];
                 foreach ($candidates as $candidate) {
                     if ($managedActual === $candidate) { $baseline = $candidate; break; }
                 }
@@ -337,6 +394,81 @@ final class BundledPluginInstaller
         }
     }
 
+    private function trustedBaselines(string $code, array $item, ?string $currentVersion): array
+    {
+        $candidates = $item['previous_files'][$currentVersion ?? ''] ?? [];
+        if ($currentVersion === $item['version']) { array_unshift($candidates, $item['files']); }
+        foreach ($candidates as $candidate) {
+            $patched = self::approvedRuntimeOverlay($code, $currentVersion ?? '', $candidate);
+            if ($patched !== null) { $candidates[] = $patched; }
+        }
+        return $candidates;
+    }
+
+    /** Both maps must come from the verified artifact reader/actual regular-file tree. */
+    public static function matchesApprovedRuntimeSource(string $code, string $version, array $actualFiles, array $officialFiles, ?string $archiveSha256 = null): bool
+    {
+        try {
+            $actual = self::validatedFileMap($actualFiles);
+            $official = self::validatedFileMap($officialFiles);
+        } catch (RuntimeException) { return false; }
+        if ($actual === $official || self::approvedRuntimeOverlay($code, $version, $official) === $actual) { return true; }
+        $subset = self::APPROVED_NATIVE_RUNTIME_SUBSETS[$code] ?? null;
+        if (!$subset || $version !== $subset[0] || $archiveSha256 !== $subset[1] || !function_exists('base_path')) { return false; }
+        try {
+            // A subset is never inferred from arbitrary actual files. Its
+            // complete byte graph must already be a validated panel release.
+            $plugins = (new self(base_path()))->manifest();
+            $item = $plugins[$code] ?? null;
+            if (!$item) { return false; }
+            $graphs = $item['previous_files'][$version] ?? [];
+            if ($item['version'] === $version) { $graphs[] = $item['files']; }
+            $known = in_array($actual, $graphs, true);
+            if (!$known) {
+                foreach ($graphs as $graph) {
+                    if (self::approvedRuntimeOverlay($code, $version, $graph) === $actual) { $known = true; break; }
+                }
+            }
+            if (!$known || array_diff_key($actual, $official)) { return false; }
+            $projected = array_intersect_key($official, $actual);
+            return $actual === $projected || self::approvedRuntimeOverlay($code, $version, $projected) === $actual;
+        } catch (\Throwable) { return false; }
+    }
+
+    private static function approvedRuntimeOverlay(string $code, string $version, array $source): ?array
+    {
+        $overlay = self::APPROVED_RUNTIME_LOCKFIX[$code] ?? null;
+        if (!$overlay || !in_array($version, $overlay['versions'], true)) { return null; }
+        foreach ($overlay['files'] as $file => [$before, $after]) {
+            if (($source[$file] ?? null) !== $before) { return null; }
+            $source[$file] = $after;
+        }
+        ksort($source);
+        return $source;
+    }
+
+    private function assertNativeOwnership(string $code, array $owned, string $version): void
+    {
+        [$repository, $assetPattern, $checksumPattern] = self::NATIVE_RELEASE_SOURCES[$code];
+        $provenance = $owned['source_provenance'];
+        $valid = ($owned['version'] ?? null) === $version
+            && ($owned['source_repository'] ?? null) === 'https://github.com/' . $repository
+            && is_string($owned['source_commit'] ?? null) && preg_match('/^[a-f0-9]{40}$/D', $owned['source_commit'])
+            && ($provenance['tag_commit'] ?? null) === $owned['source_commit']
+            && ($provenance['release_tag'] ?? null) === 'v' . $version
+            && is_string($provenance['tag_object'] ?? null) && preg_match('/^[a-f0-9]{40}$/D', $provenance['tag_object'])
+            && is_int($provenance['release_id'] ?? null) && $provenance['release_id'] > 0
+            && is_int($provenance['asset_id'] ?? null) && $provenance['asset_id'] > 0
+            && ($provenance['asset_name'] ?? null) === sprintf($assetPattern, $version)
+            && is_string($provenance['archive_sha256'] ?? null) && preg_match('/^[a-f0-9]{64}$/D', $provenance['archive_sha256'])
+            && is_int($provenance['archive_size'] ?? null) && $provenance['archive_size'] > 0 && $provenance['archive_size'] <= 33554432
+            && ($provenance['checksum_source'] ?? null) === sprintf($checksumPattern, $version);
+        $files = $this->fileMap($owned['files'] ?? null);
+        if (!$valid || !isset($files['Plugin.php'], $files['config.json'])) {
+            throw new RuntimeException("Invalid native release ownership for {$code}; review its fixed source identity before synchronization. No plugin files were changed.");
+        }
+    }
+
     private function namespaceLoaded(string $code): bool
     {
         $prefix = 'Plugin\\' . Str::studly($code) . '\\';
@@ -347,6 +479,11 @@ final class BundledPluginInstaller
     }
 
     private function fileMap(mixed $files): array
+    {
+        return self::validatedFileMap($files);
+    }
+
+    private static function validatedFileMap(mixed $files): array
     {
         if (!is_array($files) || !$files || count($files) > 4096) { throw new RuntimeException('Invalid bundled plugin file manifest.'); }
         foreach ($files as $file => $hash) {
