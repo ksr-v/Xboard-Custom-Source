@@ -1,0 +1,407 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "performed_on": "2026-11-01",
+  "timezone": "Asia/Shanghai",
+  "objective": "Restore website business data and database-backed settings using only the old SQL backup and original .env.",
+  "scope": {
+    "source_host": "192.168.128.128",
+    "destination_host": "192.168.128.129",
+    "os": "Ubuntu 24.04",
+    "runtime": "native PHP 8.3.6 / FPM",
+    "database": "MariaDB 10.11.14",
+    "release": "v2026.11.01.1",
+    "official_release_archive_sha256": "96507f6125a917dce5f8989950cef0b80f7c5db99f8c1151a2b5410b6f6ea856",
+    "data": "synthetic rehearsal records"
+  },
+  "recovery_inputs": {
+    "files": [
+      "SQL",
+      ".env"
+    ],
+    "sql_bytes": 140059,
+    "sql_sha256": "40194af015e0be2a8090006f9cf234e1993cb8b2a2bd6fa4f6c52502afb1cf5c",
+    "original_env_sha256": "3589dfac8586b8019618bfd132d6b9c0d062854d2ac958855923d91ff56781c6",
+    "old_application_directories_copied": false,
+    "old_public_or_storage_copied": false,
+    "old_ca_files_copied": false,
+    "note": "Official clean release code and dependencies are new-install assets. Known credentials and stored digests are used only by the verification harness, not restored as application data."
+  },
+  "recommended_method": {
+    "id": "A",
+    "description": "Prepare clean same-version release code, import SQL and original .env, adjust destination connections, then run update.sh without init.sh.",
+    "app": "/www/wwwroot/sql-env-restore-test",
+    "port": 8081,
+    "database": "sql_env_restored_a",
+    "init_sh_executed": false,
+    "recovery_command": "bash update.sh --deployed-code --skip-endpoint --app-user www --php /www/server/php/83/bin/php --composer /opt/xboard-tools/composer-2.10.3.phar",
+    "update_exit_code": 0,
+    "passed": 29,
+    "total": 29,
+    "checks": [
+      {
+        "name": "source_snapshot_script_runs_against_rebuilt_new_site",
+        "pass": true
+      },
+      {
+        "name": "v2_user_all_values_and_count",
+        "pass": true,
+        "rows": 4
+      },
+      {
+        "name": "v2_plan_all_values_and_count",
+        "pass": true,
+        "rows": 2
+      },
+      {
+        "name": "v2_server_group_all_values_and_count",
+        "pass": true,
+        "rows": 2
+      },
+      {
+        "name": "v2_server_all_values_and_count",
+        "pass": true,
+        "rows": 1
+      },
+      {
+        "name": "v2_server_machine_all_values_and_count",
+        "pass": true,
+        "rows": 1
+      },
+      {
+        "name": "v2_order_all_values_and_count",
+        "pass": true,
+        "rows": 1
+      },
+      {
+        "name": "v2_settings_all_values_and_count",
+        "pass": true,
+        "rows": 3
+      },
+      {
+        "name": "original_app_key_retained",
+        "pass": true
+      },
+      {
+        "name": "original_plugin_configuration_and_enabled_choices",
+        "pass": true
+      },
+      {
+        "name": "disabled_smart_expiry_and_flowscope_remain_disabled",
+        "pass": true
+      },
+      {
+        "name": "disabled_smart_expiry_has_no_fresh_admin_bridge",
+        "pass": true
+      },
+      {
+        "name": "enabled_qrcode_admin_bridge_rebuilt",
+        "pass": true
+      },
+      {
+        "name": "enabled_subscription_info_core_bridge_rebuilt",
+        "pass": true
+      },
+      {
+        "name": "original_uploaded_proof_not_recovered_from_two_files",
+        "pass": true
+      },
+      {
+        "name": "original_qr_private_proof_not_recovered_from_two_files",
+        "pass": true
+      },
+      {
+        "name": "original_ca_file_not_recovered_from_two_files",
+        "pass": true
+      },
+      {
+        "name": "old_admin_password_login",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "old_user_password_login",
+        "pass": true
+      },
+      {
+        "name": "old_user_uuid_balance_and_plan",
+        "pass": true
+      },
+      {
+        "name": "old_subscription_token_returns_real_node",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "subscription_traffic_header_retained",
+        "pass": true
+      },
+      {
+        "name": "old_machine_id_and_token_authenticate",
+        "pass": true
+      },
+      {
+        "name": "rebuilt_resource_/plugins/qrcodeextend/qrcodeextend.js",
+        "pass": true
+      },
+      {
+        "name": "rebuilt_resource_/plugins/qrcodeextend/qrcodeextend.css",
+        "pass": true
+      },
+      {
+        "name": "prior_migration_test_site_still_online",
+        "pass": true
+      },
+      {
+        "name": "restored_horizon_running",
+        "pass": true
+      },
+      {
+        "name": "actual_minute_schedule_executed",
+        "pass": true
+      },
+      {
+        "name": "schedule_has_no_fatal_or_database_error",
+        "pass": true
+      }
+    ],
+    "plugins": [
+      {
+        "code": "alipay_f2f",
+        "version": "1.0.0",
+        "is_enabled": 1
+      },
+      {
+        "code": "btcpay",
+        "version": "1.0.0",
+        "is_enabled": 1
+      },
+      {
+        "code": "coin_payments",
+        "version": "1.0.0",
+        "is_enabled": 1
+      },
+      {
+        "code": "coinbase",
+        "version": "1.0.0",
+        "is_enabled": 1
+      },
+      {
+        "code": "epay",
+        "version": "1.0.0",
+        "is_enabled": 1
+      },
+      {
+        "code": "flowscope",
+        "version": "2.4.0",
+        "is_enabled": 0
+      },
+      {
+        "code": "mgate",
+        "version": "1.0.0",
+        "is_enabled": 1
+      },
+      {
+        "code": "node_endpoint",
+        "version": "1.1.3",
+        "is_enabled": 1
+      },
+      {
+        "code": "qrcodeextend",
+        "version": "1.3.1",
+        "is_enabled": 1
+      },
+      {
+        "code": "smart_expiry",
+        "version": "1.2.0",
+        "is_enabled": 0
+      },
+      {
+        "code": "subinfo_customizer",
+        "version": "1.0.1",
+        "is_enabled": 1
+      },
+      {
+        "code": "telegram",
+        "version": "1.0.1",
+        "is_enabled": 1
+      }
+    ],
+    "target_horizon_running": true,
+    "target_automatic_minute_schedule_executed": true,
+    "existing_8080_site_and_root_state_unchanged": true
+  },
+  "already_initialized_method": {
+    "id": "B",
+    "description": "fresh init completed then only SQL and .env restored",
+    "app": "/www/wwwroot/sql-env-fresh-restore-test",
+    "port": 8082,
+    "fresh_database": "sql_env_fresh_b",
+    "restored_database": "sql_env_restored_b",
+    "fresh_init_used_skip_endpoint": true,
+    "cleanup_before_import": [
+      "smart_expiry",
+      "qrcodeextend",
+      "subinfo_customizer"
+    ],
+    "cleanup_command": "php artisan xboard:plugin-online-update PLUGIN_CODE --deactivate",
+    "cleanup_does_not_download_releases": true,
+    "real_update_sh_completed": true,
+    "passed": 27,
+    "total": 27,
+    "checks": [
+      {
+        "name": "v2_user_rows_and_values",
+        "pass": true,
+        "rows": 4,
+        "value_sha256_matches_source": true
+      },
+      {
+        "name": "v2_plan_rows_and_values",
+        "pass": true,
+        "rows": 2,
+        "value_sha256_matches_source": true
+      },
+      {
+        "name": "v2_server_group_rows_and_values",
+        "pass": true,
+        "rows": 2,
+        "value_sha256_matches_source": true
+      },
+      {
+        "name": "v2_server_rows_and_values",
+        "pass": true,
+        "rows": 1,
+        "value_sha256_matches_source": true
+      },
+      {
+        "name": "v2_server_machine_rows_and_values",
+        "pass": true,
+        "rows": 1,
+        "value_sha256_matches_source": true
+      },
+      {
+        "name": "v2_order_rows_and_values",
+        "pass": true,
+        "rows": 1,
+        "value_sha256_matches_source": true
+      },
+      {
+        "name": "v2_settings_rows_and_values",
+        "pass": true,
+        "rows": 3,
+        "value_sha256_matches_source": true
+      },
+      {
+        "name": "original_app_key_retained",
+        "pass": true
+      },
+      {
+        "name": "node_endpoint_enabled",
+        "pass": true
+      },
+      {
+        "name": "qrcodeextend_enabled",
+        "pass": true
+      },
+      {
+        "name": "subinfo_customizer_enabled",
+        "pass": true
+      },
+      {
+        "name": "smart_expiry_disabled",
+        "pass": true
+      },
+      {
+        "name": "flowscope_disabled",
+        "pass": true
+      },
+      {
+        "name": "disabled_smart_expiry_bridge_absent",
+        "pass": true
+      },
+      {
+        "name": "enabled_qrcode_bridge_rebuilt",
+        "pass": true
+      },
+      {
+        "name": "enabled_subinfo_core_bridge_rebuilt",
+        "pass": true
+      },
+      {
+        "name": "not_restored_by_sql_and_env:storage/app/migration-proof.bin",
+        "pass": true
+      },
+      {
+        "name": "not_restored_by_sql_and_env:storage/qrcodeextend/migration-proof.bin",
+        "pass": true
+      },
+      {
+        "name": "not_restored_by_sql_and_env:storage/app/node_endpoint/trust-bundle.pem",
+        "pass": true
+      },
+      {
+        "name": "fresh_database_retained",
+        "pass": true
+      },
+      {
+        "name": "old_8080_root_state_unchanged",
+        "pass": true
+      },
+      {
+        "name": "old_administrator_login",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "old_user_login",
+        "pass": true
+      },
+      {
+        "name": "old_user_uuid_balance_plan",
+        "pass": true
+      },
+      {
+        "name": "old_subscription_token",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "original_machine_id_token_and_node",
+        "pass": true
+      },
+      {
+        "name": "old_8080_website_still_online",
+        "pass": true
+      }
+    ],
+    "all_business_table_value_digests_match_source": true,
+    "original_plugin_configuration_digest_matches_source": true,
+    "existing_8080_root_state_unchanged": true,
+    "background_services": "This secondary case verified restore and web behavior; primary case A exercised the actual Horizon and minute schedule."
+  },
+  "all_named_checks_passed": true,
+  "total_named_checks": 56,
+  "recovered": [
+    "Old administrator and user password login",
+    "Users, plans, groups, balances, traffic, orders and settings",
+    "Original user UUID/subscription token and machine/node identity/token",
+    "Original APP_KEY and plugin configuration",
+    "Original disabled/enabled plugin choices with disabled SmartExpiry bridge absent",
+    "Enabled QR public resources and SubInfo subscription integration rebuilt from fresh code",
+    "Website, subscription and machine authentication APIs",
+    "Primary restore site's Horizon and real minute schedule"
+  ],
+  "not_recovered_from_two_files": [
+    "Source uploads and custom file-based resources",
+    "Source QR private files",
+    "Original NodeEndpoint private CA/certificate/key files"
+  ],
+  "limitations": [
+    "Synthetic data; no production database or DNS was changed.",
+    "Backend rehearsal used native Ubuntu PHP-FPM; the tutorial maps environment preparation and SQL/file import to aaPanel.",
+    "Website HTTP/API behavior was tested on isolated LAN ports; production domain certificate issuance and DNS cutover were not exercised.",
+    "Machine authentication was tested; real Node data forwarding, WSS and external payment/email callbacks were not exercised.",
+    "Same panel version and bundled plugin versions; arbitrary old versions, custom plugin source and incompatible database upgrades are outside this run."
+  ]
+}
