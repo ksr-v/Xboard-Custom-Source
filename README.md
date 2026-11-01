@@ -83,20 +83,13 @@ Use the [v2026.11.01.1 native PHP-FPM installation guide](docs/installation/inst
 
 For native PHP-FPM, [install and verify OPcache for PHP 8.3](docs/installation/aapanel.zh-CN.md#php83-opcache). The current source uses fixed `simple` balancing for the production data pipeline, with one worker per queue by default. Explicit `HORIZON_DATA_PIPELINE_MAX` settings, including Docker entrypoint values, still apply. Existing release archives retain their original defaults.
 
-## init.sh 已完成，直接导入 SQL 和 .env 后如何恢复
+## init.sh 已完成：保持 cron 和 Supervisor 运行后恢复
 
-[导入后恢复教程](docs/installation/restore-sql-env-2026.11.01.1.zh-CN.md) · [严格按此顺序的实测记录](docs/verification/post-import-restore-20261101.json)
+新服务器已完成 `bash init.sh`，直接导入旧 SQL，并把旧 `.env` 放回网站根目录后，按[仅用命令恢复上线教程](docs/installation/restore-sql-env-2026.11.01.1.zh-CN.md)继续。前提是新机数据库和 Redis 连接已与旧 `.env` 匹配。
 
-前提是旧 SQL 已导入还原库、旧 `.env` 已放回与 `artisan` 同级。**不用退回导入前，也不再运行 init.sh。** 后续四步：
+**不暂停 cron 或 Supervisor，不修改旧 `.env`、Redis 前缀或其他配置文件。** 恢复命令清除新装缓存、按旧库的启停选择同步插件，并由 Supervisor 自动换代 Horizon 子进程；用旧账号和订阅验收后上线。
 
-1. **暂停新站的队列和计划任务。** 核对 `.env` 指向还原后的数据库及目标 Redis，保留原 `APP_KEY`，为缓存和队列使用本站独有的新前缀。
-2. **完整执行教程第 2 节的恢复代码块。** 它先修复权限、删除 fresh 编译配置，再按旧库的禁用标志清理新装插件残留；原配置和启停选择保持。
-3. **执行更新并恢复服务。** 同一代码块会运行 `update.sh --deployed-code --skip-endpoint` 和 `artisan up`；之后恢复 / 重启本站原有的 Horizon 与分钟任务，未配置的各建立一套。
-4. **用旧数据验收后上线。** 旧管理员密码、用户、套餐、余额流量、订单、旧订阅及插件状态检查正常后，再切换域名，旧站继续停止写入。
-
-本轮保留了新装配置缓存及全部插件桥接，**先直接导入 SQL 和旧 `.env`，之后才修复**，39 / 39 项检查通过。验证了缓存原来仍指向 fresh 库、禁用插件残留被清除、旧账号 / 订阅 / 机器身份及插件原状态恢复，真实 Horizon 与下一分钟调度正常；没有拷贝旧网站目录。
-
-两份文件不包含旧上传、二维码私有图片或原私有 CA。普通网站域名 HTTPS 可按新站配置上线；固定信任原私有 CA 的节点需另配信任。需要连同这些文件及原 CA 完整迁移时，再使用[完整迁移说明](docs/installation/backup-migrate-restore-2026.11.01.1.zh-CN.md)。
+[保持任务运行的实测记录](docs/verification/live-command-restore-20261101.json)：**70 / 70 项通过**，旧 `.env` 逐字节一致，cron 和 Supervisor 主 PID 不变，Horizon 自动加载原密钥和旧数据；精确重启本站 Horizon 子任务的备用步骤也通过。两份备份不包含旧上传和二维码私有图片；本教程不涉及 NodeEndpoint 私有 CA，需要完整文件迁移时参见[完整迁移说明](docs/installation/backup-migrate-restore-2026.11.01.1.zh-CN.md)。
 
 ## 📖 Documentation
 
@@ -119,7 +112,7 @@ For existing sites, follow the [v2026.11.01.1 native PHP-FPM update guide](docs/
 
 ### Migration Guides
 
-- [init.sh 已完成，导入 SQL 和 .env 后恢复上线](./docs/installation/restore-sql-env-2026.11.01.1.zh-CN.md)
+- [init.sh 已完成，保持 cron / Supervisor 运行，仅用命令恢复](./docs/installation/restore-sql-env-2026.11.01.1.zh-CN.md)
 - [完整文件及原 CA 迁移（需要时使用）](./docs/installation/backup-migrate-restore-2026.11.01.1.zh-CN.md)
 - [Migrate from v2board dev](./docs/en/migration/v2board-dev.md)
 - [Migrate from v2board 1.7.4](./docs/en/migration/v2board-1.7.4.md)

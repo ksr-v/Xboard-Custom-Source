@@ -1,0 +1,676 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "performed_on": "2026-11-01",
+  "timezone": "Asia/Shanghai",
+  "objective": "After a real fresh init, directly import old SQL and byte-identical old .env while cron and Supervisor continue running; restore the original website with release commands only.",
+  "environment": {
+    "source_host": "192.168.128.128",
+    "target_host": "192.168.128.129",
+    "os": "Ubuntu 24.04",
+    "php": "8.3.6 native PHP-FPM",
+    "database": "MariaDB 10.11.14",
+    "release": "v2026.11.01.1",
+    "site_user": "www-data",
+    "app": "/www/wwwroot/sql-env-live-test",
+    "http_port": 8084,
+    "database_name": "migration_fresh",
+    "isolation": "private mount, network and PID namespaces; independent MariaDB, Redis, Nginx, PHP-FPM, cron and Supervisor"
+  },
+  "recovery_inputs": {
+    "files": [
+      "SQL",
+      ".env"
+    ],
+    "source_env_byte_identical": true,
+    "source_env_sha256": "3589dfac8586b8019618bfd132d6b9c0d062854d2ac958855923d91ff56781c6",
+    "source_sql_sha256": "40194af015e0be2a8090006f9cf234e1993cb8b2a2bd6fa4f6c52502afb1cf5c",
+    "old_website_directories_copied": false,
+    "old_uploads_and_qr_private_files_copied": false
+  },
+  "state_at_import": {
+    "real_bash_init_completed": true,
+    "literal_sh_result": {
+      "returncode": 2,
+      "pipefail_rejected": true,
+      "sh_target": "/usr/bin/dash"
+    },
+    "fresh_config_cache_retained": true,
+    "fresh_config_cache_sha256": "967d6187e7376d90c07916337fdff217c2f1b6e123f00b53b293db27ae2070ed",
+    "fresh_plugin_bridges_retained": true,
+    "fresh_settings_cache_primed": true,
+    "real_cron_and_horizon_already_running": true,
+    "cron_supervisor_and_horizon_pids_unchanged_during_import": true,
+    "no_cleanup_before_import": true
+  },
+  "recovery_actions": {
+    "manual_configuration_edits": false,
+    "cron_or_supervisor_paused": false,
+    "permission_preparation": "update.sh --deployed-code --skip-endpoint --prepare-only",
+    "config_cache_clear": "artisan config:clear",
+    "settings_cache_clear": "artisan cache:forget admin_settings redis",
+    "disabled_bridge_choices_read_with_native_mysql": true,
+    "disabled_plugins_cleaned": [
+      "smart_expiry"
+    ],
+    "disabled_bridge_cleanup": "artisan xboard:plugin-online-update CODE --deactivate --no-interaction",
+    "normal_update": "update.sh --deployed-code --skip-endpoint",
+    "normal_update_includes_internal_horizon_terminate": true,
+    "additional_explicit_horizon_terminate_after_update": true,
+    "graceful_queue_restart": "artisan horizon:terminate; Supervisor automatically starts replacement",
+    "bring_online": "artisan up",
+    "old_env_and_existing_configuration_bytes_unchanged": true
+  },
+  "runtime_evidence": {
+    "pids_before": {
+      "mariadb": 61,
+      "redis": 72,
+      "php-fpm": 77,
+      "nginx": 80,
+      "cron": 162,
+      "horizon": 163,
+      "supervisord": 59
+    },
+    "pids_after": {
+      "mariadb": 61,
+      "redis": 72,
+      "php-fpm": 77,
+      "nginx": 80,
+      "cron": 162,
+      "horizon": 574,
+      "supervisord": 59
+    },
+    "worker_probes": [
+      {
+        "stage": "before-import",
+        "pid": 203,
+        "app_key_sha256": "4122c9d097c7214b67c006cacd4f3fbf6c0d7618387d32de8e17b99b625d1783",
+        "databaseName": "migration_fresh",
+        "app_name": "Fresh live panel",
+        "user_count": 1
+      },
+      {
+        "stage": "after-import-before-recovery",
+        "pid": 203,
+        "app_key_sha256": "4122c9d097c7214b67c006cacd4f3fbf6c0d7618387d32de8e17b99b625d1783",
+        "databaseName": "migration_fresh",
+        "app_name": "Fresh live panel",
+        "user_count": 4
+      },
+      {
+        "stage": "after-recovery",
+        "pid": 635,
+        "app_key_sha256": "981fa67ed8ffe924d4ac22fd5efbd56659d903052dd8c1d2c9661bd98c6b81db",
+        "databaseName": "migration_fresh",
+        "app_name": "Migration validated panel",
+        "user_count": 4
+      }
+    ],
+    "post_recovery_cron_unix_time": 1793529541,
+    "mysql_compatibility_binary": "/usr/bin/mysql",
+    "source_table_snapshot": {
+      "v2_user": {
+        "count": 4,
+        "sha256": "19dfc6af7d215b710ef61156538d8f01cc1b09829cc4efafb29236182a7c9f18"
+      },
+      "v2_plan": {
+        "count": 2,
+        "sha256": "43a375c78c665c8f5e4d111ab5033cb27c8465e267005675978ec64688cbca56"
+      },
+      "v2_server_group": {
+        "count": 2,
+        "sha256": "194f37403bcc62a00f7db4b797b015da9f816e471bd90693bd57f4304f08021e"
+      },
+      "v2_server": {
+        "count": 1,
+        "sha256": "eb36fee8f6587a056c169f625cc4dc14fde4219a0d035f869dc2000ded524d35"
+      },
+      "v2_server_machine": {
+        "count": 1,
+        "sha256": "0155bebd59398caa645b649fc5fbe3897d20727c40d6f7dcf7c5974c146e0388"
+      },
+      "v2_order": {
+        "count": 1,
+        "sha256": "c08c7050aa03b8c49293c55c2bc4482fe194352bef43f109020556b9b5bc646d"
+      },
+      "v2_settings": {
+        "count": 3,
+        "sha256": "e5c2253c8c1247bc6c46e2d99959a1e12f2a6bc05cbdf47cde3b1cc93e15acc5"
+      }
+    },
+    "plugin_state_sha256": "95193c7ff30691349486363c8067e1693e9e4e834d3fec79f83ef8e09740d226",
+    "app_key_sha256": "981fa67ed8ffe924d4ac22fd5efbd56659d903052dd8c1d2c9661bd98c6b81db",
+    "plugins": [
+      {
+        "code": "alipay_f2f",
+        "version": "1.0.0",
+        "is_enabled": 1
+      },
+      {
+        "code": "btcpay",
+        "version": "1.0.0",
+        "is_enabled": 1
+      },
+      {
+        "code": "coin_payments",
+        "version": "1.0.0",
+        "is_enabled": 1
+      },
+      {
+        "code": "coinbase",
+        "version": "1.0.0",
+        "is_enabled": 1
+      },
+      {
+        "code": "epay",
+        "version": "1.0.0",
+        "is_enabled": 1
+      },
+      {
+        "code": "flowscope",
+        "version": "2.4.0",
+        "is_enabled": 0
+      },
+      {
+        "code": "mgate",
+        "version": "1.0.0",
+        "is_enabled": 1
+      },
+      {
+        "code": "node_endpoint",
+        "version": "1.1.3",
+        "is_enabled": 1
+      },
+      {
+        "code": "qrcodeextend",
+        "version": "1.3.1",
+        "is_enabled": 1
+      },
+      {
+        "code": "smart_expiry",
+        "version": "1.2.0",
+        "is_enabled": 0
+      },
+      {
+        "code": "subinfo_customizer",
+        "version": "1.0.1",
+        "is_enabled": 1
+      },
+      {
+        "code": "telegram",
+        "version": "1.0.1",
+        "is_enabled": 1
+      }
+    ],
+    "app_configuration_files_checked": 27,
+    "namespace_configuration_files_checked": 7,
+    "host_configuration_files_checked": 127,
+    "host_master_pids": [
+      {
+        "pid": 74167,
+        "name": "redis-server",
+        "unchanged": true
+      },
+      {
+        "pid": 82049,
+        "name": "cron",
+        "unchanged": true
+      },
+      {
+        "pid": 94158,
+        "name": "nginx",
+        "unchanged": true
+      },
+      {
+        "pid": 94291,
+        "name": "mariadbd",
+        "unchanged": true
+      },
+      {
+        "pid": 95142,
+        "name": "php-fpm8.3",
+        "unchanged": true
+      },
+      {
+        "pid": 95212,
+        "name": "supervisord",
+        "unchanged": true
+      },
+      {
+        "pid": 95256,
+        "name": "php8.3",
+        "unchanged": true
+      },
+      {
+        "pid": 100695,
+        "name": "php8.3",
+        "unchanged": true
+      },
+      {
+        "pid": 105835,
+        "name": "php8.3",
+        "unchanged": true
+      }
+    ],
+    "namespace_isolation_checks": {
+      "mnt": true,
+      "net": true,
+      "pid": true
+    },
+    "private_mount_checks": {
+      "/var/lib/mysql": true,
+      "/var/lib/redis": true,
+      "/run/mysqld/mysqld.sock": true,
+      "/etc/nginx/nginx.conf": true,
+      "/etc/cron.d": true
+    },
+    "pids_after_fallback": {
+      "mariadb": 61,
+      "redis": 72,
+      "php-fpm": 77,
+      "nginx": 80,
+      "cron": 162,
+      "horizon": 900,
+      "supervisord": 59
+    }
+  },
+  "verification": {
+    "passed": 70,
+    "total": 70,
+    "checks": [
+      {
+        "name": "recovery_script_completed_successfully",
+        "pass": true
+      },
+      {
+        "name": "real_fresh_init_before_import",
+        "pass": true
+      },
+      {
+        "name": "literal_sh_init_rejected_by_dash_but_bash_init_completed",
+        "pass": true
+      },
+      {
+        "name": "old_env_restored_byte_for_byte_and_still_unchanged",
+        "pass": true
+      },
+      {
+        "name": "fresh_compiled_configuration_retained_at_import",
+        "pass": true
+      },
+      {
+        "name": "compiled_configuration_cleared_with_native_artisan",
+        "pass": true
+      },
+      {
+        "name": "recovery_uses_release_commands_and_read_only_sql",
+        "pass": true
+      },
+      {
+        "name": "v2_user_all_values_and_count_match_source",
+        "pass": true,
+        "rows": 4,
+        "sha256": "19dfc6af7d215b710ef61156538d8f01cc1b09829cc4efafb29236182a7c9f18"
+      },
+      {
+        "name": "v2_plan_all_values_and_count_match_source",
+        "pass": true,
+        "rows": 2,
+        "sha256": "43a375c78c665c8f5e4d111ab5033cb27c8465e267005675978ec64688cbca56"
+      },
+      {
+        "name": "v2_server_group_all_values_and_count_match_source",
+        "pass": true,
+        "rows": 2,
+        "sha256": "194f37403bcc62a00f7db4b797b015da9f816e471bd90693bd57f4304f08021e"
+      },
+      {
+        "name": "v2_server_all_values_and_count_match_source",
+        "pass": true,
+        "rows": 1,
+        "sha256": "eb36fee8f6587a056c169f625cc4dc14fde4219a0d035f869dc2000ded524d35"
+      },
+      {
+        "name": "v2_server_machine_all_values_and_count_match_source",
+        "pass": true,
+        "rows": 1,
+        "sha256": "0155bebd59398caa645b649fc5fbe3897d20727c40d6f7dcf7c5974c146e0388"
+      },
+      {
+        "name": "v2_order_all_values_and_count_match_source",
+        "pass": true,
+        "rows": 1,
+        "sha256": "c08c7050aa03b8c49293c55c2bc4482fe194352bef43f109020556b9b5bc646d"
+      },
+      {
+        "name": "v2_settings_all_values_and_count_match_source",
+        "pass": true,
+        "rows": 3,
+        "sha256": "e5c2253c8c1247bc6c46e2d99959a1e12f2a6bc05cbdf47cde3b1cc93e15acc5"
+      },
+      {
+        "name": "original_app_key_restored",
+        "pass": true
+      },
+      {
+        "name": "original_plugin_flags_versions_and_configuration",
+        "pass": true
+      },
+      {
+        "name": "http_cli_database_credentials_match_unedited_old_env",
+        "pass": true
+      },
+      {
+        "name": "old_database_name_and_settings_restored",
+        "pass": true
+      },
+      {
+        "name": "disabled_smart_expiry_and_flowscope_remain_disabled",
+        "pass": true
+      },
+      {
+        "name": "enabled_qrcode_and_subinfo_remain_enabled",
+        "pass": true
+      },
+      {
+        "name": "disabled_smart_expiry_admin_bridge_removed",
+        "pass": true
+      },
+      {
+        "name": "enabled_qrcode_admin_bridge_rebuilt",
+        "pass": true
+      },
+      {
+        "name": "enabled_subinfo_core_bridge_rebuilt",
+        "pass": true
+      },
+      {
+        "name": "old_upload_not_recovered_from_sql_and_env",
+        "pass": true
+      },
+      {
+        "name": "old_qr_private_file_not_recovered_from_sql_and_env",
+        "pass": true
+      },
+      {
+        "name": "native_mysql_compatibility_command_available",
+        "pass": true
+      },
+      {
+        "name": "native_mysql_tcp_query_with_old_env_account_returns_only_smart_expiry",
+        "pass": true,
+        "returned_codes": [
+          "smart_expiry"
+        ]
+      },
+      {
+        "name": "website_home_online",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "original_admin_entry_online",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "old_admin_password_login",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "old_user_password_login",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "old_user_uuid_balance_plan_and_traffic_limits",
+        "pass": true
+      },
+      {
+        "name": "old_subscription_token_returns_original_node",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "subscription_usage_header_present",
+        "pass": true
+      },
+      {
+        "name": "old_machine_id_and_token_authenticate_original_node",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "rebuilt_qrcode_resource_qrcodeextend.js",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "rebuilt_qrcode_resource_qrcodeextend.css",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "fresh_horizon_executed_real_job_before_import",
+        "pass": true
+      },
+      {
+        "name": "running_worker_was_stale_after_sql_env_import",
+        "pass": true
+      },
+      {
+        "name": "restored_horizon_executed_real_job_with_old_key_and_settings",
+        "pass": true
+      },
+      {
+        "name": "queue_worker_pid_changed_after_graceful_restart",
+        "pass": true
+      },
+      {
+        "name": "only_one_after_recovery_probe_was_dispatched",
+        "pass": true
+      },
+      {
+        "name": "horizon_reports_running",
+        "pass": true
+      },
+      {
+        "name": "cron_and_supervisor_were_not_paused_at_import_or_recovery",
+        "pass": true
+      },
+      {
+        "name": "horizon_master_was_automatically_replaced",
+        "pass": true
+      },
+      {
+        "name": "restored_services_keep_recovery_pids",
+        "pass": true
+      },
+      {
+        "name": "all_other_service_master_pids_unchanged",
+        "pass": true
+      },
+      {
+        "name": "actual_new_minute_cron_fired_after_recovery",
+        "pass": true
+      },
+      {
+        "name": "actual_post_recovery_scheduler_produced_output",
+        "pass": true
+      },
+      {
+        "name": "post_recovery_scheduler_has_no_fatal_database_or_permission_error",
+        "pass": true
+      },
+      {
+        "name": "env_config_php_composer_and_install_scripts_unchanged",
+        "pass": true
+      },
+      {
+        "name": "nginx_fpm_supervisor_cron_and_probe_configuration_unchanged",
+        "pass": true
+      },
+      {
+        "name": "prior_host_website_8080_still_online",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "prior_host_website_8081_still_online",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "prior_host_website_8082_still_online",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "prior_host_website_8083_still_online",
+        "pass": true,
+        "http_status": 200
+      },
+      {
+        "name": "all_host_service_configuration_and_node_root_files_unchanged",
+        "pass": true
+      },
+      {
+        "name": "all_preexisting_host_service_and_horizon_master_pids_preserved",
+        "pass": true
+      },
+      {
+        "name": "test_mount_network_and_pid_namespaces_remain_isolated",
+        "pass": true
+      },
+      {
+        "name": "test_data_socket_and_service_mounts_are_distinct_from_host",
+        "pass": true
+      },
+      {
+        "name": "fallback_begins_after_successful_automatic_recovery",
+        "pass": true
+      },
+      {
+        "name": "fallback_horizon_program_has_new_running_master",
+        "pass": true
+      },
+      {
+        "name": "fallback_cron_supervisor_and_other_master_pids_preserved",
+        "pass": true
+      },
+      {
+        "name": "fallback_real_queue_job_reads_original_key_settings_and_data",
+        "pass": true
+      },
+      {
+        "name": "fallback_horizon_status_running",
+        "pass": true
+      },
+      {
+        "name": "fallback_old_env_app_config_and_install_scripts_unchanged",
+        "pass": true
+      },
+      {
+        "name": "fallback_nginx_fpm_supervisor_cron_and_probe_configuration_unchanged",
+        "pass": true
+      },
+      {
+        "name": "fallback_main_automatic_recovery_evidence_file_unchanged",
+        "pass": true
+      },
+      {
+        "name": "fallback_preexisting_host_service_master_pids_preserved",
+        "pass": true
+      },
+      {
+        "name": "fallback_host_service_configuration_and_node_root_unchanged",
+        "pass": true
+      }
+    ]
+  },
+  "state": "website_login_subscription_machine_auth_scheduler_and_queue_online",
+  "limits": [
+    "The tested target is an isolated native PHP-FPM Ubuntu VM; no aaPanel UI actions were performed.",
+    "No production DNS cutover, public HTTPS deployment, real node traffic forwarding, WSS, or private-CA recovery was tested.",
+    "SQL and .env do not include original uploads or QR private files.",
+    "Seven-table comparisons run before HTTP acceptance; user last_login_at, last_login_ip and updated_at are excluded exactly as in the source baseline, because login acceptance updates these fields.",
+    "The additional queue probe job was created during fixture setup; its bytes were unchanged during recovery.",
+    "Read-only mysql credential acceptance uses MYSQL_PWD only in the private child process environment; the documented operator command uses interactive -p instead."
+  ],
+  "precise_program_restart_fallback": {
+    "command": "supervisorctl -c /etc/supervisor/supervisord.conf restart horizon",
+    "scope": "Only the isolated test site Horizon program, not the supervisord or cron service.",
+    "pids_before": {
+      "mariadb": 61,
+      "redis": 72,
+      "php-fpm": 77,
+      "nginx": 80,
+      "cron": 162,
+      "horizon": 574,
+      "supervisord": 59
+    },
+    "pids_after": {
+      "mariadb": 61,
+      "redis": 72,
+      "php-fpm": 77,
+      "nginx": 80,
+      "cron": 162,
+      "horizon": 900,
+      "supervisord": 59
+    },
+    "real_worker_probe": {
+      "stage": "after-supervisor-fallback",
+      "pid": 938,
+      "app_key_sha256": "981fa67ed8ffe924d4ac22fd5efbd56659d903052dd8c1d2c9661bd98c6b81db",
+      "databaseName": "migration_fresh",
+      "app_name": "Migration validated panel",
+      "user_count": 4
+    },
+    "primary_recovery_evidence_unchanged": true,
+    "passed": 10,
+    "total": 10,
+    "checks": [
+      {
+        "name": "fallback_begins_after_successful_automatic_recovery",
+        "pass": true
+      },
+      {
+        "name": "fallback_horizon_program_has_new_running_master",
+        "pass": true
+      },
+      {
+        "name": "fallback_cron_supervisor_and_other_master_pids_preserved",
+        "pass": true
+      },
+      {
+        "name": "fallback_real_queue_job_reads_original_key_settings_and_data",
+        "pass": true
+      },
+      {
+        "name": "fallback_horizon_status_running",
+        "pass": true
+      },
+      {
+        "name": "fallback_old_env_app_config_and_install_scripts_unchanged",
+        "pass": true
+      },
+      {
+        "name": "fallback_nginx_fpm_supervisor_cron_and_probe_configuration_unchanged",
+        "pass": true
+      },
+      {
+        "name": "fallback_main_automatic_recovery_evidence_file_unchanged",
+        "pass": true
+      },
+      {
+        "name": "fallback_preexisting_host_service_master_pids_preserved",
+        "pass": true
+      },
+      {
+        "name": "fallback_host_service_configuration_and_node_root_unchanged",
+        "pass": true
+      }
+    ]
+  }
+}
