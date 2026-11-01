@@ -1,0 +1,454 @@
+{
+  "schema_version": 1,
+  "result": "PASS",
+  "performed_on": "2026-11-01",
+  "timezone": "Asia/Shanghai",
+  "scope": "Real backup and restore between two independent Ubuntu VMs, using synthetic application data and the official v2026.11.01.1 native release.",
+  "release": {
+    "tag": "v2026.11.01.1",
+    "commit": "ff8d814a97b340685b8fc229bf179d43f2e66382",
+    "archive_sha256": "96507f6125a917dce5f8989950cef0b80f7c5db99f8c1151a2b5410b6f6ea856",
+    "composer_version": "2.10.3"
+  },
+  "environment": {
+    "source": {
+      "host": "192.168.128.128",
+      "php": "PHP 8.3.6 (cli) (built: Oct 19 2026 15:16:58) (NTS)",
+      "database": "10.11.14-MariaDB-0ubuntu0.24.04.1",
+      "fresh_native_init_completed": true
+    },
+    "target": {
+      "host": "192.168.128.129",
+      "php": "PHP 8.3.6 (cli) (built: Oct 19 2026 15:16:58) (NTS)",
+      "database": "10.11.14-MariaDB-0ubuntu0.24.04.1",
+      "fresh_native_init": {
+        "stage": "ready",
+        "exit_code": 0
+      }
+    },
+    "app": "/www/wwwroot/migration-test",
+    "app_user": "www-data",
+    "uid": 33,
+    "php_binary": "/usr/bin/php8.3",
+    "nginx_binary": "/usr/sbin/nginx",
+    "web_test_port": 8080,
+    "node_https_port": 8443
+  },
+  "procedure": [
+    "Install the official release through real init.sh independently on both empty VMs, including Nginx/FPM, MySQL, Redis, five bundled feature plugins, Root CA and helper.",
+    "Create synthetic users, plan, completed order, machine/node, balances/traffic, private files and two intentionally disabled plugins on the source.",
+    "Enter source maintenance, drain exactly seven synthetic node_sync jobs with a controlled --force worker, confirm all measured queues empty; no notification jobs are processed.",
+    "Create a consistent SQL dump, matching application runtime/private file archive and complete Root state plus the owned Nginx configuration and source vhost.",
+    "Transfer the private bundle directly between authenticated SSH streams without storing SQL or credentials in the local repository.",
+    "Retain target fresh database/files/Root state; import into a new empty migration_restored database, restore original APP_KEY, files and source Nginx layout, and run application update with target-local Redis.",
+    "Resolve the target explicit-IP-to-wildcard Nginx listener collision; restore the original CA, sign a new target-IP leaf certificate and regenerate the target helper policy.",
+    "Compare source values/digests before login and runtime writes, then verify old credentials, subscriptions, authenticated machine API, wrong-key rejection, helper permissions and actual Horizon/cron operation."
+  ],
+  "backup": {
+    "complete_bundle_sha256": "351dd0cbe273d81ae0a1e1312fbdd89755b085ae0972a97f797062a019fb34c4",
+    "complete_bundle_bytes": 5209549,
+    "private_bundle_mode": "0o600",
+    "compressed_database_bytes": 19554,
+    "source_table_counts": {
+      "v2_user": 4,
+      "v2_plan": 2,
+      "v2_server_group": 2,
+      "v2_server": 1,
+      "v2_server_machine": 1,
+      "v2_order": 1,
+      "v2_settings": 3
+    },
+    "drained_synthetic_jobs": {
+      "done": 7,
+      "fail": 0
+    },
+    "queues_at_final_backup": {
+      "traffic_fetch": 0,
+      "stat": 0,
+      "user_alive_sync": 0,
+      "default": 0,
+      "order_handle": 0,
+      "send_email": 0,
+      "node_sync": 0
+    },
+    "original_app_key_and_root_ca_included": true
+  },
+  "restored_database": {
+    "name": "migration_restored",
+    "fresh_database_name": "migration_fresh",
+    "fresh_database_retained": true,
+    "backup_member_digests_verified": true,
+    "target_redis_isolated": true,
+    "source_root_layout_restored": true,
+    "original_fresh_vs_source_layout": {
+      "app": {
+        "source": "/www/wwwroot/migration-test",
+        "target": "/www/wwwroot/migration-test",
+        "equal": true
+      },
+      "app_user": {
+        "source": "www-data",
+        "target": "www-data",
+        "equal": true
+      },
+      "php": {
+        "source": "/usr/bin/php8.3",
+        "target": "/usr/bin/php8.3",
+        "equal": true
+      },
+      "source_site": {
+        "source": "/etc/nginx/sites-enabled/migration-test.conf",
+        "target": "/etc/nginx/conf.d/xboard-migration-test.conf",
+        "equal": false
+      },
+      "site_name": {
+        "source": "migration-test.local",
+        "target": "192.168.128.129",
+        "equal": false
+      },
+      "include_dir": {
+        "source": "/etc/nginx/sites-enabled",
+        "target": "/etc/nginx/conf.d",
+        "equal": false
+      },
+      "backend": {
+        "source": "unix:/run/php/php8.3-fpm.sock",
+        "target": "unix:/run/php/php8.3-fpm.sock",
+        "equal": true
+      }
+    }
+  },
+  "verification": {
+    "data_and_files": {
+      "checks": [
+        {
+          "name": "v2_user_rows_and_values",
+          "pass": true,
+          "rows": 4
+        },
+        {
+          "name": "v2_plan_rows_and_values",
+          "pass": true,
+          "rows": 2
+        },
+        {
+          "name": "v2_server_group_rows_and_values",
+          "pass": true,
+          "rows": 2
+        },
+        {
+          "name": "v2_server_rows_and_values",
+          "pass": true,
+          "rows": 1
+        },
+        {
+          "name": "v2_server_machine_rows_and_values",
+          "pass": true,
+          "rows": 1
+        },
+        {
+          "name": "v2_order_rows_and_values",
+          "pass": true,
+          "rows": 1
+        },
+        {
+          "name": "v2_settings_rows_and_values",
+          "pass": true,
+          "rows": 3
+        },
+        {
+          "name": "app_key_sha256_preserved",
+          "pass": true
+        },
+        {
+          "name": "plugin_state_sha256_preserved",
+          "pass": true
+        },
+        {
+          "name": "admin_runtime_sha256_preserved",
+          "pass": true
+        },
+        {
+          "name": "ca_credentials_preserved",
+          "pass": true
+        },
+        {
+          "name": "storage/app/migration-proof.bin_preserved",
+          "pass": true
+        },
+        {
+          "name": "storage/qrcodeextend/migration-proof.bin_preserved",
+          "pass": true
+        },
+        {
+          "name": "storage/app/node_endpoint/trust-bundle.pem_preserved",
+          "pass": true
+        },
+        {
+          "name": "fresh_database_retained",
+          "pass": true
+        }
+      ],
+      "passed": 15,
+      "total": 15,
+      "plugins": [
+        {
+          "code": "alipay_f2f",
+          "version": "1.0.0",
+          "is_enabled": 1
+        },
+        {
+          "code": "btcpay",
+          "version": "1.0.0",
+          "is_enabled": 1
+        },
+        {
+          "code": "coin_payments",
+          "version": "1.0.0",
+          "is_enabled": 1
+        },
+        {
+          "code": "coinbase",
+          "version": "1.0.0",
+          "is_enabled": 1
+        },
+        {
+          "code": "epay",
+          "version": "1.0.0",
+          "is_enabled": 1
+        },
+        {
+          "code": "flowscope",
+          "version": "2.4.0",
+          "is_enabled": 0
+        },
+        {
+          "code": "mgate",
+          "version": "1.0.0",
+          "is_enabled": 1
+        },
+        {
+          "code": "node_endpoint",
+          "version": "1.1.3",
+          "is_enabled": 1
+        },
+        {
+          "code": "qrcodeextend",
+          "version": "1.3.1",
+          "is_enabled": 1
+        },
+        {
+          "code": "smart_expiry",
+          "version": "1.2.0",
+          "is_enabled": 0
+        },
+        {
+          "code": "subinfo_customizer",
+          "version": "1.0.1",
+          "is_enabled": 1
+        },
+        {
+          "code": "telegram",
+          "version": "1.0.1",
+          "is_enabled": 1
+        }
+      ]
+    },
+    "web_and_runtime": {
+      "checks": [
+        {
+          "name": "old_administrator_password_login",
+          "pass": true,
+          "http_status": 200
+        },
+        {
+          "name": "old_user_password_login",
+          "pass": true,
+          "http_status": 200
+        },
+        {
+          "name": "old_user_uuid_balance_and_plan",
+          "pass": true
+        },
+        {
+          "name": "original_subscription_token_and_real_node",
+          "pass": true,
+          "http_status": 200
+        },
+        {
+          "name": "subscription_traffic_header",
+          "pass": true
+        },
+        {
+          "name": "original_machine_id_and_token_over_original_ca_tls",
+          "pass": true,
+          "http_status": 200
+        },
+        {
+          "name": "invalid_machine_token_rejected",
+          "pass": true,
+          "http_status": 403
+        },
+        {
+          "name": "source_remains_in_maintenance",
+          "pass": true,
+          "http_status": 503
+        },
+        {
+          "name": "wrong_app_key_cannot_decrypt_original_ca_credential",
+          "pass": true
+        },
+        {
+          "name": "restored_target_horizon_running",
+          "pass": true
+        },
+        {
+          "name": "restored_target_minute_cron_executed",
+          "pass": true
+        },
+        {
+          "name": "minute_schedule_no_fatal_error",
+          "pass": true
+        },
+        {
+          "name": "restored_schedule_table_loads",
+          "pass": true
+        }
+      ],
+      "passed": 13,
+      "total": 13,
+      "limitations": [
+        "synthetic rehearsal data",
+        "no production DNS switch",
+        "no real Node data-plane or WSS connection",
+        "no external payment/email callback test"
+      ]
+    },
+    "final_services_and_permissions": {
+      "checks": [
+        {
+          "name": "helper_available_through_authenticated_php_fpm",
+          "pass": true
+        },
+        {
+          "name": "helper_policy_rebound_to_target_app_user",
+          "pass": true
+        },
+        {
+          "name": "helper_reports_restored_endpoint_new_ip",
+          "pass": true
+        },
+        {
+          "name": "all_target_runtime_services_active",
+          "pass": true
+        },
+        {
+          "name": "no_failed_jobs_after_restore",
+          "pass": true,
+          "count": 0
+        },
+        {
+          "name": "production_flow_queues_have_one_worker_each",
+          "pass": true,
+          "workers": {
+            "traffic_fetch": 1,
+            "stat": 1,
+            "user_alive_sync": 1
+          }
+        }
+      ],
+      "passed": 6,
+      "total": 6,
+      "services": {
+        "nginx": "active",
+        "php8.3-fpm": "active",
+        "mariadb": "active",
+        "redis-server": "active",
+        "supervisor": "active",
+        "cron": "active",
+        "nodeendpoint-web-manager": "active"
+      }
+    },
+    "total_named_checks": 34,
+    "all_named_checks_passed": true,
+    "documented_ordered_sql_dump_and_cmp": {
+      "pass": true,
+      "data_bytes": 10881,
+      "sha256": "99562711304115d6f7aa7277e099058ab3214205577f670d2cfe2de15c1b2248",
+      "source_data_bytes": 10881,
+      "source_sha256": "99562711304115d6f7aa7277e099058ab3214205577f670d2cfe2de15c1b2248",
+      "source_client_version": "mariadb-dump  Ver 10.19 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86_64)",
+      "target_client_version": "mariadb-dump  Ver 10.19 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86_64)",
+      "source_options": [
+        "--single-transaction",
+        "--quick",
+        "--hex-blob",
+        "--no-create-info",
+        "--skip-comments",
+        "--compact",
+        "--skip-extended-insert",
+        "--complete-insert",
+        "--order-by-primary",
+        "--no-tablespaces"
+      ],
+      "target_options": [
+        "--single-transaction",
+        "--quick",
+        "--hex-blob",
+        "--no-create-info",
+        "--skip-comments",
+        "--compact",
+        "--skip-extended-insert",
+        "--complete-insert",
+        "--order-by-primary",
+        "--no-tablespaces"
+      ],
+      "validation_database": "migration_dump_validation",
+      "original_application_databases_untouched": true
+    }
+  },
+  "endpoint": {
+    "status": "original_ca_restored_new_server_certificate_verified",
+    "original_ca_preserved": true,
+    "new_ip_san_verified": true,
+    "server_certificate_changed": true,
+    "source_certificate_sha256": "2d62d58e1c1e39d115bd1a15bc550a6a6fec9f18d93360fbd0fb3bc5fd1463bd",
+    "target_tls": {
+      "certificate_sha256": "89b6b53c53624eeab22beec0fc375b103c13c7d1fea82336021c995303275a75",
+      "san": [
+        [
+          "IP Address",
+          "192.168.128.129"
+        ]
+      ],
+      "protocol": "TLSv1.3"
+    },
+    "helper_reinstalled_for_target": true,
+    "helper_socket_ready": true
+  },
+  "observed_issue_and_resolution": {
+    "issue": "The fresh target vhost bound 192.168.128.129:8080, while the restored source vhost used wildcard listen 8080. Nginx reload returned success but logged bind EADDRINUSE and left the old workers and fresh CA certificate active.",
+    "safety_behavior": "The official Root manager failed strict TLS verification and automatically rolled back its entry transaction.",
+    "resolution": "On the isolated target's sole site, validate configuration and restart Nginx to apply the restored listener layout, then repair the target address under the original CA and regenerate the local helper policy.",
+    "tls_verification_was_not_disabled": true
+  },
+  "final_state": {
+    "source_in_maintenance": true,
+    "target_restored_site_active": true,
+    "target_horizon_running": true,
+    "target_single_minute_schedule_executed": true,
+    "original_ca_preserved": true,
+    "target_certificate_san": "192.168.128.129",
+    "fresh_target_recovery_copies_retained": true,
+    "private_backups_retained_only_on_test_vms": true,
+    "production_hosts_untouched": true
+  },
+  "limitations": [
+    "Synthetic rehearsal data; no production user database was migrated.",
+    "No production DNS or load balancer cutover.",
+    "Machine authentication was tested over real verified HTTPS; no real Node data forwarding or authenticated WSS connection was exercised.",
+    "No external payment/email callback, FlowScope collector migration or long-running load test.",
+    "Fresh recovery copies were preserved; a full reverse business-data cutover was not exercised.",
+    "Native PHP-FPM only; Docker, arbitrary old versions, different application/PHP paths and offline CA keys are outside this run."
+  ]
+}

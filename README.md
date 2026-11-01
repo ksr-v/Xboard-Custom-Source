@@ -4,6 +4,8 @@
 
 本版默认内置 NodeEndpoint **1.1.3**、SmartExpiry **1.2.0**、QRCode Extend **1.3.1**、FlowScope **2.4.0** 和 SubInfoCustomizer **1.0.1**，全新安装自动安装并启用五项。安装教程固定下载 `v2026.11.01.1` 的正式归档，并单独核对 `xboard.tar.gz` 的摘要，随后配置网站、节点通讯入口、定时调度和队列守护。
 
+迁移到新服务器使用[本版备份、迁移与还原教程](docs/installation/backup-migrate-restore-2026.11.01.1.zh-CN.md)：已在两台独立测试 VM 上完成全新安装、数据库及文件还原、原 CA 迁移和登录 / 订阅验收。数据库之外还须保留原 `.env` / APP_KEY、插件与私有文件；完整流程和实测边界见下方“备份迁移与还原”。
+
 本发行提供完整原生源码归档和校验资产，按既有备份及维护流程部署；OPcache 扩展仍须在 aaPanel 的实际 PHP 8.3 中另行安装。已验证的现场队列切换不代表本次完整归档已完成生产升级或吞吐测试。下方旧版本和固定 tag 教程保留历史归属，旧归档不会自动获得新默认值。
 
 **2026.10.31.2** 提供默认最新 Node 对接、网页插件一键更新和 SSH 面板与插件批量更新。五个独立插件分别跟随各自仓库的最新正式发行，七个核心插件跟随面板发行；更新保留配置、启停选择与二维码私有文件。NodeEndpoint 为 **1.1.3**，内置二维码源码为 **1.3.1**。详见[本次变化](docs/releases/v2026.10.31.2.md)和[在线更新说明](docs/operations/plugin-online-update.zh-CN.md)。下方版本与教程保留历史记录。
@@ -81,6 +83,22 @@ Use the [v2026.11.01.1 native PHP-FPM installation guide](docs/installation/inst
 
 For native PHP-FPM, [install and verify OPcache for PHP 8.3](docs/installation/aapanel.zh-CN.md#php83-opcache). The current source uses fixed `simple` balancing for the production data pipeline, with one worker per queue by default. Explicit `HORIZON_DATA_PIPELINE_MAX` settings, including Docker entrypoint values, still apply. Existing release archives retain their original defaults.
 
+## 备份迁移与还原（v2026.11.01.1）
+
+完整命令见[备份、迁移与还原教程](docs/installation/backup-migrate-restore-2026.11.01.1.zh-CN.md)，实测结果见[跨服务器验证记录](docs/verification/backup-migrate-restore-20261101.json)。流程为：
+
+1. **源站停止新增写入。** 暂停本站调度，隔离外部写入，先处理完 Redis 待执行任务，再进入维护并停 Horizon / WS。默认 worker 在维护模式下会暂停取任务，不能先 `down` 再等默认队列排空。
+2. **备份数据库及配套文件。** 导出一致性 SQL，保留原 `.env` / APP_KEY、同版 `app/` / `public/` 运行资源、实际插件、`storage/app/`、`storage/qrcodeextend/` 和自定义资源。节点入口另备份完整 `/var/lib/node-endpoint` 及它拥有的两份 Nginx 配置；核对摘要后私下传输。
+3. **新服务器先安装同版空面板。** 按[全新安装教程](docs/installation/install-2026.11.01.1.zh-CN.md)执行 `init.sh`，保留 fresh 数据库、文件和 Root 状态作回退，暂不启动该站的调度和队列。
+4. **旧 SQL 导入另一个空库。** 使用独立还原库和账号，不把旧数据混入 fresh 库。先比较表及关键业务值，数据库密码放在私有客户端配置中。
+5. **恢复源文件和原 APP_KEY。** 仅调整目标数据库、Redis、网站地址等环境差异；恢复同版实际运行快照，避免源站禁用的插件残留目标 fresh 桥接。清理编译缓存，通过 `update.sh --deployed-code --skip-endpoint` 完成权限、锁定依赖和应用更新，保留原启停选择。
+6. **恢复节点通讯信任。** 按教程核对原目录、网站用户、PHP 和 Nginx 布局，恢复原 CA 与配套状态，用正式工具为新地址重签服务器证书，再在目标重建助手授权。若监听绑定变化使热重载失败，先处理实际监听和旧 worker，不能关闭 TLS 校验绕过。
+7. **验收后切换。** 验证旧管理员密码、用户 UUID / Token、套餐、余额流量、订单、机器身份、实际订阅、私有文件及原 CA。再启动目标唯一的 Horizon 和分钟调度，确认自动执行；最后切换域名 / 入口，必要时更改已有 Node 的面板地址，保留身份、Token 和 CA，源站继续停止写入。
+
+还原后不重新运行 `init.sh`、`xboard:install` 或 `key:generate`，不全局替换 SQL 中的 IP / 域名，也不清空 Redis。目标开始接受新业务后，回退需要处理新增数据差异，不能直接指回旧库。
+
+本次在 `192.168.128.128 → 192.168.128.129` 的两台 Ubuntu / PHP 8.3 原生 VM 上实测：15 项数据与文件比较、13 项登录 / 订阅 / 调度验收、6 项助手与运行检查全部通过。原 CA 保持不变，新 IP 的证书经严格 TLS 验证；SmartExpiry、FlowScope 原禁用选择及实际运行资源保留，目标 fresh 库仍可用于回退。演练使用合成数据；生产 DNS 切换、真实 Node 数据转发、WSS 和外部支付 / 邮件回调不在本次验收范围内。
+
 ## 📖 Documentation
 
 ### 🔄 Upgrade Notice
@@ -101,6 +119,8 @@ For existing sites, follow the [v2026.11.01.1 native PHP-FPM update guide](docs/
 - [宝塔 / aaPanel + Docker](./docs/installation/aapanel-docker.zh-CN.md) / [English](./docs/en/installation/aapanel-docker.md)（新装一次确认；标准桥接布局支持宿主 Root 私有入口，见支持范围）
 
 ### Migration Guides
+
+- [备份、迁移与还原 v2026.11.01.1（数据库、文件与原 CA）](./docs/installation/backup-migrate-restore-2026.11.01.1.zh-CN.md)
 - [Migrate from v2board dev](./docs/en/migration/v2board-dev.md)
 - [Migrate from v2board 1.7.4](./docs/en/migration/v2board-1.7.4.md)
 - [Migrate from v2board 1.7.3](./docs/en/migration/v2board-1.7.3.md)
