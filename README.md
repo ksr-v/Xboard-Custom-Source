@@ -4,7 +4,7 @@
 
 本版默认内置 NodeEndpoint **1.1.3**、SmartExpiry **1.2.0**、QRCode Extend **1.3.1**、FlowScope **2.4.0** 和 SubInfoCustomizer **1.0.1**，全新安装自动安装并启用五项。安装教程固定下载 `v2026.11.01.1` 的正式归档，并单独核对 `xboard.tar.gz` 的摘要，随后配置网站、节点通讯入口、定时调度和队列守护。
 
-只备份了数据库 SQL 和原 `.env`，请使用[五步恢复上线教程](docs/installation/restore-sql-env-2026.11.01.1.zh-CN.md)：新机准备环境和干净源码，导入 SQL、放回原 `.env`，再执行更新命令即可恢复网站业务及插件设置。两种恢复路径均已实测，简要步骤见下方。
+新服务器已经完成 `init.sh`，并且已经导入旧 SQL、覆盖原 `.env`，请直接使用[导入后的恢复上线教程](docs/installation/restore-sql-env-2026.11.01.1.zh-CN.md)。已按这个顺序重测通过；后续会修复新装缓存和插件残留，再恢复旧网站业务与原启停选择。
 
 本发行提供完整原生源码归档和校验资产，按既有备份及维护流程部署；OPcache 扩展仍须在 aaPanel 的实际 PHP 8.3 中另行安装。已验证的现场队列切换不代表本次完整归档已完成生产升级或吞吐测试。下方旧版本和固定 tag 教程保留历史归属，旧归档不会自动获得新默认值。
 
@@ -83,27 +83,18 @@ Use the [v2026.11.01.1 native PHP-FPM installation guide](docs/installation/inst
 
 For native PHP-FPM, [install and verify OPcache for PHP 8.3](docs/installation/aapanel.zh-CN.md#php83-opcache). The current source uses fixed `simple` balancing for the production data pipeline, with one worker per queue by default. Explicit `HORIZON_DATA_PIPELINE_MAX` settings, including Docker entrypoint values, still apply. Existing release archives retain their original defaults.
 
-## 只用 SQL 和 .env 恢复上线
+## init.sh 已完成，直接导入 SQL 和 .env 后如何恢复
 
-[五步详细教程](docs/installation/restore-sql-env-2026.11.01.1.zh-CN.md) · [本轮实测记录](docs/verification/sql-env-only-restore-20261101.json)
+[导入后恢复教程](docs/installation/restore-sql-env-2026.11.01.1.zh-CN.md) · [严格按此顺序的实测记录](docs/verification/post-import-restore-20261101.json)
 
-1. **旧站备份两份文件：** 数据库 SQL 和网站根目录的原 `.env`；备份时暂停旧站写入。
-2. **新机准备环境与源码：** aaPanel / 宝塔安装 Nginx、PHP 8.3、Redis 和数据库，部署经过校验的同版干净源码，配置 `public/` 和 Laravel 伪静态。此时不要运行 `init.sh`。
-3. **导入并改连接：** 旧 SQL 导入新建空库，旧 `.env` 放回与 `artisan` 同级；只修改目标数据库、Redis 和网站地址，保留原 `APP_KEY`。
-4. **执行恢复命令：** 以 Root 在网站根目录运行下方命令，用户名和路径换成本机实际值。
-5. **启动并上线：** 按详细教程配置 Horizon 和每分钟调度，用旧账号登录、检查订阅后切换域名，旧站继续停止写入。
+前提是旧 SQL 已导入还原库、旧 `.env` 已放回与 `artisan` 同级。**不用退回导入前，也不再运行 init.sh。** 后续四步：
 
-```bash
-cd /www/wwwroot/你的域名
-bash update.sh --deployed-code --skip-endpoint \
-  --app-user www \
-  --php /www/server/php/83/bin/php \
-  --composer /opt/xboard-tools/composer-2.10.3.phar
-runuser -u www -- /www/server/php/83/bin/php artisan storage:link
-runuser -u www -- /www/server/php/83/bin/php artisan up
-```
+1. **暂停新站的队列和计划任务。** 核对 `.env` 指向还原后的数据库及目标 Redis，保留原 `APP_KEY`，为缓存和队列使用本站独有的新前缀。
+2. **完整执行教程第 2 节的恢复代码块。** 它先修复权限、删除 fresh 编译配置，再按旧库的禁用标志清理新装插件残留；原配置和启停选择保持。
+3. **执行更新并恢复服务。** 同一代码块会运行 `update.sh --deployed-code --skip-endpoint` 和 `artisan up`；之后恢复 / 重启本站原有的 Horizon 与分钟任务，未配置的各建立一套。
+4. **用旧数据验收后上线。** 旧管理员密码、用户、套餐、余额流量、订单、旧订阅及插件状态检查正常后，再切换域名，旧站继续停止写入。
 
-已实测旧账号、用户 UUID、套餐余额流量、订单、订阅、机器身份及插件原启停选择恢复，主流程 Horizon 和实际分钟任务正常；另测试了已经运行过 `init.sh` 的兼容步骤，见详细教程末尾。
+本轮保留了新装配置缓存及全部插件桥接，**先直接导入 SQL 和旧 `.env`，之后才修复**，39 / 39 项检查通过。验证了缓存原来仍指向 fresh 库、禁用插件残留被清除、旧账号 / 订阅 / 机器身份及插件原状态恢复，真实 Horizon 与下一分钟调度正常；没有拷贝旧网站目录。
 
 两份文件不包含旧上传、二维码私有图片或原私有 CA。普通网站域名 HTTPS 可按新站配置上线；固定信任原私有 CA 的节点需另配信任。需要连同这些文件及原 CA 完整迁移时，再使用[完整迁移说明](docs/installation/backup-migrate-restore-2026.11.01.1.zh-CN.md)。
 
@@ -128,7 +119,7 @@ For existing sites, follow the [v2026.11.01.1 native PHP-FPM update guide](docs/
 
 ### Migration Guides
 
-- [只用 SQL 和 .env 恢复上线（五步）](./docs/installation/restore-sql-env-2026.11.01.1.zh-CN.md)
+- [init.sh 已完成，导入 SQL 和 .env 后恢复上线](./docs/installation/restore-sql-env-2026.11.01.1.zh-CN.md)
 - [完整文件及原 CA 迁移（需要时使用）](./docs/installation/backup-migrate-restore-2026.11.01.1.zh-CN.md)
 - [Migrate from v2board dev](./docs/en/migration/v2board-dev.md)
 - [Migrate from v2board 1.7.4](./docs/en/migration/v2board-1.7.4.md)

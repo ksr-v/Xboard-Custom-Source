@@ -1,103 +1,91 @@
-# 只用 SQL 和 .env 恢复上线：v2026.11.01.1
+# 新服务器已完成 init.sh：导入 SQL 和 .env 后恢复上线
 
-适用场景：旧站只保存了数据库 SQL 和原 `.env`，希望在新服务器的 aaPanel / 宝塔、PHP 8.3 环境恢复用户、套餐、订单、余额流量、机器身份和插件设置。
+适用情况：新面板已经运行 `init.sh`，现在已导入旧 SQL、覆盖原 `.env`，需要恢复旧网站的业务数据、插件状态并上线。下面针对 `v2026.11.01.1` 同版、插件版本匹配的站点。
 
-主流程是：**部署干净同版源码 → 导入 SQL → 放回原 .env → 执行更新 → 启动服务**。这是恢复已有网站，不运行全新安装向导。
+**从导入完成这一刻继续即可，不需要回到导入前清理，也不再运行 init.sh。**
 
-如果新面板已经执行过 `init.sh`，先按[文末的兼容步骤](#已经在新服务器运行过-initsh)清理新装集成，再从第 3 步继续。
+## 1. 暂停新站任务，检查恢复后的 .env
 
-两份备份可恢复数据库中的业务与设置，原 `APP_KEY` 必须保留。
+如果新站已经配置了计划任务、Horizon / WS，先暂停它们，暂不切换域名到新站。
 
-## 1. 旧站只保存两份备份
+旧 SQL 应在专门的还原库中；不要与 fresh 数据混合。已经导入完成的，核对网站根目录的 `.env`：
 
-先暂停旧站计划任务并阻止新增写入，等队列处理完，再停 Horizon / WS 并进入维护。随后：
+- `DB_HOST / DB_PORT / DB_DATABASE / DB_USERNAME / DB_PASSWORD` 指向新服务器已导入旧 SQL 的数据库。
+- `REDIS_HOST / REDIS_PORT / REDIS_PASSWORD` 使用新服务器 Redis。
+- **保留旧站原 APP_KEY**，确认 `INSTALLED=true`、`APP_ENV=production`、`APP_DEBUG=false`。
+- `APP_URL` 填实际网站地址；若有 `DATABASE_URL`、`DB_SOCKET`、`REDIS_URL`，一并核对目标连接。
 
-1. 在 aaPanel / 宝塔的「数据库」中导出本站完整 SQL，下载到自己的电脑。
-2. 在旧网站根目录找到隐藏文件 `.env`，下载原文件。
-
-保存好这两个文件。SQL 和 `.env` 含业务及连接信息，不放进网站公开下载目录。确认还原成功前保留旧站，并让旧站继续停止写入。
-
-## 2. 新服务器准备环境和干净源码
-
-按[全新安装教程](install-2026.11.01.1.zh-CN.md)完成**第 1～3 节的环境、源码和网站配置**，停在运行 `init.sh` 之前：
-
-- 安装 Nginx、PHP 8.3、Redis、MySQL / MariaDB；PHP 扩展、函数和 Composer 按该教程准备。
-- 新建网站，把经过校验的 `v2026.11.01.1` 正式源码解压到该网站目录。
-- 网站运行目录设为 `public/`，PHP 选 8.3，设置 Laravel 伪静态，并为实际网站域名配置 HTTPS。
-
-**这里不要执行新装教程第 4 节的 `init.sh`，也不要生成新的 APP_KEY。**
-
-先用与旧站相同的面板版本恢复。若旧站单独升级过插件，新服务器还需准备匹配的插件版本；不要用更旧插件源码强行加载较新的数据库记录。
-
-以下命令把 `/www/wwwroot/你的域名` 换成实际网站根目录；`www` 和 PHP 路径按本站真实配置替换。
-
-## 3. 导入 SQL，上传并修改原 .env
-
-在新 aaPanel / 宝塔中创建一个**专门的空数据库**及账号，在该数据库的「导入」中选择旧 SQL。不要导入到其他业务库。
-
-把旧 `.env` 上传到新网站根目录，即与 `artisan` 同一目录，文件名保持为 `.env`。
-
-编辑这份 `.env`，只调整新服务器的连接和地址。下面是需要核对的项目，不要用示例值整份覆盖原文件：
+为避免读取新装阶段的缓存、接着处理 fresh 队列，在 `.env` 中使用本站独有的新前缀，例如：
 
 ```ini
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=新服务器已导入SQL的数据库名
-DB_USERNAME=该数据库账号
-DB_PASSWORD="该数据库密码"
-
-REDIS_HOST=127.0.0.1
-REDIS_PORT=6379
-REDIS_PASSWORD=null
-
-APP_URL=https://实际网站域名
-APP_ENV=production
+REDIS_PREFIX=restored_panel_
+CACHE_PREFIX=restored_panel_cache_
+HORIZON_PREFIX=restored_panel_horizon:
 ```
 
-**保留原 `APP_KEY`，并确认原文件中 `INSTALLED=true`。** 不使用新站生成的 key，不运行 `key:generate`。
+## 2. 执行导入后的恢复命令
 
-Redis 也使用新服务器自己的服务；设有密码时，把上面的 `null` 改为实际密码。原文件若含 `DB_URL`、`REDIS_URL` 等完整连接串，一并改到目标，避免它们覆盖分项设置。密码含特殊字符时按 `.env` 格式保留正确引号。
-
-## 4. 一条更新命令完成恢复
-
-以 Root 登录新服务器 SSH，在网站根目录执行：
+以 Root SSH 登录，修改下面的网站目录、网站用户、PHP 和 Composer 路径，再**整段执行**。宝塔常见用户是 `www`；PHP / Composer 路径沿用本次 `init.sh` 使用的值。
 
 ```bash
+set -e
 cd /www/wwwroot/你的域名
+restore_user='www'
+restore_php='/www/server/php/83/bin/php'
+restore_composer='/opt/xboard-tools/composer-2.10.3.phar'
+
+# 先修复上传 .env 后的权限，只做准备
+bash update.sh --deployed-code --skip-endpoint --prepare-only \
+  --app-user "$restore_user" --php "$restore_php" --composer "$restore_composer"
+
+# 移除新装时的编译配置，让后续读取旧 .env 中恢复的连接和密钥
+rm -f -- bootstrap/cache/config.php
+
+# 按旧数据库的启停选择，清理其中已禁用插件的新装残留
+runuser -u "$restore_user" -- "$restore_php" <<'PHP'
+<?php
+$_SERVER['argv'] = ['artisan', 'xboard:plugin-online-update'];
+require getcwd() . '/vendor/autoload.php';
+$app = require getcwd() . '/bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+App\Services\Plugin\BundledPluginInstaller::assertApplicationUser();
+$codes = ['smart_expiry', 'qrcodeextend', 'subinfo_customizer'];
+$read = fn () => App\Models\Plugin::whereIn('code', $codes)->orderBy('code')
+    ->get(['code', 'is_enabled', 'config'])->map(fn ($row) => $row->getAttributes())->all();
+$before = $read();
+$manager = app(App\Services\Plugin\PluginManager::class);
+foreach ($before as $row) {
+    if (!(bool) $row['is_enabled']) {
+        $manager->disableForUpdate($row['code']);
+    }
+}
+if ($read() !== $before) {
+    throw new RuntimeException('插件启停或配置发生变化，停止恢复。');
+}
+echo "旧插件选择已保留，新装残留已清理。\n";
+PHP
+
+# 完成依赖、数据库迁移、插件同步及缓存清理
 bash update.sh --deployed-code --skip-endpoint \
-  --app-user www \
-  --php /www/server/php/83/bin/php \
-  --composer /opt/xboard-tools/composer-2.10.3.phar
+  --app-user "$restore_user" --php "$restore_php" --composer "$restore_composer"
+
+runuser -u "$restore_user" -- "$restore_php" artisan up
 ```
 
-这会准备站点用户权限、安装锁定依赖、执行数据库迁移、恢复默认插件的原启停选择并清理编译缓存。应用命令由站点用户运行，无需另以 Root 执行 `composer install`。
+第一段准备权限，随后清除 fresh 编译配置。PHP 部分只清理旧库中已禁用插件的残留，保留原配置和启停选择；更新命令再重建应启用的功能。
 
-看到完成提示后执行：
+`--skip-endpoint` 表示先恢复网站，不在这一步改动独立 IP 私有 CA 入口。网站域名 HTTPS 使用 aaPanel / 宝塔网站证书。
 
-```bash
-runuser -u www -- /www/server/php/83/bin/php artisan storage:link
-runuser -u www -- /www/server/php/83/bin/php artisan up
-```
+命令报错会停止。保留错误信息处理，不删除原 `.env`、不生成新 APP_KEY，也不重新初始化。
 
-`--skip-endpoint` 表示本次先恢复网站，不自动配置独立 IP 私有 CA 入口。网站域名 HTTPS 仍由 aaPanel / 宝塔的网站证书提供。
+## 3. 恢复队列和每分钟调度
 
-如果命令报错，先保留现场并处理具体错误，不重跑 `init.sh`，不删除 `.env`，也不执行 `composer update`。
-
-## 5. 启动调度和队列，检查后上线
-
-在 aaPanel / 宝塔恢复本站的两项任务，每项只配置一套：
+新站原来已经配置这些任务的，恢复 / 重启原任务，让进程读取恢复后的配置；没有配置的，各建立一套：
 
 | 项目 | 设置 |
 | --- | --- |
-| 计划任务 | 每 1 分钟执行；下方脚本以 Root 启动并降权到 `www` |
-| Supervisor / 进程守护 | 用户 `www`，工作目录为网站根目录，进程数 `1`，自动启动启用、`autorestart=true` |
-
-计划任务脚本：
-
-```bash
-runuser -u www -- /www/server/php/83/bin/php /www/wwwroot/你的域名/artisan schedule:run
-```
+| Supervisor / 进程守护 | 用户 `www`，工作目录为网站根目录，进程数 `1`，自动启动，`autorestart=true` |
+| 计划任务 | 每 1 分钟运行一次下方调度命令 |
 
 Supervisor 启动命令：
 
@@ -105,31 +93,23 @@ Supervisor 启动命令：
 /www/server/php/83/bin/php /www/wwwroot/你的域名/artisan horizon
 ```
 
-先手动运行计划任务，再确认下一分钟出现自动执行记录；确认 Horizon 持续运行。详细界面设置见[新装教程第 5 节](install-2026.11.01.1.zh-CN.md#5-配置计划任务与-horizon-守护)。
-
-切换域名解析前检查：
-
-- 用旧管理员账号和密码登录，核对用户、套餐、余额流量、订单和插件启停选择。
-- 用旧用户的订阅链接获取订阅，确认节点及用户身份保留。
-- 网站地址或域名改变时，在后台同步修改站点 / 订阅地址，并调整已有节点的面板地址；保留原机器身份和 Token。
-
-检查正常后把域名切到新服务器，确认网站 HTTPS、订阅、队列和调度正常。旧站继续停止写入，避免两边同时处理同一业务。
-
-## 已经在新服务器运行过 init.sh
-
-如果新面板已经全新安装完成，先暂停新站调度和队列。在**新站仍使用其 fresh 数据库和新 .env 时**，进入网站根目录清理新装插件的桥接：
+宝塔计划任务脚本，Root 执行后降权：
 
 ```bash
-cd /www/wwwroot/你的域名
-runuser -u www -- /www/server/php/83/bin/php artisan xboard:plugin-online-update smart_expiry --deactivate
-runuser -u www -- /www/server/php/83/bin/php artisan xboard:plugin-online-update qrcodeextend --deactivate
-runuser -u www -- /www/server/php/83/bin/php artisan xboard:plugin-online-update subinfo_customizer --deactivate
+runuser -u www -- /www/server/php/83/bin/php /www/wwwroot/你的域名/artisan schedule:run
 ```
 
-这三条只清理 fresh 集成，不下载插件。然后从本页第 3 步继续：旧 SQL 导入另建的空库，上传旧 `.env`，再执行更新命令。旧数据库中的插件启停选择会恢复，避免禁用插件残留新装桥接。
+确认 Horizon 持续运行，并等待下一分钟出现自动调度记录。界面设置可参考[新装教程第 5 节](install-2026.11.01.1.zh-CN.md#5-配置计划任务与-horizon-守护)。
 
-若新站已创建独立 IP 私有 CA，导入旧 SQL 和原 `.env` 后，不把这套 fresh CA 当成已经恢复可管理的原 CA。本页先验收网站域名上线；私有入口和节点信任另行配置。
+## 4. 检查后上线
 
-本轮只用 SQL 和 `.env` 重测通过：主流程 29 项、已初始化新站的兼容流程 27 项检查全部通过。旧账号、订阅、余额套餐、订单、机器身份和插件状态已恢复，主流程还验证了 Horizon 与实际分钟调度。未复制旧网站目录、上传文件或 CA，未进行生产 DNS 切换或真实节点转发。详见[脱敏验证记录](../verification/sql-env-only-restore-20261101.json)。
+- 用**旧管理员账号和密码**登录，核对用户、套餐、余额流量、订单和插件原启停选择。
+- 用旧用户的订阅链接取订阅，确认节点和用户身份保留。
+- 网站域名改变时，同步修改后台站点 / 订阅地址及已有节点的面板地址，保留机器身份和 Token。
+- 确认网站 HTTPS、Horizon、分钟任务正常，再切换域名；旧站保持停止写入。
 
-恢复范围：旧上传、二维码私有图片及原私有 CA / 私钥不在这两份备份中。普通网站域名 HTTPS 可按新站配置上线；固定信任原私有 CA 的节点需要另行配置入口及信任。
+本次严格按“真实 init.sh 完成 → 保留 fresh 配置缓存和桥接 → 直接导入 SQL 与旧 .env → 执行后续恢复”的顺序测试，**39 / 39 项通过**，包括实际 Horizon 和下一分钟调度。详见[导入后恢复实测记录](../verification/post-import-restore-20261101.json)。
+
+恢复范围：SQL 和 `.env` 恢复数据库业务与设置，不包含旧上传、二维码私有图片或原私有 CA / 私钥；新装 CA 也不等于原 CA 已恢复。固定信任原私有 CA 的节点需要另行配置入口及信任。
+
+其他情况：如果新服务器尚未运行 `init.sh`，干净同版源码导入 SQL 和原 `.env` 后，可直接运行普通 `update.sh --deployed-code --skip-endpoint`，再配置队列和调度；该路径的[此前实测记录](../verification/sql-env-only-restore-20261101.json)仍保留。
