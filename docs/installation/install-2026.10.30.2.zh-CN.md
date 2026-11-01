@@ -14,6 +14,8 @@ Node v9 本地六资产锁、运行回归与插件包验收已完成，见[本�
 
 PHP CLI 与网站 PHP-FPM 使用同一版本，启用锁定依赖需要的扩展：`redis`、`fileinfo`、`mbstring`、`curl`、DOM / XML、`openssl`、`pcntl`、`posix`、`pdo_mysql` 等。安装 PHP `zip` 或系统 `unzip` 供 Composer 解压；Composer 会检查完整平台要求，缺项应先补齐。原生 FPM 路线不要求 Swoole 或 Event。
 
+同时在 **aaPanel → PHP 8.3 → 安装扩展（Install extensions）** 中实际安装并加载 OPcache。起始参数为 `opcache.enable=1`、`memory_consumption=128`、`interned_strings_buffer=16`、`max_accelerated_files=20000`、`validate_timestamps=1`、`revalidate_freq=2`（后五项同属 `opcache.` 前缀）。按[OPcache 安装与 FPM 验证](aapanel.zh-CN.md#php83-opcache)核对实际 FPM 二进制与加载配置，并按服务范围安排平滑重载；仅写 ini 或查看 CLI 的缓存结果不能证明线上 FPM 已启用。保留源码变化检查，供后续插件和代码更新使用。
+
 确认 PHP CLI 中 `putenv`、`proc_open`、`pcntl_alarm`、`pcntl_signal`、`symlink` 等相应函数可用。安装器会在数据库初始化前预检 `symlink`；不要用忽略平台要求来绕过检查，也不需要为存储链接额外开放 `exec`。
 
 本例固定 Composer `2.10.3`，以 Root 下载并核对其固定摘要：
@@ -154,7 +156,9 @@ runuser -u www -- /www/server/php/83/bin/php /www/wwwroot/实际站点目录/art
 /www/server/php/83/bin/php /www/wwwroot/实际站点目录/artisan horizon
 ```
 
-保存并启动守护任务，确认其状态持续为运行中；若启动后退出，先查看该任务的输出日志。Horizon 由 Supervisor 持续运行，5.1 的每分钟调度仍需保留。
+保存并启动守护任务，确认其状态持续为运行中；若启动后退出，先查看该任务的输出日志。Horizon 由 Supervisor 持续运行，5.1 的每分钟调度仍需保留。核对其实际配置为 `autorestart=true`，使正常的优雅退出也会被自动拉起。
+
+**当前源码补充：** 原生生产 `data-pipeline` 默认采用 `balance=simple`、固定 3 个 worker，三个流量/统计/在线同步队列各一个；显式 `HORIZON_DATA_PIPELINE_MAX=6` 时各两个。说明与既有站点的环境覆盖、缓存及优雅切换边界见[流量队列默认值](aapanel.zh-CN.md#horizon-fixed-workers)。该源码变更不追溯修改本页固定 `v2026.10.30.2` 归档或其历史验收结果；实际部署以所取源码或发行资产为准。
 
 ### 5.3 检查配置
 

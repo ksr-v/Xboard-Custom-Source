@@ -54,6 +54,18 @@ python3 -I /root/xboard-upgrade-20261030-2/source/scripts/deploy-release.py \
 
 本版继续保留默认首计划与设备在线修复。已经手动应用旧独立补丁工具的站点，归档升级后不要再次运行旧补丁器，它可能正确地拒绝新的文件版本。
 
+<a id="performance-settings"></a>
+
+## 升级后核对 OPcache 与 Horizon
+
+既有 aaPanel / PHP 8.3 FPM 站点也应核对 OPcache 是否**实际安装并加载**；升级面板源码不会代为安装 PHP 扩展。按[OPcache 安装与 FPM 验证](aapanel.zh-CN.md#php83-opcache)检查实际 FPM 的加载信息、`128 MB / 16 MB / 20000` 起始参数及 `validate_timestamps=1`、`revalidate_freq=2`。安装扩展或修改启动配置后，结合该 FPM 服务承载范围安排平滑重载。CLI 中看到扩展或 `opcache_get_status()` 的结果，不能代替线上 FPM 的缓存状态。
+
+**当前源码补充：** 生产 `data-pipeline` 改为 `balance=simple`，`HORIZON_DATA_PIPELINE_MAX` 未设置时固定 3 个 worker，三个队列各一个。保留显式环境覆盖，例如值为 `6` 时每个队列两个；Docker 入口另有资源环境变量分配，不能将原生默认值套用于全部容器。此项说明描述当前源码，不代表本页固定 `v2026.10.30.2` 归档已包含该修改，也不改变历史验收记录。
+
+应用包含该调整的源码时，核对原 `.env` 覆盖、`bootstrap/cache/config.php` 是否存在及实际队列进程参数；源码改变不会自动刷新已有配置缓存。重建配置缓存会读取全部配置，应作为核对过的部署步骤处理，勿仅为这两项设置盲目清除全站缓存。确认本站 Supervisor 配置为 `autorestart=true` 后，才以与 FPM 一致的网站用户执行 `artisan horizon:terminate --wait` 优雅换用新配置；当前任务按既有超时完成，Redis 可继续接收新任务，切换期间可能短暂等待。完整步骤与运行范围见[流量队列默认值](aapanel.zh-CN.md#horizon-fixed-workers)。
+
+上文完整归档升级所需的维护、迁移与长驻进程更新仍应执行。若仅调整这项 Horizon 配置，不需要因此重启 PHP-FPM、Redis 或 MySQL；OPcache 的时间戳检查也不会使已运行的 Horizon / WebSocket 进程自动换用新配置。
+
 ## 助手核对与单独初始化的适用情形
 
 通过本页默认 Root 归档流程升级、且已有有效原生入口时，助手会随升级安装或更新，不需要另行初始化。仅上传插件、手动更新源码，或显式使用 `--skip-endpoint` 跳过本次入口处理而助手仍未安装时，才需单独运行下方首次初始化命令。NodeEndpoint `1.1.2` 可在助手尚未安装时正常安装和启用，原有通讯入口继续工作；网页本身不会创建 Root 服务。

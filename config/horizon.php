@@ -173,14 +173,13 @@ return [
             'data-pipeline' => [
                 'connection' => 'redis',
                 'queue' => ['traffic_fetch', 'stat', 'user_alive_sync'],
-                'balance' => 'auto',
-                'autoScalingStrategy' => 'time',
+                // Keep warm queue workers across short traffic/stat bursts.
+                'balance' => 'simple',
                 'minProcesses' => 1,
-                'maxProcesses' => (int) env('HORIZON_DATA_PIPELINE_MAX', 8),
+                'maxProcesses' => (int) env('HORIZON_DATA_PIPELINE_MAX', 3),
                 'memory' => (int) env('HORIZON_WORKER_MEMORY_MB', 128),
                 'maxTime' => (int) env('HORIZON_WORKER_MAX_TIME', 3600),
                 'maxJobs' => (int) env('HORIZON_WORKER_MAX_JOBS', 1000),
-                'balanceCooldown' => 1,
                 'tries' => 3,
                 'timeout' => 30,
             ],

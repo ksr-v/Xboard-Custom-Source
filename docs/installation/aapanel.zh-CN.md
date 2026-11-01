@@ -70,6 +70,36 @@ chmod 0644 /opt/xboard-tools/composer-2.10.3.phar
 
 Composer 安装时会检查完整依赖要求，缺少的扩展应先补齐。原生 FPM 路线不要求先安装 Swoole 或 Event。
 
+<a id="php83-opcache"></a>
+
+##### PHP 8.3 FPM 的 OPcache
+
+原生 PHP-FPM 部署还应安装并启用 **OPcache**，减少每次请求重复编译 PHP 源码的开销。在 **aaPanel / 宝塔 → 软件商店 → 已安装的 PHP 8.3 → 设置 → 安装扩展（Install extensions）** 中安装 `opcache`。必须安装到本站实际使用的 PHP 8.3；只在 `php.ini` 中添加 `opcache.enable=1`，不会代替扩展安装与 `zend_extension` 加载。扩展路径使用安装器生成的实际值，不重复追加加载项。加载方式见 [PHP 官方安装说明](https://www.php.net/manual/en/opcache.installation.php)。
+
+安装成功后，在这套 PHP 8.3 FPM 实际加载的配置中核对以下起始参数；不要只修改系统中另一套 PHP 的配置：
+
+```ini
+opcache.enable=1
+opcache.memory_consumption=128
+opcache.interned_strings_buffer=16
+opcache.max_accelerated_files=20000
+opcache.validate_timestamps=1
+opcache.revalidate_freq=2
+```
+
+`memory_consumption` 与 `interned_strings_buffer` 的单位为 MB，文件数与内存可按实际缓存使用情况调整。保留 `validate_timestamps=1`、`revalidate_freq=2`，让请求按周期检查源码变化，兼容插件写入和后续代码更新；不要为降低检查开销设为 `validate_timestamps=0`。参数含义见 [PHP 官方配置说明](https://www.php.net/manual/en/opcache.configuration.php)。
+
+先核对运行中 FPM master 的实际二进制和启动参数。aaPanel 默认路径可用下面的只读检查；若服务另带 `-c` 等配置参数，应沿用该服务的实际设置：
+
+```bash
+/www/server/php/83/sbin/php-fpm -t
+/www/server/php/83/sbin/php-fpm -i | grep -E 'Server API|Loaded Configuration File|Zend OPcache|opcache\.(enable |memory_consumption|interned_strings_buffer|max_accelerated_files|validate_timestamps|revalidate_freq)'
+```
+
+确认 `Server API` 为 FPM/FastCGI、配置路径正确，存在 Zend OPcache 信息且 `opcache.enable` 为 On，并核对上述参数。`php-fpm -i` 反映该二进制按当前配置启动时的加载情况，不能单独证明原有运行中的 worker 已重新加载。CLI 的 `php -m`、`php -i` 或 `opcache_get_status()` 结果也不代表线上 FPM 的缓存状态；后者需要在实际 FPM 请求上下文中检查，不公开 `phpinfo` 或长期保留诊断页面。
+
+安装扩展或修改启动配置后，先确认这套 PHP 8.3 FPM 承载的站点范围，再按实际服务支持的方式安排平滑重载，让新 worker 加载配置。此处只给预检命令，不自动操作服务。后续应用升级仍按部署流程更新 Horizon / WebSocket 等长驻进程；OPcache 的时间戳检查不能替代它们的配置和代码重载。
+
 #### 2.3 检查 PHP 禁用函数
 
 在 PHP 8.3 设置中确认 `putenv`、`proc_open`、`pcntl_alarm`、`pcntl_signal` 和 **`symlink`** 等安装及队列需要的函数可用；相应扩展也须启用。Laravel 创建公共存储链接需要 `symlink`，这个函数可用时，该步骤不需要开放 `exec`。修改后按需要重启 PHP-FPM，并确认命令行 PHP 使用正确配置。
@@ -190,7 +220,17 @@ INSTALL <实际通讯地址>:<端口>
 | 启动命令 | `/www/server/php/83/bin/php artisan horizon` |
 | 进程数 | `1` |
 
-替换实际网站目录，启用自动启动和异常重启。应用队列不用 Root 用户运行。
+替换实际网站目录，启用自动启动，并明确配置 `autorestart=true`，使 Horizon 正常退出后也会自动拉起；只配置“异常退出才重启”不足以支持优雅切换。应用队列不用 Root 用户运行。
+
+<a id="horizon-fixed-workers"></a>
+
+#### 当前源码的流量队列默认值
+
+当前源码的 `config/horizon.php` 将生产环境 `data-pipeline` 设为 `balance=simple`，`HORIZON_DATA_PIPELINE_MAX` 未设置时固定分配 **3 个 worker**，由 `traffic_fetch`、`stat`、`user_alive_sync` 三个队列各使用一个，避免短周期上报引起频繁自动扩缩容。这是当前源码的默认值，不表示本页历史固定 tag 或已发布归档原已包含该变更。
+
+保留显式环境覆盖：例如 `HORIZON_DATA_PIPELINE_MAX=6` 会在这三个队列各分配两个 worker。已有站点应先核对自己的 `.env`、配置缓存和实际运行参数，再按队列积压与服务器资源决定是否覆盖。Docker 入口可能另外导出该环境变量，应核对容器资源分配，不能据此认定所有 Docker 部署也是 3 个 worker。
+
+仅调整 Horizon 配置时，在确认 Supervisor 会自动拉起后，以实际网站用户执行 `artisan horizon:terminate --wait`，让正在处理的任务完成再换用新配置；新任务仍可进入 Redis 队列，切换期间可能短暂等待。无需仅为该队列配置重启 PHP-FPM、Redis 或 MySQL。完整应用升级仍遵循对应版本的维护流程。已有配置缓存也需核对，不能只改源文件后就认为新进程已读到它；`config:cache` 会重建全部配置，不应未经核对就用它让其他尚未生效的设置一并进入生产。
 
 ### 2. 配置计划任务
 

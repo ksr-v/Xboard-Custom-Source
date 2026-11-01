@@ -23,6 +23,8 @@
 
 先准备 Linux、Python 3.10+、PHP 8.3、可信 Composer 2.2 及以上的 2.x 版本、Nginx/OpenResty、数据库、Redis、OpenSSL、`ss` 和 `runuser`。按锁定依赖启用所需 PHP 扩展，CLI 与 FPM 版本应一致。安装器不升级系统或 Composer，不创建数据库账号，也不代装宝塔。
 
+原生 PHP 8.3 FPM 还应在 **aaPanel → PHP 8.3 → 安装扩展（Install extensions）** 中实际安装并加载 OPcache，再核对 `128 MB / 16 MB / 20000` 及时间戳检查参数。只写 ini 不会安装扩展；CLI 检查也不能代替实际 FPM 加载和运行状态核对。完整参数、只读 `php-fpm -i` 检查及平滑重载范围见[PHP 8.3 FPM 的 OPcache](aapanel.zh-CN.md#php83-opcache)。
+
 锁定依赖要求 `composer-runtime-api ^2.2`，不能使用 Composer 2.0 / 2.1。推荐以 Root 准备[Composer 官网](https://getcomposer.org/download/)的固定 **2.10.3** PHAR：
 
 ```bash
@@ -144,6 +146,8 @@ install -d -o root -g root -m 755 /var/cache/xboard-composer
 再重跑原 `init.sh` 命令，显式传入 `--composer /opt/xboard-tools/composer-2.10.3.phar`。v2026.10.18.2 会自行准备缓存父目录权限。`mbstring` 重复加载警告不是 `composer-runtime-api` 依赖错误的原因，可另查 PHP 配置中的重复扩展项。保留 `.env`；若已经开始应用初始化或面板已安装，不通过删除 `.env` 强行重跑新装。
 
 ## 已有面板升级
+
+已有站点也应核对上述 OPcache 安装与 FPM 生效情况。当前源码另采用[流量队列固定 worker 默认值](aapanel.zh-CN.md#horizon-fixed-workers)：原生生产 `data-pipeline` 默认 `simple` / 3 个 worker，并保留 `HORIZON_DATA_PIPELINE_MAX` 的显式覆盖。升级时核对 `.env`、配置缓存及守护进程的实际参数；这些运行建议不追溯改变下方历史归档的内容或验收记录。
 
 本次 `v2026.10.25.2` 修复还要求独立 Node `v1.13-orphan.6`，完整顺序、两类部署和验证步骤见[本次更新教程](upgrade-2026.10.25.2.zh-CN.md)。只同步内置插件不足以修复旧节点内核。
 

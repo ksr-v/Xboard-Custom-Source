@@ -1,8 +1,12 @@
 # Xboard
 
+**2026.11.01.1** 固化生产流量队列的 `simple` 固定分配，原生默认三个队列各一个 worker，并保留 `HORIZON_DATA_PIPELINE_MAX` 显式覆盖。教程补齐 PHP 8.3 OPcache 的扩展安装、参数和实际 FPM 验证。详见[本次变化](docs/releases/v2026.11.01.1.md)及[本版原生升级说明](docs/installation/upgrade-2026.11.01.1.zh-CN.md)。
+
+本发行提供完整原生源码归档和校验资产，按既有备份及维护流程部署；OPcache 扩展仍须在 aaPanel 的实际 PHP 8.3 中另行安装。已验证的现场队列切换不代表本次完整归档已完成生产升级或吞吐测试。下方旧版本和固定 tag 教程保留历史归属，旧归档不会自动获得新默认值。
+
 **2026.10.31.2** 提供默认最新 Node 对接、网页插件一键更新和 SSH 面板与插件批量更新。五个独立插件分别跟随各自仓库的最新正式发行，七个核心插件跟随面板发行；更新保留配置、启停选择与二维码私有文件。NodeEndpoint 为 **1.1.3**，内置二维码源码为 **1.3.1**。详见[本次变化](docs/releases/v2026.10.31.2.md)和[在线更新说明](docs/operations/plugin-online-update.zh-CN.md)。下方版本与教程保留历史记录。
 
-当前版本：**2026.10.30.2**。默认内置 NodeEndpoint **1.1.2**、SmartExpiry **1.2.0**、QRCode Extend **1.2.0（审计副本）**、FlowScope **2.4.0** 和 SubInfoCustomizer **1.0.1**。全新安装自动安装并启用五项；原生 PHP-FPM 的 Root 初始化随后配置独立 HTTPS 入口、导入公共 CA 并安装受限本机助手。已有面板升级保留各插件配置、公共 CA 和管理员禁用选择；只有显式选择全部启用才改变禁用状态。以 Root 执行归档升级且不加 `--skip-endpoint` 时，也会为已有有效原生入口安装或更新助手，授权范围与新初始化相同。
+历史版本 **2026.10.30.2**。默认内置 NodeEndpoint **1.1.2**、SmartExpiry **1.2.0**、QRCode Extend **1.2.0（审计副本）**、FlowScope **2.4.0** 和 SubInfoCustomizer **1.0.1**。全新安装自动安装并启用五项；原生 PHP-FPM 的 Root 初始化随后配置独立 HTTPS 入口、导入公共 CA 并安装受限本机助手。已有面板升级保留各插件配置、公共 CA 和管理员禁用选择；只有显式选择全部启用才改变禁用状态。以 Root 执行归档升级且不加 `--skip-endpoint` 时，也会为已有有效原生入口安装或更新助手，授权范围与新初始化相同。
 
 本版配套独立 Node `v1.13-orphan.9`，处理已确认的 ACME 混合大小写域名 Order / CSR literal 不一致，保留 TLS 验证与现有证书缓存。旧 nft 0.9.0 的成功 null 空表输出已由独立空表查询确认；v9 仅按该条件兼容，并使用旧内核可用的 ip / ip6 NAT 与完整规则标记，不把任意解析失败当作空规则集。实际 4.19 内核尚未启动验收。Node v8、插件 1.1.1 和面板 30.1 的发行记录保留原样，不将旧版通过数归属本轮。
 
@@ -22,6 +26,8 @@ bash init.sh --app-user www \
   --composer /opt/xboard-tools/composer-2.10.3.phar \
   --port 8443
 ```
+
+原生 PHP-FPM 部署还应按[OPcache 配置说明](docs/installation/aapanel.zh-CN.md#php83-opcache)安装并启用 PHP 8.3 的 OPcache，再核对 FPM 已加载扩展。当前源码的生产流量队列改用 `simple` 固定分配，默认三条队列各一个 worker，避免短周期节点上报引起频繁扩缩容；`HORIZON_DATA_PIPELINE_MAX` 仍可显式调整进程预算，Docker 入口也会设置该值。此处说明当前源码，历史发行归档不会自动获得新默认值；已有站点按[性能配置核对步骤](docs/installation/upgrade-2026.10.30.2.zh-CN.md#performance-settings)检查后再切换 Horizon。
 
 首次配置时选择 `1` 自动检测本机公网 IPv4（默认，回车选择），或 `2` 手工输入 IP / 域名。自动模式显示候选，回车接受或输入其他实际地址；检测失败必须手工填写。手工模式不请求公网检测服务。已有真实 Root 入口或显式 `--host` 跳过该菜单，不自动覆盖原地址。安装器先准备文件权限，再降权执行 Composer、数据库迁移和五插件安装启用，随后处理独立 HTTPS 入口、公共 CA、本机助手和防火墙。已有有效入口仍会安装助手，保留原 CA。显式 `--skip-endpoint` 会将独立入口、公共 CA 和助手一起延期，五插件仍安装启用。Root 工具和私钥位于应用目录之外。
 
@@ -70,6 +76,8 @@ Xboard is a modern panel system built on Laravel 11, focusing on providing a cle
 ## 🚀 Installation
 
 Use the [v2026.10.30.2 native PHP-FPM installation guide](docs/installation/install-2026.10.30.2.zh-CN.md). Fresh Root initialization installs and enables all five plugins, configures the HTTPS endpoint and installs the restricted local helper. `--skip-endpoint` defers the endpoint, public CA and helper. Node v9 retains v8 owned INPUT rules for the actual Hysteria2 UDP listener on supported iptables backends; cloud rules remain manual. The Node v9 source lock, local regressions and six public assets are verified; final panel archive and panel suite results are recorded in release JSON attachments; previous release counts are retained as history. The earlier [aaPanel + Docker guide](docs/installation/aapanel-docker.zh-CN.md) ([English](docs/en/installation/aapanel-docker.md)) retains its historical scope.
+
+For native PHP-FPM, [install and verify OPcache for PHP 8.3](docs/installation/aapanel.zh-CN.md#php83-opcache). The current source uses fixed `simple` balancing for the production data pipeline, with one worker per queue by default. Explicit `HORIZON_DATA_PIPELINE_MAX` settings, including Docker entrypoint values, still apply. Existing release archives retain their original defaults.
 
 ## 📖 Documentation
 
