@@ -1,6 +1,6 @@
 # QRCode Extend
 
-Adds a locally generated subscription QR-code action to Xboard's Admin user menu. Version 1.3.1 makes the explicit PNG save action a visible, touch-friendly button and cache-busts the updated assets. Version 1.3.0 introduced Blob-backed PNG output for mobile long-press handling.
+Adds a locally generated subscription QR-code action to Xboard's Admin user menu. Version 1.3.2 avoids waiting on the shared patch lock when the complete installed bridge is already valid, and skips copying identical published assets. Missing or changed assets are repaired. Version 1.3.1 introduced the visible, touch-friendly PNG save button; those asset bytes and their existing cache version remain unchanged.
 
 ## Lifecycle
 
@@ -24,7 +24,7 @@ Those changes served safe restore, operator commands, asset cleanup, and Admin a
 
 ## Ownership and coexistence
 
-The injected block is bounded by exact `qrcodeextend:start:v5` and `qrcodeextend:end:v5` markers. Exact owned v3 and v4 blocks are upgraded without touching foreign bytes. Apply and removal run under the shared `storage/framework/xboard-admin-patch.lock` exclusive lock for their complete read → validate → transform → atomic-write → verify transaction.
+The injected block is bounded by exact `qrcodeextend:start:v5` and `qrcodeextend:end:v5` markers. Exact owned v3 and v4 blocks are upgraded without touching foreign bytes. A fully validated installed v5 bridge returns without acquiring the shared lock or writing files. Every other patch state, including a failed optimistic read, is reread under the shared `storage/framework/xboard-admin-patch.lock` exclusive lock before deciding whether to modify or reject it. Installation, upgrades, status, and removal retain their locked validation and mutation behavior.
 
 Rules:
 
@@ -57,6 +57,12 @@ php artisan qrcodeextend:restore
 - Legacy unmarked QRCode Extend injections fail closed and require a deliberate migration/removal; they are never guessed at or fuzzily deleted.
 - QRCode Extend removes `public/plugins/qrcodeextend/` and `storage/qrcodeextend/` itself during cleanup, then republishes assets from its package on enable. The shared `storage/framework/xboard-admin-patch.lock` is deliberately retained because it belongs to every Admin patching plugin and contains no plugin data.
 - Shared locking, build detection, bridge diagnostics, Admin extension points, asset loading, and optional command registration are general runtime capabilities that should eventually live in an `xb-extension-runtime`, not in QR business logic.
+
+## Validation
+
+The repository's focused PHPUnit suite uses `tests/bootstrap.php`. The standalone native lifecycle check requires a local Xboard-Custom-Source checkout through `QRCODE_TEST_PANEL` and its Composer autoloader through `XBOARD_TEST_VENDOR`; run `tests/NativeLifecycleTest.php` in separate PHP processes with `smart-first` and `qr-first`. It uses copied assets and a new SQLite database, without contacting a live site. `node tests/QrcodeImageOutputTest.js` checks the existing PNG/mobile-save implementation.
+
+Build the runtime archive with `python scripts/package.py --timestamp 2026-11-07T00:00:00Z`. It emits the ZIP, a file hash manifest, and `dist/SHA256SUMS`, checks the explicit plugin root and Unix permissions, and excludes repository tests and tooling.
 
 ## Data handling
 

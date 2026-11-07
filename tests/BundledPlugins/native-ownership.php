@@ -97,7 +97,8 @@ foreach ([
         $manifest = json_decode(file_get_contents($root . '/bundled-plugins/manifest.json'), true);
         $item = array_values(array_filter($manifest['plugins'], fn ($item) => $item['code'] === $code))[0];
         $actual = $item['files'];
-        $archivePath = dirname($sourceRoot) . '/release-work/online-updates-20261031/independent-plugin-source/official-assets/' . $archive;
+        $archivePath = (getenv('XBOARD_OFFICIAL_PLUGIN_ARCHIVES') ?: dirname($sourceRoot)
+            . '/release-work/online-updates-20261031/independent-plugin-source/official-assets') . '/' . $archive;
         check(hash_file('sha256', $archivePath) === $sha, 'Reviewed artifact hash changed');
         $official = officialMap($archivePath, $wrapper);
         check(count($official) > count($actual), 'Fixture must cover documentation/development-only native extras');

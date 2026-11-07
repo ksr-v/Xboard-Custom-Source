@@ -39,9 +39,48 @@ class Plugin extends AbstractPlugin
     {
         $source = $this->basePath . '/resources/assets';
         $target = public_path('plugins/qrcodeextend');
+        if ($this->publishedAssetsMatch($source, $target)) {
+            return;
+        }
         File::ensureDirectoryExists($target);
         if (!File::copyDirectory($source, $target)) {
             throw new \RuntimeException('Could not publish QRCode Extend assets.');
+        }
+    }
+
+    /** Skip repeated publication only after comparing every owned file. */
+    private function publishedAssetsMatch(string $source, string $target): bool
+    {
+        if (!is_dir($source) || !is_dir($target) || is_link($source) || is_link($target)) {
+            return false;
+        }
+        try {
+            $files = 0;
+            $entries = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($source, \FilesystemIterator::SKIP_DOTS),
+                \RecursiveIteratorIterator::SELF_FIRST,
+            );
+            foreach ($entries as $entry) {
+                $published = $target . '/' . substr($entry->getPathname(), strlen($source) + 1);
+                if ($entry->isLink() || is_link($published)) { return false; }
+                if ($entry->isDir()) {
+                    if (!is_dir($published)) { return false; }
+                    continue;
+                }
+                if (!$entry->isFile() || !is_file($published)
+                    || !$entry->isReadable() || !is_readable($published)
+                    || $entry->getSize() !== filesize($published)) { return false; }
+                $sourceHash = hash_file('sha256', $entry->getPathname());
+                $publishedHash = hash_file('sha256', $published);
+                if (!is_string($sourceHash) || !is_string($publishedHash)
+                    || !hash_equals($sourceHash, $publishedHash)) { return false; }
+                $files++;
+            }
+            return $files > 0;
+        } catch (\Throwable) {
+            // Preserve the original publisher's handling of missing or
+            // unreadable paths instead of treating them as installed assets.
+            return false;
         }
     }
 

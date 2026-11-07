@@ -130,7 +130,8 @@ namespace {
             check($elapsed >= 1.0, 'Clean bridge bypassed the shared writer lock.');
         });
         $test('corrupt owned bridge waits and is rejected without writes', static function () use ($patcher, $bundlePath, $patched): void {
-            $corrupt = str_replace('/*qrcodeextend:start:v3*/', '/*qrcodeextend:start:v2*/', $patched);
+            $corrupt = str_replace('/*qrcodeextend:start:v5*/', '/*qrcodeextend:start:v2*/', $patched);
+            check($corrupt !== $patched, 'Fixture did not corrupt the current owned bridge.');
             file_put_contents($bundlePath, $corrupt);
             $elapsed = heldLock(static function () use ($patcher): void {
                 try { $patcher->patch(); }

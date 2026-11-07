@@ -26,8 +26,11 @@ function originalBundleFile(string $relative): string
 function preHotfixFiles(array $item): array
 {
     if (isset($item['source_provenance']['base_files'])) { return $item['source_provenance']['base_files']; }
-    // QR now ships the genuine 1.3.1 native release; its reviewed 1.2.0
-    // baseline remains historical evidence rather than current provenance.
+    return historicalQrFiles($item);
+}
+function historicalQrFiles(array $item): array
+{
+    // This fixture reads the pinned 1.2.0 Git tree independently of the current release.
     foreach ($item['accepted_previous'] as $previous) {
         if ($previous['version'] === '1.2.0' && !isset($previous['source_provenance'])) { return $previous['files']; }
     }
@@ -36,12 +39,12 @@ function preHotfixFiles(array $item): array
 function deployPartialQrHotfix(string $root, array $item): void
 {
     global $sourceRoot;
-    foreach (preHotfixFiles($item) as $relative => $hash) {
+    foreach (historicalQrFiles($item) as $relative => $hash) {
         $bytes = originalBundleFile('Qrcodeextend/' . $relative);
         check(hash('sha256', $bytes) === $hash, 'Historical QR source changed');
         file_put_contents($root . '/plugins/Qrcodeextend/' . $relative, $bytes);
     }
-    $patch = dirname($sourceRoot) . '/panel-changes/runtime-patch-lock-fix/payload/plugins/Qrcodeextend/Plugin.php';
+    $patch = $sourceRoot . '/bundled-plugins/Qrcodeextend/Plugin.php';
     check(hash_file('sha256', $patch) === 'ab99c90d1b259bd9bd0a8fd10105362cf7f49ca1b134fcc13c96064a480cb545', 'Published QR hotfix fixture changed');
     copy($patch, $root . '/plugins/Qrcodeextend/Plugin.php');
 }
@@ -109,7 +112,7 @@ test('partial QR hotfix mixing old and patched target files is not an approved g
     [$root, $installer, $manifest] = ownedFixture('partial-qr');
     $item = array_values(array_filter($manifest['plugins'], fn ($item) => $item['code'] === 'qrcodeextend'))[0];
     $ownership = fixtureOwnership($root);
-    $ownership['plugins']['qrcodeextend']['files'] = preHotfixFiles($item);
+    $ownership['plugins']['qrcodeextend']['files'] = historicalQrFiles($item);
     fixtureOwnership($root, $ownership);
     deployPartialQrHotfix($root, $item);
     expectFailure(fn () => $installer->stage(), 'modified files');

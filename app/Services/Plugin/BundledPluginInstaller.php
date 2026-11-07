@@ -42,6 +42,17 @@ final class BundledPluginInstaller
             ],
         ]],
     ];
+    /** Exact local QR 1.3.1 lock/publisher fix; both changed files form one reviewed overlay. */
+    private const APPROVED_QRCODE_131_LOCKFIX = ['versions' => ['1.3.1'], 'files' => [
+        'Plugin.php' => [
+            '2d73596c562a7c4bcb5bbae0229aff75918b3626d950e5089296389b4b65e8ad',
+            'ab99c90d1b259bd9bd0a8fd10105362cf7f49ca1b134fcc13c96064a480cb545',
+        ],
+        'Services/AdminBundlePatcher.php' => [
+            '08ce494ab50c3011c6e9c0740d1149d1d561a7dd3562b044cc68a804fd09621a',
+            '7b8f6f984f52c49e616ec4644baa948db516b13332eee41568fd2d07f1f38380',
+        ],
+    ]];
     private const NATIVE_RELEASE_SOURCES = [
         'node_endpoint' => ['ksr-v/Xboard-Independent-NodeEndpoint', 'NodeEndpoint-%s.zip', 'SHA256SUMS'],
         'smart_expiry' => ['ksr-v/xb-SmartExpiry', 'SmartExpiry-%s-full.zip', 'github-asset-digest'],
@@ -437,7 +448,9 @@ final class BundledPluginInstaller
 
     private static function approvedRuntimeOverlay(string $code, string $version, array $source): ?array
     {
-        $overlay = self::APPROVED_RUNTIME_LOCKFIX[$code] ?? null;
+        $overlay = $code === 'qrcodeextend' && $version === '1.3.1'
+            ? self::APPROVED_QRCODE_131_LOCKFIX
+            : (self::APPROVED_RUNTIME_LOCKFIX[$code] ?? null);
         if (!$overlay || !in_array($version, $overlay['versions'], true)) { return null; }
         foreach ($overlay['files'] as $file => [$before, $after]) {
             if (($source[$file] ?? null) !== $before) { return null; }

@@ -6,12 +6,12 @@ use App\Models\Plugin;
 use App\Services\Plugin\{BundledPluginInstaller, PluginManager};
 use Illuminate\Support\Facades\{DB, Schema};
 
-test('source manifest fixes all five versions and the official QR 1.3.1 release', function (): void {
+test('source manifest fixes all five versions and the official QR 1.3.2 release', function (): void {
     global $sourceRoot;
     $manifest = json_decode(file_get_contents($sourceRoot . '/bundled-plugins/manifest.json'), true);
     $versions = array_column($manifest['plugins'], 'version', 'code');
-    check($manifest['bundle_version'] === '2026.10.31.2', 'Unexpected bundle release');
-    check($versions === ['node_endpoint' => '1.1.3', 'smart_expiry' => '1.2.0', 'qrcodeextend' => '1.3.1', 'flowscope' => '2.4.0', 'subinfo_customizer' => '1.0.1'], 'Unexpected versions');
+    check($manifest['bundle_version'] === '2026.11.07.1', 'Unexpected bundle release');
+    check($versions === ['node_endpoint' => '1.1.3', 'smart_expiry' => '1.2.0', 'qrcodeextend' => '1.3.2', 'flowscope' => '2.4.0', 'subinfo_customizer' => '1.0.1'], 'Unexpected versions');
     foreach (['bootstrap.py', 'flowscope_collector.py', 'install.sh', 'flowscope-collector.service', 'manage.sh'] as $file) {
         check(is_file($sourceRoot . '/bundled-plugins/Flowscope/collector/' . $file), 'Missing collector asset');
     }
@@ -228,7 +228,7 @@ $installer = app(BundledPluginInstaller::class);
 test('native default installation installs and enables all five using real Composer autoload', function (): void {
     PluginManager::installDefaultPlugins();
     check(Plugin::count() === 5 && Plugin::where('is_enabled', true)->count() === 5, 'Five plugins are not enabled');
-    check(Plugin::where('code', 'qrcodeextend')->value('version') === '1.3.1', 'Wrong QR version');
+    check(Plugin::where('code', 'qrcodeextend')->value('version') === '1.3.2', 'Wrong QR version');
     foreach (['node_endpoint_settings', 'flowscope_server_settings', 'flowscope_machine_settings', 'flowscope_install_tickets', 'subinfo_customizer_settings'] as $table) {
         check(Schema::hasTable($table), 'Missing migration table ' . $table);
     }

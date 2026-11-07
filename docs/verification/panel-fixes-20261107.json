@@ -1,0 +1,149 @@
+{
+  "date": "2026-11-07",
+  "scope": "Local source and isolated process/SQLite fixtures; no production data or production access in this test run",
+  "panelBase": "e9c726b",
+  "qrRelease": {
+    "kind": "github-release-asset",
+    "release_id": 437211446,
+    "release_tag": "v1.3.2",
+    "tag_object": "13c628f608fcc50e3a119c5dad9d1174d290d7d3",
+    "tag_commit": "687ee0747b86f8eba0a5cafbf32d67ae4c2351e5",
+    "asset_id": 719084718,
+    "asset_name": "qrcodeextend-1.3.2.zip",
+    "archive_sha256": "0688c4f21d93a022db7433f4d11251c14c31bea42ac1065b2fe74b5f54271aef",
+    "archive_size": 28881,
+    "checksum_source": "SHA256SUMS"
+  },
+  "php": "8.2.33",
+  "notes": [
+    "Genuine published QR1.3.2 metadata is required; all temporary release-candidate test branches were removed.",
+    "Historical SubInfo1.0 native-install cases requiring PHP8.3 are skipped by the existing integration guard on this PHP8.2 host.",
+    "Native release preservation uses the real current release identity in the manifest."
+  ],
+  "passedSuites": 13,
+  "totalSuites": 13,
+  "results": [
+    {
+      "test": "tests/BundledPlugins/integration.php",
+      "exitCode": 0,
+      "output": "PASS source manifest fixes all five versions and the official QR 1.3.2 release\nPASS tampered bundle is rejected before any runtime plugin is written\nPASS first staging and repeat are idempotent; unrelated plugin remains\nPASS existing exact native plugin is adopted with extra documentation preserved\nPASS unknown old plugin is refused and newer plugin is preserved\nPASS a locally modified real v1.0.0 deployment is refused before any bundle is copied\nPASS real Git-tag v1.0.0 native deployment upgrades to 1.1.3 in fresh processes; enabled choice survives\nPASS real Git-tag v1.0.0 native deployment upgrades to 1.1.3 in fresh processes; disabled choice survives\nPASS real Git-tag v1.1.0 native deployment upgrades to 1.1.3 in fresh processes; enabled choice survives\nPASS real Git-tag v1.1.0 native deployment upgrades to 1.1.3 in fresh processes; disabled choice survives\nPASS real Git-tag v1.1.1 native deployment upgrades to 1.1.3 in fresh processes; enabled choice survives\nPASS real Git-tag v1.1.1 native deployment upgrades to 1.1.3 in fresh processes; disabled choice survives\nPASS a modified real v1.1.0 deployment is refused without claiming ownership\nPASS a modified real v1.1.1 deployment is refused without claiming ownership\nPASS real Git-tag v1.0.8 source is accepted and upgraded without losing operator files\nPASS real Git-tag v1.0.10 source is accepted and upgraded without losing operator files\nPASS modified independent SubInfo v1.0.0 is refused before any bundled plugin is written\nPASS newer independently installed SubInfo is preserved without downgrade\nPASS a completely removed owned SubInfo directory can be restored from the verified bundle\nPASS partially missing or emptied owned SubInfo directories are rejected without silent replacement\nPASS independent v1.0.0 ZIP verification extras survive adoption and repeat synchronization\nSKIP independent v1.0.0 native install: that historical release requires PHP 8.3\nPASS native default installation installs and enables all five using real Composer autoload\nPASS repeat preserves settings and public CA; upgrade preserves existing identity\nPASS administrator disabled choice is preserved; enable-all is explicit\nPASS three dynamic Admin integrations coexist with shared bundle patches\nPASS SubInfo disable and reenable preserve settings, shared assets and all other plugin states\nPASS a core archive refresh reapplies exactly one SubInfo bridge and preserves its saved settings\nPASS unknown core source is rejected without replacing operator content\nPASS boot failure cannot leave an apparently enabled plugin\n{\n    \"result\": \"PASS\",\n    \"checks\": 29,\n    \"composer_loader\": true,\n    \"database\": \"isolated SQLite\",\n    \"root_actions\": false\n}\n",
+      "error": "",
+      "passedChecks": 29
+    },
+    {
+      "test": "tests/BundledPlugins/online_update.php",
+      "exitCode": 0,
+      "output": "PASS five maintained plugins use their own stable release while seven core plugins use the panel\nPASS QR independent 1.3.1 is discovered even while the panel snapshot carries an older version\nPASS native check failure is isolated from the other native and panel sources and cached as an error\nPASS all seven core checks share one panel metadata and archive fetch\nPASS checksum failures are explicit errors and never reported as current\nPASS archive path traversal, links, duplicate members, and truncation are rejected\nPASS real fresh-process update cleans old source, migrates new source, and preserves enabled configuration\nPASS same-version source fixes update and disabled plugins stay disabled without booting\nPASS failed fresh-process activation restores original source, version, enabled state, and config\nPASS bundled online updates retain the verified source ownership for later panel synchronization\nPASS native update ignores check cache and preserves disabled state config and true release provenance\nPASS native activation failure restores original source state config and ownership\nPASS malformed ownership JSON or schema is refused before staging cleanup source or database mutation\nPASS ownership restoration write failure cannot bypass original source database and boot recovery\nPASS a bulk updater instance freezes one fresh panel snapshot across core targets\nPASS late recovery-record failure restores source even after its backup moved to private storage\nPASS newer installed versions are identified and never downgraded\nPASS ordinary plugin mutations reject a busy shared lock and release it after success or failure\nCompleted 18 online plugin update tests\n",
+      "error": "",
+      "passedChecks": 18
+    },
+    {
+      "test": "tests/BundledPlugins/native-ownership.php",
+      "exitCode": 0,
+      "output": "PASS same-version native source is preserved independently of panel bundle dates: node_endpoint\nPASS same-version native source is preserved independently of panel bundle dates: smart_expiry\nPASS same-version native source is preserved independently of panel bundle dates: qrcodeextend\nPASS same-version native source is preserved independently of panel bundle dates: flowscope\nPASS same-version native source is preserved independently of panel bundle dates: subinfo_customizer\nPASS invalid native identity is refused before source synchronization: repository\nPASS invalid native identity is refused before source synchronization: commit\nPASS invalid native identity is refused before source synchronization: tag\nPASS invalid native identity is refused before source synchronization: asset\nPASS invalid native identity is refused before source synchronization: checksum\nPASS invalid native identity is refused before source synchronization: release_id\nPASS invalid native identity is refused before source synchronization: archive_size\nPASS native source preservation requires the complete exact owned graph: modified\nPASS native source preservation requires the complete exact owned graph: missing\nPASS native source preservation requires the complete exact owned graph: extra\nPASS reviewed same-version native ZIP recognizes only complete trusted panel runtime closure: smart_expiry\nPASS reviewed same-version native ZIP recognizes only complete trusted panel runtime closure: subinfo_customizer\nPASS full native approved overlays are complete and version-scoped\nPASS 18 native ownership/source checks\n",
+      "error": "",
+      "passedChecks": 18
+    },
+    {
+      "test": "tests/PluginRuntime/QRCodeExtendFastPathTest.php",
+      "exitCode": 0,
+      "output": "PASS complete v5 patch finishes under an independently held lock without writes\nPASS clean installation waits for the shared lock before writing\nPASS owned v4 upgrade waits for the shared lock before writing\nPASS modified marker is rechecked under lock and rejected without writes\nPASS moved owned block is rechecked under lock and rejected without writes\nPASS unsupported manifest is rechecked under lock and rejected without writes\nPASS transient validation failure is rechecked after the holder repairs it\nPASS changed source is reread under lock and preserves the holder's foreign bytes\nPASS source invalidated while waiting is rejected without overwriting the holder's bytes\nPASS status and cleanup retain shared-lock exclusion\nPASS 10 real-process QRCodeExtend lock regression scenarios\n",
+      "error": "",
+      "passedChecks": 10
+    },
+    {
+      "test": "tests/PluginRuntime/QRCodeExtendLockTest.php",
+      "exitCode": 0,
+      "output": "{\n    \"type\": \"standalone filesystem and real process lock checks; not PHP-FPM acceptance\",\n    \"passed\": 5,\n    \"total\": 5,\n    \"checks\": [\n        {\n            \"name\": \"complete installed bridge returns while another process owns the lock\",\n            \"passed\": true\n        },\n        {\n            \"name\": \"clean bridge waits for the lock before writing\",\n            \"passed\": true\n        },\n        {\n            \"name\": \"corrupt owned bridge waits and is rejected without writes\",\n            \"passed\": true\n        },\n        {\n            \"name\": \"invalid optimistic state is reread after a cooperating writer repairs it\",\n            \"passed\": true\n        },\n        {\n            \"name\": \"identical published assets skip copying; same-size corruption and missing files are repaired\",\n            \"passed\": true\n        }\n    ]\n}\n",
+      "error": "",
+      "passedChecks": 5
+    },
+    {
+      "test": "tests/PluginRuntime/CombinedPluginLockTest.php",
+      "exitCode": 0,
+      "output": "{\n    \"type\": \"combined copied-asset and real-process lock checks; not PHP-FPM acceptance\",\n    \"php_version\": \"8.2.33\",\n    \"source_admin_bundle_bytes\": 6537409,\n    \"pre_existing_cleanup_crlf_to_lf_assets\": [],\n    \"passed\": 5,\n    \"total\": 5,\n    \"checks\": [\n        {\n            \"name\": \"initial SmartExpiry, QRCodeExtend and SubInfoCustomizer installation coexists on the same assets\",\n            \"passed\": true\n        },\n        {\n            \"name\": \"all three complete bridges finish while another process holds their shared lock without writes\",\n            \"passed\": true\n        },\n        {\n            \"name\": \"removing QRCodeExtend preserves the complete SmartExpiry and SubInfoCustomizer bridges\",\n            \"passed\": true\n        },\n        {\n            \"name\": \"remaining cleanup restores original core\\/assets with only registered legacy locale newline changes\",\n            \"passed\": true\n        },\n        {\n            \"name\": \"reverse shared-asset installation and cleanup order preserves QRCodeExtend until its own removal\",\n            \"passed\": true\n        }\n    ]\n}\n",
+      "error": "",
+      "passedChecks": 5
+    },
+    {
+      "test": "tests/PluginRuntime/SmartExpiryLockTest.php",
+      "exitCode": 0,
+      "output": "PASS complete v7 apply finishes while another process owns the lock, without writes\nPASS source apply waits for shared lock before changing files\nPASS corrupt multi-file bridge rechecks under lock and is rejected without writes\nPASS transient validation error is rechecked after the lock holder completes\nPASS status and cleanup retain shared-lock exclusion\nPASS 5 real-process lock regression scenarios\n",
+      "error": "",
+      "passedChecks": 5
+    },
+    {
+      "test": "tests/PluginRuntime/QRCodeExtendSourceTest.php",
+      "exitCode": 0,
+      "output": "{\n    \"type\": \"standalone source-graph compatibility checks; no Laravel or network\",\n    \"passed\": 7,\n    \"total\": 7,\n    \"checks\": [\n        {\n            \"name\": \"official QR 1.3.2 runtime exactly matches its native source manifest\",\n            \"passed\": true\n        },\n        {\n            \"name\": \"historical QR 1.3.1 complete two-file overlay matches its original native release\",\n            \"passed\": true\n        },\n        {\n            \"name\": \"QR 1.3.1 overlay cannot escape its plugin or version boundary\",\n            \"passed\": true\n        },\n        {\n            \"name\": \"either partial QR 1.3.1 overlay is rejected\",\n            \"passed\": true\n        },\n        {\n            \"name\": \"unknown extras, missing source, and unrelated edits are rejected\",\n            \"passed\": true\n        },\n        {\n            \"name\": \"original native file hashes remain pinned before applying the overlay\",\n            \"passed\": true\n        },\n        {\n            \"name\": \"historical QR 1.2.0 published two-file overlay remains accepted unchanged\",\n            \"passed\": true\n        }\n    ]\n}\n",
+      "error": "",
+      "passedChecks": 7
+    },
+    {
+      "test": "tests/BundledPlugins/qrcode-lockfix-upgrade.php",
+      "exitCode": 0,
+      "output": "PASS exact original QR 1.3.1 upgrades to official 1.3.2 with notes preserved: unowned\nPASS exact original QR 1.3.1 upgrades to official 1.3.2 with notes preserved: panel-owned\nPASS exact original QR 1.3.1 upgrades to official 1.3.2 with notes preserved: native-owned\nPASS complete reviewed local QR 1.3.1 overlay upgrades to official 1.3.2\nPASS same-version native-owned QR 1.3.2 retains its exact release provenance\nPASS 5 original QR 1.3.1 to official 1.3.2 upgrade checks\n",
+      "error": "",
+      "passedChecks": 5
+    },
+    {
+      "test": "tests/BundledPlugins/owned-hotfix-upgrade.php",
+      "exitCode": 0,
+      "output": "PASS all three complete trusted current graphs reconcile stale pre-hotfix ownership without source rewrites\nPASS owned current graph can recognize and upgrade a complete trusted previous same-version graph\nPASS approved published hotfix on historical SubInfo v1.0.0 upgrades from its unchanged ownership graph\nPASS a known hotfix plus an unrelated modified source file is rejected before staging\nPASS partial QR hotfix mixing old and patched target files is not an approved graph\nPASS unapproved CRLF rewriting is not silently normalized while reconciling ownership\nPASS 6 owned hotfix upgrade checks\n",
+      "error": "",
+      "passedChecks": 6
+    },
+    {
+      "test": "tests/BundledPlugins/same-version-snapshots.php",
+      "exitCode": 0,
+      "output": "PASS either complete same-version historical snapshot upgrades without losing operator notes: first\nPASS either complete same-version historical snapshot upgrades without losing operator notes: second\nPASS unknown same-version modifications fail before any plugin is staged\nPASS a mixture of known same-version snapshots is rejected\nPASS current same-version source is adopted and preserved on repeat\nPASS an older bundle preserves verified newer owned same-version source\nPASS same-version lifecycle retains settings and disabled choice\nPASS preserved newer same-version lifecycle reapplies only the disabled choice\nPASS same-version lifecycle retains settings and enabled choice\nPASS preserved newer same-version lifecycle reapplies only the enabled choice\nPASS 10 same-version snapshot checks\n",
+      "error": "",
+      "passedChecks": 10
+    },
+    {
+      "test": "tests/PluginUpdates/update-cleanup-guard.php",
+      "exitCode": 0,
+      "output": "PASS update cleanup removes old public integration and restores all private QR files and empty directories\nPASS failed ordinary cleanup still restores private data and retains the original exception\nPASS concurrent conflicting private data is never overwritten\nPASS nonconflicting private files created by cleanup survive restoration\nPASS QR storage file instead of directory refuses cleanup before flags can change\nPASS other plugin cleanup and empty QR installations retain their ordinary behavior\nPASS PluginManager update-only entry wraps ordinary disable but direct disable remains destructive\nSKIP symlink creation unavailable\nPASS symlink private members are rejected before cleanup when platform permits creating them\nPASS real QR version upgrades preserve private storage, enabled/config choices and disabled-after-update cleanup\nPASS 9 update-cleanup guard checks\n",
+      "error": "",
+      "passedChecks": 9
+    },
+    {
+      "test": "tests/Admin/user-dialog-regression.cjs",
+      "exitCode": 0,
+      "output": "PASS traffic dialog opens and changes its pagination through shipped handlers\nPASS changed user-list results preserve the open dialog, pagination and current row\nPASS manual close and reopen still work after list refreshes\nPASS locale changes refresh labels and refresh callback changes stay current\nPASS replaced edit-provider callbacks stay current\n5 regression checks passed (hook/component-identity fixture; no browser).\n",
+      "error": "",
+      "passedChecks": 5
+    }
+  ],
+  "passedChecks": 132,
+  "sourceIntegrity": {
+    "nonQrManifestEntriesUnchanged": true,
+    "qrRuntimeFileCount": 12,
+    "historicalQrGraphs": 4,
+    "temporaryCandidateAcceptanceRemoved": true,
+    "adminBundleChange": "one columns memoization fragment",
+    "adminTemplateChange": "one preserved-query cache version suffix",
+    "installerChange": "only exact version-scoped QR1.3.1 overlay constant and selector"
+  },
+  "deploymentOperatorReportedAcceptance": {
+    "scope": "Sanitized facts reported separately by the deployment operator; not performed by this local test runner",
+    "originAndPublicAdminAssetHashesMatch": true,
+    "htmlContainsNewModuleQuery": true,
+    "readOnlyTrafficOrderPaymentGets": "HTTP 200",
+    "metaSubscription": "parseable with real nodes",
+    "temporaryAdminSessionsRemoved": true,
+    "paymentAndPluginConfigurationAndEnabledStatesPreserved": true,
+    "envAndComposerLockHashesPreserved": true,
+    "qrDatabaseVersion": "1.3.2",
+    "fpm": "graceful reload completed",
+    "supervisor": "main process unchanged",
+    "nodeConnections": "continued",
+    "php83IsolatedFixtures": {
+      "qrFastPath": 10,
+      "qrExistingLock": 5,
+      "combinedPluginLock": 5
+    },
+    "liveBrowserAutomation": "unavailable",
+    "userReportedPopupResolved": true
+  }
+}

@@ -45,6 +45,18 @@ class AdminBundlePatcher
 
     public function patch(): string
     {
+        // Ordinary requests only verify an already complete bridge. Keep all
+        // mutations locked, without queuing these read-only checks behind them.
+        try {
+            $check = $this->inspect($this->readBundle());
+            if ($check['valid'] && $check['state'] === 'patched') {
+                return 'Admin bridge is already patched; no changes made.';
+            }
+        } catch (\Throwable) {
+            // A cooperating writer may be replacing files. Re-read under the
+            // shared lock before rejecting the build or changing anything.
+        }
+
         return $this->withLock(function (): string {
             $current = $this->readBundle();
             $check = $this->inspect($current);

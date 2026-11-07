@@ -98,7 +98,7 @@ test('real QR version upgrades preserve private storage, enabled/config choices 
     }
     $manager = app(PluginManager::class);
     $manager->update('qrcodeextend');
-    check(Plugin::where('code', 'qrcodeextend')->value('version') === '1.3.1'
+    check(Plugin::where('code', 'qrcodeextend')->value('version') === '1.3.2'
         && Plugin::where('code', 'qrcodeextend')->value('is_enabled') === true, 'Real enabled upgrade did not retain version/choice');
     check(file_get_contents($source . '/operator.json') === '{"private":"operator-canary"}', 'Real enabled upgrade deleted private data');
     check(str_contains(file_get_contents($root . '/public/assets/admin/assets/index-CEIYH7i8.js'), 'qrcodeextend:start:v5'), 'Real enabled upgrade did not reapply current bridge');
@@ -106,7 +106,7 @@ test('real QR version upgrades preserve private storage, enabled/config choices 
     // removes update() integration while retaining the administrator choice.
     Plugin::where('code', 'qrcodeextend')->update(['version' => '1.2.0', 'is_enabled' => false]);
     $installer->synchronize();
-    check(Plugin::where('code', 'qrcodeextend')->value('version') === '1.3.1'
+    check(Plugin::where('code', 'qrcodeextend')->value('version') === '1.3.2'
         && Plugin::where('code', 'qrcodeextend')->value('is_enabled') === false, 'Disabled bundled upgrade changed the saved choice');
     check(Plugin::where('code', 'qrcodeextend')->value('config') === '{"operator_setting":"preserve"}', 'QR configuration was changed');
     check(file_get_contents($source . '/operator.json') === '{"private":"operator-canary"}', 'Disabled upgrade cleanup deleted private data');

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "bundle_version": "2026.11.01.1",
+  "bundle_version": "2026.11.07.1",
   "plugins": [
     {
       "code": "node_endpoint",
@@ -545,17 +545,17 @@
     {
       "code": "qrcodeextend",
       "directory": "Qrcodeextend",
-      "version": "1.3.1",
+      "version": "1.3.2",
       "source_repository": "https://github.com/ksr-v/xb-qrcode-extend",
-      "source_commit": "9176c3da8b5084a4ad98d38c3471fb4f2543a4ec",
+      "source_commit": "687ee0747b86f8eba0a5cafbf32d67ae4c2351e5",
       "files": {
         "Commands/PatchCommand.php": "445a3271dcdc6cb5c49a3ac69cbe9c71d751dee1743e8369f48fbb8fe2be4851",
         "Commands/RestoreCommand.php": "145bf82c5d0023fcdf16652428c52dcd0dd7d238ed9f701a1b4190a8cf337828",
         "Commands/StatusCommand.php": "7d8116585b7a4794e8288f333d5b53029fb99ca5dbca2fdfc45b78ba3b432518",
-        "Plugin.php": "2d73596c562a7c4bcb5bbae0229aff75918b3626d950e5089296389b4b65e8ad",
-        "README.md": "1aae97a43a5a6f06fdcfe78256636d5f17c101864c246b952aa6d8206fa96aec",
-        "Services/AdminBundlePatcher.php": "08ce494ab50c3011c6e9c0740d1149d1d561a7dd3562b044cc68a804fd09621a",
-        "config.json": "a65566ecd26ce70fb3d36c5c07a81a4c2fd71c0a8f08aa68cddd23cf9cc148f5",
+        "Plugin.php": "ab99c90d1b259bd9bd0a8fd10105362cf7f49ca1b134fcc13c96064a480cb545",
+        "README.md": "e3667e202458c1c21705c6f0866db3f20bec0bdb17ca6028e524946a8b6737d1",
+        "Services/AdminBundlePatcher.php": "7b8f6f984f52c49e616ec4644baa948db516b13332eee41568fd2d07f1f38380",
+        "config.json": "64eeac693a8e4e8223fe677c210956de3d26f204485e03f8331d7c4600fcf20a",
         "resources/assets/qrcodeextend.css": "7f1a7cc3d4c086dc37f4ec9c8e8782e67bbf1d6f3a9415512c0fb563e2b428de",
         "resources/assets/qrcodeextend.js": "535e930509857a6c054cb4158b1085deef53ccf24fd9b6ddf66792f7461e901f",
         "resources/assets/vendor/LICENSE.nayuki": "f9f4bba35e6ee9161fa917a4cb9943c463be6a6d447c7ce370239769c699ad57",
@@ -622,19 +622,103 @@
               "Services/AdminBundlePatcher.php"
             ]
           }
+        },
+        {
+          "version": "1.3.1",
+          "source_commit": "9176c3da8b5084a4ad98d38c3471fb4f2543a4ec",
+          "files": {
+            "Commands/PatchCommand.php": "445a3271dcdc6cb5c49a3ac69cbe9c71d751dee1743e8369f48fbb8fe2be4851",
+            "Commands/RestoreCommand.php": "145bf82c5d0023fcdf16652428c52dcd0dd7d238ed9f701a1b4190a8cf337828",
+            "Commands/StatusCommand.php": "7d8116585b7a4794e8288f333d5b53029fb99ca5dbca2fdfc45b78ba3b432518",
+            "Plugin.php": "2d73596c562a7c4bcb5bbae0229aff75918b3626d950e5089296389b4b65e8ad",
+            "README.md": "1aae97a43a5a6f06fdcfe78256636d5f17c101864c246b952aa6d8206fa96aec",
+            "Services/AdminBundlePatcher.php": "08ce494ab50c3011c6e9c0740d1149d1d561a7dd3562b044cc68a804fd09621a",
+            "config.json": "a65566ecd26ce70fb3d36c5c07a81a4c2fd71c0a8f08aa68cddd23cf9cc148f5",
+            "resources/assets/qrcodeextend.css": "7f1a7cc3d4c086dc37f4ec9c8e8782e67bbf1d6f3a9415512c0fb563e2b428de",
+            "resources/assets/qrcodeextend.js": "535e930509857a6c054cb4158b1085deef53ccf24fd9b6ddf66792f7461e901f",
+            "resources/assets/vendor/LICENSE.nayuki": "f9f4bba35e6ee9161fa917a4cb9943c463be6a6d447c7ce370239769c699ad57",
+            "resources/assets/vendor/README.txt": "f347f88ec2f668653c4cd5687785994e7b6a4f92309bed6d272fad19273462bc",
+            "resources/assets/vendor/qrcodegen.js": "782dfb84800af8ba2fd946a79a561f51e06612e3a0c2b8d493a45729f119447c"
+          },
+          "source_provenance": {
+            "kind": "github-release-asset",
+            "release_id": 427464449,
+            "release_tag": "v1.3.1",
+            "tag_object": "e3b97ed63a75becf4fe92df3e4e462e0f8fd14b7",
+            "tag_commit": "9176c3da8b5084a4ad98d38c3471fb4f2543a4ec",
+            "asset_id": 687335856,
+            "asset_name": "qrcodeextend-1.3.1.zip",
+            "archive_sha256": "7da6c72eb7cfe60ac7b255007735608520acd20d96f946b8bbef44c784281f0b",
+            "archive_size": 27669,
+            "checksum_source": "SHA256SUMS+github-asset-digest"
+          }
+        },
+        {
+          "version": "1.3.1",
+          "source_commit": "9176c3da8b5084a4ad98d38c3471fb4f2543a4ec",
+          "files": {
+            "Commands/PatchCommand.php": "445a3271dcdc6cb5c49a3ac69cbe9c71d751dee1743e8369f48fbb8fe2be4851",
+            "Commands/RestoreCommand.php": "145bf82c5d0023fcdf16652428c52dcd0dd7d238ed9f701a1b4190a8cf337828",
+            "Commands/StatusCommand.php": "7d8116585b7a4794e8288f333d5b53029fb99ca5dbca2fdfc45b78ba3b432518",
+            "Plugin.php": "ab99c90d1b259bd9bd0a8fd10105362cf7f49ca1b134fcc13c96064a480cb545",
+            "README.md": "1aae97a43a5a6f06fdcfe78256636d5f17c101864c246b952aa6d8206fa96aec",
+            "Services/AdminBundlePatcher.php": "7b8f6f984f52c49e616ec4644baa948db516b13332eee41568fd2d07f1f38380",
+            "config.json": "a65566ecd26ce70fb3d36c5c07a81a4c2fd71c0a8f08aa68cddd23cf9cc148f5",
+            "resources/assets/qrcodeextend.css": "7f1a7cc3d4c086dc37f4ec9c8e8782e67bbf1d6f3a9415512c0fb563e2b428de",
+            "resources/assets/qrcodeextend.js": "535e930509857a6c054cb4158b1085deef53ccf24fd9b6ddf66792f7461e901f",
+            "resources/assets/vendor/LICENSE.nayuki": "f9f4bba35e6ee9161fa917a4cb9943c463be6a6d447c7ce370239769c699ad57",
+            "resources/assets/vendor/README.txt": "f347f88ec2f668653c4cd5687785994e7b6a4f92309bed6d272fad19273462bc",
+            "resources/assets/vendor/qrcodegen.js": "782dfb84800af8ba2fd946a79a561f51e06612e3a0c2b8d493a45729f119447c"
+          },
+          "source_provenance": {
+            "kind": "panel-working-tree-overlay",
+            "base_source_commit": "9176c3da8b5084a4ad98d38c3471fb4f2543a4ec",
+            "base_panel_commit": "01be17d6c1ffbefd820e631660cc4b0d1a121d9c",
+            "base_manifest_sha256": "7361d2a5c07faa44b4217121099e9c1af39666374df200bc680faba86a7955d9",
+            "base_source_provenance": {
+              "kind": "github-release-asset",
+              "release_id": 427464449,
+              "release_tag": "v1.3.1",
+              "tag_object": "e3b97ed63a75becf4fe92df3e4e462e0f8fd14b7",
+              "tag_commit": "9176c3da8b5084a4ad98d38c3471fb4f2543a4ec",
+              "asset_id": 687335856,
+              "asset_name": "qrcodeextend-1.3.1.zip",
+              "archive_sha256": "7da6c72eb7cfe60ac7b255007735608520acd20d96f946b8bbef44c784281f0b",
+              "archive_size": 27669,
+              "checksum_source": "SHA256SUMS+github-asset-digest"
+            },
+            "base_files": {
+              "Commands/PatchCommand.php": "445a3271dcdc6cb5c49a3ac69cbe9c71d751dee1743e8369f48fbb8fe2be4851",
+              "Commands/RestoreCommand.php": "145bf82c5d0023fcdf16652428c52dcd0dd7d238ed9f701a1b4190a8cf337828",
+              "Commands/StatusCommand.php": "7d8116585b7a4794e8288f333d5b53029fb99ca5dbca2fdfc45b78ba3b432518",
+              "Plugin.php": "2d73596c562a7c4bcb5bbae0229aff75918b3626d950e5089296389b4b65e8ad",
+              "README.md": "1aae97a43a5a6f06fdcfe78256636d5f17c101864c246b952aa6d8206fa96aec",
+              "Services/AdminBundlePatcher.php": "08ce494ab50c3011c6e9c0740d1149d1d561a7dd3562b044cc68a804fd09621a",
+              "config.json": "a65566ecd26ce70fb3d36c5c07a81a4c2fd71c0a8f08aa68cddd23cf9cc148f5",
+              "resources/assets/qrcodeextend.css": "7f1a7cc3d4c086dc37f4ec9c8e8782e67bbf1d6f3a9415512c0fb563e2b428de",
+              "resources/assets/qrcodeextend.js": "535e930509857a6c054cb4158b1085deef53ccf24fd9b6ddf66792f7461e901f",
+              "resources/assets/vendor/LICENSE.nayuki": "f9f4bba35e6ee9161fa917a4cb9943c463be6a6d447c7ce370239769c699ad57",
+              "resources/assets/vendor/README.txt": "f347f88ec2f668653c4cd5687785994e7b6a4f92309bed6d272fad19273462bc",
+              "resources/assets/vendor/qrcodegen.js": "782dfb84800af8ba2fd946a79a561f51e06612e3a0c2b8d493a45729f119447c"
+            },
+            "changed_files": [
+              "Plugin.php",
+              "Services/AdminBundlePatcher.php"
+            ]
+          }
         }
       ],
       "source_provenance": {
         "kind": "github-release-asset",
-        "release_id": 427464449,
-        "release_tag": "v1.3.1",
-        "tag_object": "e3b97ed63a75becf4fe92df3e4e462e0f8fd14b7",
-        "tag_commit": "9176c3da8b5084a4ad98d38c3471fb4f2543a4ec",
-        "asset_id": 687335856,
-        "asset_name": "qrcodeextend-1.3.1.zip",
-        "archive_sha256": "7da6c72eb7cfe60ac7b255007735608520acd20d96f946b8bbef44c784281f0b",
-        "archive_size": 27669,
-        "checksum_source": "SHA256SUMS+github-asset-digest"
+        "release_id": 437211446,
+        "release_tag": "v1.3.2",
+        "tag_object": "13c628f608fcc50e3a119c5dad9d1174d290d7d3",
+        "tag_commit": "687ee0747b86f8eba0a5cafbf32d67ae4c2351e5",
+        "asset_id": 719084718,
+        "asset_name": "qrcodeextend-1.3.2.zip",
+        "archive_sha256": "0688c4f21d93a022db7433f4d11251c14c31bea42ac1065b2fe74b5f54271aef",
+        "archive_size": 28881,
+        "checksum_source": "SHA256SUMS"
       }
     },
     {

@@ -1,12 +1,14 @@
 # Xboard
 
-**2026.11.01.1** 固化生产流量队列的 `simple` 固定分配，原生默认三个队列各一个 worker，并保留 `HORIZON_DATA_PIPELINE_MAX` 显式覆盖。教程补齐 PHP 8.3 OPcache 的扩展安装、参数和实际 FPM 验证。新站使用[本版全新安装教程](docs/installation/install-2026.11.01.1.zh-CN.md)，已有站点使用[本版原生升级说明](docs/installation/upgrade-2026.11.01.1.zh-CN.md)，版本变化见[发行说明](docs/releases/v2026.11.01.1.md)。
+**2026.11.07.1** 修复后台“TA 的流量记录”弹窗在用户列表刷新后自动关闭的问题，并内置官方 QRCode Extend **1.3.2**：已完成的二维码桥接校验不再等待共享修改锁，发布内容一致时不重复复制资源。安装、升级、异常重检和清理仍使用原共享锁。详见[本次发行说明](docs/releases/v2026.11.07.1.md)。
 
-本版默认内置 NodeEndpoint **1.1.3**、SmartExpiry **1.2.0**、QRCode Extend **1.3.1**、FlowScope **2.4.0** 和 SubInfoCustomizer **1.0.1**，全新安装自动安装并启用五项。安装教程固定下载 `v2026.11.01.1` 的正式归档，并单独核对 `xboard.tar.gz` 的摘要，随后配置网站、节点通讯入口、定时调度和队列守护。
+本版默认内置 NodeEndpoint **1.1.3**、SmartExpiry **1.2.0**、QRCode Extend **1.3.2**、FlowScope **2.4.0** 和 SubInfoCustomizer **1.0.1**。使用 `v2026.11.07.1` 的正式归档并核对 `SHA256SUMS`；全新安装与已有站点升级继续遵循[原生部署流程](docs/installation/bundled-native.zh-CN.md)。保留数据库、原 `.env` / APP_KEY、插件配置、机器身份与 CA；升级不改管理员保存的插件启停选择。历史固定 tag 教程仍对应其原归档。
+
+历史版本 **2026.11.01.1** 固化生产流量队列的 `simple` 固定分配，原生默认三个队列各一个 worker，并保留 `HORIZON_DATA_PIPELINE_MAX` 显式覆盖。教程补齐 PHP 8.3 OPcache 的扩展安装、参数和实际 FPM 验证。该版[全新安装教程](docs/installation/install-2026.11.01.1.zh-CN.md)、[原生升级说明](docs/installation/upgrade-2026.11.01.1.zh-CN.md)和[发行说明](docs/releases/v2026.11.01.1.md)保留历史归属。
 
 新服务器已经完成 `init.sh`，并且已经导入旧 SQL、覆盖原 `.env`，请直接使用[导入后的恢复上线教程](docs/installation/restore-sql-env-2026.11.01.1.zh-CN.md)。已按这个顺序重测通过；后续会修复新装缓存和插件残留，再恢复旧网站业务与原启停选择。
 
-本发行提供完整原生源码归档和校验资产，按既有备份及维护流程部署；OPcache 扩展仍须在 aaPanel 的实际 PHP 8.3 中另行安装。已验证的现场队列切换不代表本次完整归档已完成生产升级或吞吐测试。下方旧版本和固定 tag 教程保留历史归属，旧归档不会自动获得新默认值。
+该历史发行提供完整原生源码归档和校验资产；OPcache 扩展仍须在 aaPanel 的实际 PHP 8.3 中另行安装。当时已验证的现场队列切换不代表新发行完整归档已完成生产升级或吞吐测试。下方旧版本和固定 tag 教程保留历史归属，旧归档不会自动获得新默认值。
 
 **2026.10.31.2** 提供默认最新 Node 对接、网页插件一键更新和 SSH 面板与插件批量更新。五个独立插件分别跟随各自仓库的最新正式发行，七个核心插件跟随面板发行；更新保留配置、启停选择与二维码私有文件。NodeEndpoint 为 **1.1.3**，内置二维码源码为 **1.3.1**。详见[本次变化](docs/releases/v2026.10.31.2.md)和[在线更新说明](docs/operations/plugin-online-update.zh-CN.md)。下方版本与教程保留历史记录。
 
